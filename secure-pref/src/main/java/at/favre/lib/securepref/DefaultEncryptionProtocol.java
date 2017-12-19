@@ -13,7 +13,7 @@ import at.favre.lib.crypto.HKDF;
  * @since 18.12.2017
  */
 
-class DefaultEncryptionProtocol implements EncryptionProtocol {
+final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     private final EncryptionFingerprint fingerprint;
     private final KeyStretchingFunction keyStretchingFunction;
@@ -22,8 +22,8 @@ class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final byte[] persistenceSalt;
 
     DefaultEncryptionProtocol(SymmetricEncryption symmetricEncryption, KeyStretchingFunction keyStretchingFunction,
-                                     @SymmetricEncryption.KeyStrength int keyStrength, EncryptionFingerprint fingerprint,
-                                     byte[] persistenceSalt) {
+                              @SymmetricEncryption.KeyStrength int keyStrength, EncryptionFingerprint fingerprint,
+                              byte[] persistenceSalt) {
         this.symmetricEncryption = symmetricEncryption;
         this.keyStretchingFunction = keyStretchingFunction;
         this.fingerprint = fingerprint;
@@ -68,7 +68,7 @@ class DefaultEncryptionProtocol implements EncryptionProtocol {
         Bytes ikm = Bytes.wrap(fingerprint.getBytes()).append(Bytes.from(contentKey, Normalizer.Form.NFKD));
 
         if (password != null) {
-            ikm.append(keyStretchingFunction.stretch(password));
+            ikm.append(keyStretchingFunction.stretch(password, 32));
         }
 
         return HKDF.fromHmacSha512().extractAndExpand(persistenceSalt, ikm.array(), "DefaultEncryptionProtocol".getBytes(), keyLengthBit / 8);

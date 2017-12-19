@@ -13,7 +13,7 @@ import javax.crypto.spec.SecretKeySpec;
  * @since 18.12.2017
  */
 
-class AesGcmEncryption implements SymmetricEncryption {
+final class AesGcmEncryption implements SymmetricEncryption {
     private static final byte PROTOCOL_VERSION = 0;
     private static final String ALGORITHM = "AES/GCM/NoPadding";
     private static final int TAG_LENGTH_BIT = 128;
@@ -51,9 +51,9 @@ class AesGcmEncryption implements SymmetricEncryption {
 
             byte[] encrypted = cipher.doFinal(rawData);
 
-            ByteBuffer byteBuffer = ByteBuffer.allocate(1 + 4 + iv.length + encrypted.length);
+            ByteBuffer byteBuffer = ByteBuffer.allocate(1 + 1 + iv.length + encrypted.length);
             byteBuffer.put(PROTOCOL_VERSION);
-            byteBuffer.putInt(iv.length);
+            byteBuffer.put((byte) iv.length);
             byteBuffer.put(iv);
             byteBuffer.put(encrypted);
 
@@ -73,7 +73,7 @@ class AesGcmEncryption implements SymmetricEncryption {
                 throw new IllegalStateException("invalid protocol version " + version + " - cannot decrypt");
             }
 
-            int ivLength = byteBuffer.getInt();
+            int ivLength = byteBuffer.get();
             byte[] iv = new byte[ivLength];
             byteBuffer.get(iv);
             byte[] encrypted = new byte[byteBuffer.remaining()];

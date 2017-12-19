@@ -7,5 +7,5 @@ package at.favre.lib.securepref;
 
 public interface KeyStretchingFunction {
 
-    byte[] stretch(char[] originalKey);
+    byte[] stretch(char[] password, int outLengthByte);
 }

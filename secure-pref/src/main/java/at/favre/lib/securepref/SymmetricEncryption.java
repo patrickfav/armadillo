@@ -16,7 +16,15 @@ public interface SymmetricEncryption {
     @interface KeyStrength {
     }
 
+    /**
+     * High Security which is equivalent to a AES key size of 128 bit
+     */
     int STRENGTH_HIGH = 0;
+
+    /**
+     * Very high security which is equivalent to a AES key size of 256 bit
+     * Note: This is usually not required.
+     */
     int STRENGTH_VERY_HIGH = 1;
 
     byte[] encrypt(byte[] key, byte[] rawData) throws SymmetricEncryptionException;

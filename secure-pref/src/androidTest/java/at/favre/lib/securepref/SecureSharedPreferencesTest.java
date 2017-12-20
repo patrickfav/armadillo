@@ -45,12 +45,12 @@ public class SecureSharedPreferencesTest {
         SecureRandom secureRandom = new SecureRandom();
         EncryptionFingerprint fingerprint = EncryptionFingerprintFactory.create(appContext, null);
         return new SecureSharedPreferences(
-                appContext,
-                name,
-                new DefaultEncryptionProtocol(
-                        new AesGcmEncryption(secureRandom), new PBKDF2KeyStretcher(),
-                        SymmetricEncryption.STRENGTH_HIGH,
-                        fingerprint, BuildConfig.PREF_SALT), pw, secureRandom);
+            appContext,
+            name,
+            new DefaultEncryptionProtocol(
+                new AesGcmEncryption(secureRandom), new PBKDF2KeyStretcher(),
+                SymmetricEncryption.STRENGTH_HIGH,
+                fingerprint, new HkdfXorObfuscator.Factory()), pw, secureRandom);
     }
 
     @Test
@@ -59,7 +59,7 @@ public class SecureSharedPreferencesTest {
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 100; j++) {
                 String content = "testäI/_²~" + Bytes.random(64 + j).encodeHex();
-                preferences.edit().putString("k" + j, content).apply();
+                preferences.edit().putString("k" + j, content).commit();
                 assertEquals(content, preferences.getString("k" + j, null));
             }
         }
@@ -68,37 +68,37 @@ public class SecureSharedPreferencesTest {
     @Test
     public void simpleGetString() throws Exception {
         String content = "testäI/_²~";
-        preferences.edit().putString("string", content).apply();
+        preferences.edit().putString("string", content).commit();
         assertEquals(content, preferences.getString("string", null));
     }
 
     @Test
     public void simpleGetInt() throws Exception {
         int content = 3782633;
-        preferences.edit().putInt("int", content).apply();
+        preferences.edit().putInt("int", content).commit();
         assertEquals(content, preferences.getInt("int", 0));
     }
 
     @Test
     public void simpleGetLong() throws Exception {
         long content = 3782633654323456L;
-        preferences.edit().putLong("long", content).apply();
+        preferences.edit().putLong("long", content).commit();
         assertEquals(content, preferences.getLong("long", 0));
     }
 
     @Test
     public void simpleGetFloat() throws Exception {
         float content = 728.1891f;
-        preferences.edit().putFloat("float", content).apply();
+        preferences.edit().putFloat("float", content).commit();
         assertEquals(content, preferences.getFloat("float", 0), 0.001);
     }
 
     @Test
     public void simpleGetBoolean() throws Exception {
-        preferences.edit().putBoolean("boolean", true).apply();
+        preferences.edit().putBoolean("boolean", true).commit();
         assertEquals(true, preferences.getBoolean("boolean", false));
 
-        preferences.edit().putBoolean("boolean2", false).apply();
+        preferences.edit().putBoolean("boolean2", false).commit();
         assertEquals(false, preferences.getBoolean("boolean2", true));
     }
 
@@ -109,7 +109,7 @@ public class SecureSharedPreferencesTest {
             set.add("input" + i);
         }
 
-        preferences.edit().putStringSet("stringSet", set).apply();
+        preferences.edit().putStringSet("stringSet", set).commit();
         assertEquals(set, preferences.getStringSet("stringSet", null));
     }
 
@@ -117,7 +117,7 @@ public class SecureSharedPreferencesTest {
     public void simpleStringGetWithPassword() throws Exception {
         SecureSharedPreferences preferences = create("withPw", "superSecret".toCharArray());
         String content = "testäI/_²~" + Bytes.random(64).encodeHex();
-        preferences.edit().putString("k", content).apply();
+        preferences.edit().putString("k", content).commit();
         assertEquals(content, preferences.getString("k", null));
     }
 }

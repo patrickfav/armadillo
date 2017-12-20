@@ -18,22 +18,17 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final EncryptionFingerprint fingerprint;
     private final KeyStretchingFunction keyStretchingFunction;
     private final SymmetricEncryption symmetricEncryption;
+    private final DataObfuscator.Factory dataObfuscatorFactory;
     private final int keyLengthBit;
-    private final byte[] persistenceSalt;
 
     DefaultEncryptionProtocol(SymmetricEncryption symmetricEncryption, KeyStretchingFunction keyStretchingFunction,
                               @SymmetricEncryption.KeyStrength int keyStrength, EncryptionFingerprint fingerprint,
-                              byte[] persistenceSalt) {
+                              DataObfuscator.Factory dataObfuscatorFactory) {
         this.symmetricEncryption = symmetricEncryption;
         this.keyStretchingFunction = keyStretchingFunction;
         this.fingerprint = fingerprint;
         this.keyLengthBit = keyStrength == SymmetricEncryption.STRENGTH_HIGH ? 128 : 256;
-
-        if (persistenceSalt == null || persistenceSalt.length < 16) {
-            throw new IllegalArgumentException("salt must not be null and greater than 16 byte");
-        }
-
-        this.persistenceSalt = persistenceSalt;
+        this.dataObfuscatorFactory = dataObfuscatorFactory;
     }
 
     @Override
@@ -43,10 +38,16 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     @Override
     public byte[] encrypt(@NonNull String contentKey, char[] password, byte[] rawContent) throws EncryptionProtocolException {
+        byte[] fingerprintBytes = new byte[0];
         try {
-            return symmetricEncryption.encrypt(keyDerivationFunction(contentKey, fingerprint, password), rawContent);
+            fingerprintBytes = fingerprint.getBytes();
+            byte[] encrypted = symmetricEncryption.encrypt(keyDerivationFunction(contentKey, fingerprintBytes, password), rawContent);
+            dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array()).obfuscate(encrypted);
+            return encrypted;
         } catch (SymmetricEncryptionException e) {
             throw new EncryptionProtocolException(e);
+        } finally {
+            Bytes.wrap(fingerprintBytes).mutable().secureWipe();
         }
     }
 
@@ -57,20 +58,35 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     @Override
     public byte[] decrypt(@NonNull String contentKey, char[] password, byte[] encryptedContent) throws EncryptionProtocolException {
+        byte[] fingerprintBytes = new byte[0];
         try {
-            return symmetricEncryption.decrypt(keyDerivationFunction(contentKey, fingerprint, password), encryptedContent);
+            fingerprintBytes = fingerprint.getBytes();
+            dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array()).deobfuscate(encryptedContent);
+            return symmetricEncryption.decrypt(keyDerivationFunction(contentKey, fingerprintBytes, password), encryptedContent);
         } catch (SymmetricEncryptionException e) {
             throw new EncryptionProtocolException(e);
+        } finally {
+            Bytes.wrap(fingerprintBytes).mutable().secureWipe();
         }
     }
 
-    private byte[] keyDerivationFunction(String contentKey, EncryptionFingerprint fingerprint, @Nullable char[] password) {
-        Bytes ikm = Bytes.wrap(fingerprint.getBytes()).append(Bytes.from(contentKey, Normalizer.Form.NFKD));
+    @Override
+    public DataObfuscator createDataObfuscator(@NonNull byte[] key) {
+        return dataObfuscatorFactory.create(key);
+    }
+
+    @Override
+    public EncryptionFingerprint getFingerprint() {
+        return fingerprint;
+    }
+
+    private byte[] keyDerivationFunction(String contentKey, byte[] fingerprint, @Nullable char[] password) {
+        Bytes ikm = Bytes.wrap(fingerprint).append(Bytes.from(contentKey, Normalizer.Form.NFKD));
 
         if (password != null) {
             ikm.append(keyStretchingFunction.stretch(password, 32));
         }
 
-        return HKDF.fromHmacSha512().extractAndExpand(persistenceSalt, ikm.array(), "DefaultEncryptionProtocol".getBytes(), keyLengthBit / 8);
+        return HKDF.fromHmacSha512().extractAndExpand(new byte[64], ikm.array(), "DefaultEncryptionProtocol".getBytes(), keyLengthBit / 8);
     }
 }

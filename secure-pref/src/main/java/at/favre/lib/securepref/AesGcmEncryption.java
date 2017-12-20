@@ -8,6 +8,8 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import at.favre.lib.bytes.Bytes;
+
 /**
  * @author Patrick Favre-Bulle
  * @since 18.12.2017
@@ -56,7 +58,6 @@ final class AesGcmEncryption implements SymmetricEncryption {
             byteBuffer.put((byte) iv.length);
             byteBuffer.put(iv);
             byteBuffer.put(encrypted);
-
             return byteBuffer.array();
         } catch (Exception e) {
             throw new SymmetricEncryptionException("could not encrypt", e);
@@ -81,7 +82,13 @@ final class AesGcmEncryption implements SymmetricEncryption {
 
             final Cipher cipher = getCipher();
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
-            return cipher.doFinal(encrypted);
+            byte[] decrypted = cipher.doFinal(encrypted);
+
+            Bytes.wrap(iv).mutable().secureWipe();
+            Bytes.wrap(key).mutable().secureWipe();
+            Bytes.wrap(encrypted).mutable().secureWipe();
+
+            return decrypted;
         } catch (Exception e) {
             throw new SymmetricEncryptionException("could not decrypt", e);
         }

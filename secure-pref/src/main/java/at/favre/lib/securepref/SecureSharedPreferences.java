@@ -264,8 +264,14 @@ public class SecureSharedPreferences implements SharedPreferences {
         final String keyHash = deriveKey(KEY_RANDOM);
         String base64Random = sharedPreferences.getString(keyHash, null);
         if (base64Random == null) {
-            base64Random = Bytes.random(32, secureRandom).encodeBase64();
-            sharedPreferences.edit().putString(keyHash, base64Random).apply();
+            byte[] rndBytes = Bytes.random(32, secureRandom).array();
+            base64Random = Bytes.wrap(rndBytes).encodeBase64();
+            encryptionProtocol.createDataObfuscator(encryptionProtocol.getFingerprint().getBytes()).obfuscate(rndBytes);
+            sharedPreferences.edit().putString(keyHash, Bytes.wrap(rndBytes).encodeBase64()).apply();
+        } else {
+            byte[] obfuscatedRandom = Bytes.parseBase64(base64Random).array();
+            encryptionProtocol.createDataObfuscator(encryptionProtocol.getFingerprint().getBytes()).deobfuscate(obfuscatedRandom);
+            base64Random = Bytes.wrap(obfuscatedRandom).encodeBase64();
         }
         return base64Random;
     }
@@ -280,6 +286,6 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     private static String derive(String contentKey, String useName) {
         return Bytes.wrap(HKDF.fromHmacSha512().extractAndExpand(BuildConfig.PREF_SALT, Bytes.from(contentKey, Normalizer.Form.NFKD).array(),
-                Bytes.from(useName, Normalizer.Form.NFKD).array(), 32)).encodeHex();
+            Bytes.from(useName, Normalizer.Form.NFKD).array(), 20)).encodeHex();
     }
 }

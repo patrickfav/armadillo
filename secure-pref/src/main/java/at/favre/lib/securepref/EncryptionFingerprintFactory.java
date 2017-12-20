@@ -20,10 +20,16 @@ import at.favre.lib.bytes.Bytes;
 public class EncryptionFingerprintFactory {
 
     public static EncryptionFingerprint create(Context context, @Nullable String additionalData) {
-        return () -> Bytes.wrap(getApkSignatureHash(context))
+        return new EncryptionFingerprint.Default(Bytes.wrap(getApkSignatureHash(context))
                 .append(Bytes.from(getAndroidId(context)))
+            .append(Bytes.from(getApplicationPackage(context)))
                 .append(BuildConfig.STATIC_RANDOM)
-                .append(additionalData != null ? Bytes.from(additionalData) : Bytes.from("")).array();
+            .append(additionalData != null ? Bytes.from(additionalData) : Bytes.from("")).array());
+    }
+
+    @SuppressLint("HardwareIds")
+    private static String getApplicationPackage(Context context) {
+        return String.valueOf(context.getApplicationContext().getPackageName());
     }
 
     @SuppressLint("HardwareIds")

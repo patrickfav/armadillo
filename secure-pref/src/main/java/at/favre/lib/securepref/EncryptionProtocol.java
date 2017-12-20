@@ -17,4 +17,7 @@ public interface EncryptionProtocol {
 
     byte[] decrypt(@NonNull String contentKey, char[] password, byte[] encryptedContent) throws EncryptionProtocolException;
 
+    DataObfuscator createDataObfuscator(@NonNull byte[] key);
+
+    EncryptionFingerprint getFingerprint();
 }

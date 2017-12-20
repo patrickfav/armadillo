@@ -39,7 +39,7 @@ public class SecureSharedPreferences implements SharedPreferences {
     }
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol encryptionProtocol, char[] password, SecureRandom secureRandom) {
-        this(context.getSharedPreferences(deriveKey(preferenceName), Context.MODE_PRIVATE), encryptionProtocol, password, secureRandom);
+        this(context.getSharedPreferences(derivePrefName(preferenceName), Context.MODE_PRIVATE), encryptionProtocol, password, secureRandom);
     }
 
     public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol encryptionProtocol, char[] password, SecureRandom secureRandom) {
@@ -271,6 +271,15 @@ public class SecureSharedPreferences implements SharedPreferences {
     }
 
     private static String deriveKey(String contentKey) {
-        return Bytes.wrap(HKDF.fromHmacSha256().extract(BuildConfig.PREF_SALT, Bytes.from(contentKey, Normalizer.Form.NFKD).array())).encodeHex();
+        return derive(contentKey, "contentKey");
+    }
+
+    private static String derivePrefName(String contentKey) {
+        return derive(contentKey, "prefName");
+    }
+
+    private static String derive(String contentKey, String useName) {
+        return Bytes.wrap(HKDF.fromHmacSha512().extractAndExpand(BuildConfig.PREF_SALT, Bytes.from(contentKey, Normalizer.Form.NFKD).array(),
+                Bytes.from(useName, Normalizer.Form.NFKD).array(), 32)).encodeHex();
     }
 }

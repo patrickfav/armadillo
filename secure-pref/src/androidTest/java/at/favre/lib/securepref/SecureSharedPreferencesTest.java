@@ -36,7 +36,7 @@ public class SecureSharedPreferencesTest {
 
     @After
     public void tearDown() {
-        preferences.edit().clear().apply();
+        preferences.edit().clear().commit();
     }
 
     @NonNull
@@ -54,7 +54,8 @@ public class SecureSharedPreferencesTest {
     }
 
     @Test
-    public void simpleStringGet() throws Exception {
+    public void simpleMultipleStringGet() throws Exception {
+        SecureSharedPreferences preferences = create("manytest", null);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 100; j++) {
                 String content = "testäI/_²~" + Bytes.random(64 + j).encodeHex();

@@ -7,7 +7,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 /**
- * @author RISE GmbH (patrick.favre@rise-world.com)
+ * @author Patrick Favre-Bulle
  * @since 19.12.2017
  */
 

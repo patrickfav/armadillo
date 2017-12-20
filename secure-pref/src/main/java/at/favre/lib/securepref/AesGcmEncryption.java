@@ -9,7 +9,7 @@ import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 /**
- * @author RISE GmbH (patrick.favre@rise-world.com)
+ * @author Patrick Favre-Bulle
  * @since 18.12.2017
  */
 

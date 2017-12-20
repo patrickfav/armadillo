@@ -1,10 +1,9 @@
 package at.favre.lib.securepref;
 
 /**
- * @author RISE GmbH (patrick.favre@rise-world.com)
+ * @author Patrick Favre-Bulle
  * @since 18.12.2017
  */
-
 public class EncryptionProtocolException extends Exception {
 
     public EncryptionProtocolException(String message) {

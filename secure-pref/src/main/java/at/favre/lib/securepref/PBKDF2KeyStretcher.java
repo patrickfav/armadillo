@@ -19,11 +19,11 @@ final class PBKDF2KeyStretcher implements KeyStretchingFunction {
 
     private final int iterations;
 
-    public PBKDF2KeyStretcher() {
+    PBKDF2KeyStretcher() {
         this(PBKDF2_DEFAULT_ITERATIONS);
     }
 
-    public PBKDF2KeyStretcher(int iterations) {
+    PBKDF2KeyStretcher(int iterations) {
         this.iterations = Math.max(PBKDF2_MIN_ITERATIONS, iterations);
     }
 

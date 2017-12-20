@@ -13,7 +13,7 @@ import java.io.ByteArrayOutputStream;
 import at.favre.lib.bytes.Bytes;
 
 /**
- * @author RISE GmbH (patrick.favre@rise-world.com)
+ * @author Patrick Favre-Bulle
  * @since 19.12.2017
  */
 

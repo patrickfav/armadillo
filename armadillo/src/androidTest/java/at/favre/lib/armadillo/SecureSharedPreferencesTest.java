@@ -1,8 +1,11 @@
 package at.favre.lib.armadillo;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 /**
@@ -16,5 +19,16 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
         return Armadillo.create(InstrumentationRegistry.getTargetContext(), name)
                 .encryptionFingerprint(InstrumentationRegistry.getTargetContext())
                 .password(pw);
+    }
+
+    @Test
+    public void quickStartTest() throws Exception {
+        Context context = InstrumentationRegistry.getTargetContext();
+        SharedPreferences preferences = Armadillo.create(context, "myPrefs")
+                .encryptionFingerprint(context)
+                .build();
+
+        preferences.edit().putString("key1", "string").apply();
+        String s = preferences.getString("key1", null);
     }
 }

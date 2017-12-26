@@ -164,7 +164,7 @@ public class SecureSharedPreferences implements SharedPreferences {
      * {@link #apply()}.
      */
     public final class Editor implements SharedPreferences.Editor {
-        private SharedPreferences.Editor internalEditor;
+        private final SharedPreferences.Editor internalEditor;
 
         @SuppressLint("CommitPrefEdits")
         private Editor() {
@@ -214,8 +214,7 @@ public class SecureSharedPreferences implements SharedPreferences {
         @Override
         public SharedPreferences.Editor putBoolean(String key, boolean value) {
             final String keyHash = deriveKey(key);
-            internalEditor.putString(keyHash, encryptToBase64(keyHash, Bytes.from(value ? (byte) 1 : (byte) 0).array()))
-            ;
+            internalEditor.putString(keyHash, encryptToBase64(keyHash, Bytes.from(value ? (byte) 1 : (byte) 0).array()));
             return this;
         }
 

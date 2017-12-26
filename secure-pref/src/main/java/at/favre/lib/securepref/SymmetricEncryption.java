@@ -27,9 +27,25 @@ public interface SymmetricEncryption {
      */
     int STRENGTH_VERY_HIGH = 1;
 
-    byte[] encrypt(byte[] key, byte[] rawData) throws SymmetricEncryptionException;
+    /**
+     * Encrypt
+     *
+     * @param rawEncryptionKey
+     * @param rawData
+     * @return
+     * @throws SymmetricEncryptionException
+     */
+    byte[] encrypt(byte[] rawEncryptionKey, byte[] rawData) throws SymmetricEncryptionException;
 
-    byte[] decrypt(byte[] key, byte[] encryptedData) throws SymmetricEncryptionException;
+    byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData) throws SymmetricEncryptionException;
+
+    /**
+     * Get the required key size length in byte for given security strenght type
+     *
+     * @param keyStrengthType
+     * @return required size in byte
+     */
+    int byteSizeLength(@KeyStrength int keyStrengthType);
 
     /**
      * Factory method for obfuscator

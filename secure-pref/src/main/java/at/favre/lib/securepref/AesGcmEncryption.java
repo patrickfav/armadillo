@@ -39,8 +39,8 @@ final class AesGcmEncryption implements SymmetricEncryption {
     }
 
     @Override
-    public byte[] encrypt(byte[] key, byte[] rawData) throws SymmetricEncryptionException {
-        if (key.length < 16) {
+    public byte[] encrypt(byte[] rawEncryptionKey, byte[] rawData) throws SymmetricEncryptionException {
+        if (rawEncryptionKey.length < 16) {
             throw new IllegalArgumentException("key length must be longer than 16 byte");
         }
 
@@ -49,7 +49,7 @@ final class AesGcmEncryption implements SymmetricEncryption {
             secureRandom.nextBytes(iv);
 
             final Cipher cipher = getCipher();
-            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
 
             byte[] encrypted = cipher.doFinal(rawData);
 
@@ -65,7 +65,7 @@ final class AesGcmEncryption implements SymmetricEncryption {
     }
 
     @Override
-    public byte[] decrypt(byte[] key, byte[] encryptedData) throws SymmetricEncryptionException {
+    public byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData) throws SymmetricEncryptionException {
         try {
             ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
             byte version = byteBuffer.get();
@@ -81,17 +81,22 @@ final class AesGcmEncryption implements SymmetricEncryption {
             byteBuffer.get(encrypted);
 
             final Cipher cipher = getCipher();
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(key, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
             byte[] decrypted = cipher.doFinal(encrypted);
 
             Bytes.wrap(iv).mutable().secureWipe();
-            Bytes.wrap(key).mutable().secureWipe();
+            Bytes.wrap(rawEncryptionKey).mutable().secureWipe();
             Bytes.wrap(encrypted).mutable().secureWipe();
 
             return decrypted;
         } catch (Exception e) {
             throw new SymmetricEncryptionException("could not decrypt", e);
         }
+    }
+
+    @Override
+    public int byteSizeLength(@KeyStrength int keyStrengthType) {
+        return keyStrengthType == STRENGTH_HIGH ? 16 : 32;
     }
 
     private Cipher getCipher() {

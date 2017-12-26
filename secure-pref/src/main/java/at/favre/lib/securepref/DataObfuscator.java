@@ -25,6 +25,11 @@ public interface DataObfuscator {
     void deobfuscate(@NonNull byte[] obfuscated);
 
     /**
+     * Clears the internal key reference
+     */
+    void clearKey();
+
+    /**
      * Factory method for obfuscator
      */
     interface Factory {

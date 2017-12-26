@@ -10,10 +10,19 @@ import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
 
 /**
- * Created by patri on 20.12.2017.
+ * A simple obfuscator using HKDF to derive keys for individual blocks and uses
+ * a simple version of CTR block mode. Uses XOR as the encryption primitive.
+ *
+ * The main design choices for this obfuscator:
+ * <ul>
+ *     <li>Non-Standard implementation and concept</li>
+ *     <li>Simple and fast (using xor)</li>
+ * </ul>
+ *
+ * This is optimized to be fast and not as secure as possible.
  */
 public class HkdfXorObfuscator implements DataObfuscator {
-    private final static int BLOCK_SIZE_BYTE = 24;
+    private final static int BLOCK_SIZE_BYTE = 128;
 
     private final byte[] key;
 
@@ -24,6 +33,8 @@ public class HkdfXorObfuscator implements DataObfuscator {
     @Override
     public void obfuscate(@NonNull byte[] original) {
         Objects.requireNonNull(original);
+        Objects.requireNonNull(this.key);
+
         byte[] okm = HKDF.fromHmacSha512().extract(new byte[64], key);
 
         int ctr = 0;
@@ -49,6 +60,11 @@ public class HkdfXorObfuscator implements DataObfuscator {
     @Override
     public void deobfuscate(@NonNull byte[] obfuscated) {
         obfuscate(obfuscated);
+    }
+
+    @Override
+    public void clearKey() {
+        Bytes.wrap(key).mutable().secureWipe();
     }
 
     public static final class Factory implements DataObfuscator.Factory {

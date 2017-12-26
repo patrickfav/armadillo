@@ -1,5 +1,7 @@
 package at.favre.lib.securepref;
 
+import android.os.StrictMode;
+
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 
@@ -46,6 +48,7 @@ final class PBKDF2KeyStretcher implements KeyStretchingFunction {
      * @return the PBDKF2 hash of the password
      */
     private static byte[] pbkdf2(char[] password, byte[] salt, int iterations, int outBytes) throws NoSuchAlgorithmException, InvalidKeySpecException {
+        StrictMode.noteSlowCall("pbkdf2 is a very expensive call and should not be done on the main thread");
         PBEKeySpec spec = new PBEKeySpec(password, salt, iterations, outBytes * 8);
         SecretKeyFactory skf = SecretKeyFactory.getInstance(PBKDF2_ALGORITHM);
         return skf.generateSecret(spec).getEncoded();

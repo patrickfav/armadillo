@@ -4,11 +4,13 @@ import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public class MockSharedPref implements SharedPreferences {
-    private Map<String, Object> internalMap = new HashMap<>();
+    private final Map<String, Object> internalMap = new HashMap<>();
 
     @Override
     public Map<String, ?> getAll() {
@@ -84,7 +86,7 @@ public class MockSharedPref implements SharedPreferences {
 
     @Override
     public Editor edit() {
-        return new Editor(internalMap, this);
+        return new Editor(this);
     }
 
     @Override
@@ -97,70 +99,81 @@ public class MockSharedPref implements SharedPreferences {
         throw new UnsupportedOperationException("listener not supported");
     }
 
-    void setInternalMap(Map<String, Object> map) {
-        this.internalMap = map;
+    void executeTransaction(Map<String, Object> putMap, List<String> removeList, boolean clear) {
+        if (!clear) {
+            for (Map.Entry<String, Object> stringObjectEntry : putMap.entrySet()) {
+                this.internalMap.put(stringObjectEntry.getKey(), stringObjectEntry.getValue());
+            }
+            for (String s : removeList) {
+                this.internalMap.remove(s);
+            }
+        } else {
+            this.internalMap.clear();
+        }
     }
 
     public static final class Editor implements SharedPreferences.Editor {
-        private final Map<String, Object> cache;
         private final MockSharedPref mockSharedPref;
 
-        public Editor(Map<String, Object> original, MockSharedPref mockSharedPref) {
-            this.cache = new HashMap<>(original);
+        private final Map<String, Object> putMap = new HashMap<>();
+        private final List<String> removeList = new LinkedList<>();
+        private boolean clear = false;
+
+        Editor(MockSharedPref mockSharedPref) {
             this.mockSharedPref = mockSharedPref;
         }
 
         @Override
         public SharedPreferences.Editor putString(String s, @Nullable String s1) {
-            cache.put(s, s1);
+            putMap.put(s, s1);
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putStringSet(String s, @Nullable Set<String> set) {
-            cache.put(s, set);
+            putMap.put(s, set);
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putInt(String s, int i) {
-            cache.put(s, i);
+            putMap.put(s, i);
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putLong(String s, long l) {
-            cache.put(s, l);
+            putMap.put(s, l);
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putFloat(String s, float v) {
-            cache.put(s, v);
+            putMap.put(s, v);
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putBoolean(String s, boolean b) {
-            cache.put(s, b);
+            putMap.put(s, b);
             return this;
         }
 
         @Override
         public SharedPreferences.Editor remove(String s) {
-            cache.remove(s);
+            removeList.add(s);
             return this;
         }
 
         @Override
         public SharedPreferences.Editor clear() {
-            cache.clear();
+            clear = true;
             return this;
         }
 
         @Override
         public boolean commit() {
-            mockSharedPref.setInternalMap(cache);
+            mockSharedPref.executeTransaction(putMap, removeList, clear);
             return true;
         }
 

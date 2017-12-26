@@ -27,7 +27,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         this.symmetricEncryption = symmetricEncryption;
         this.keyStretchingFunction = keyStretchingFunction;
         this.fingerprint = fingerprint;
-        this.keyLengthBit = keyStrength == SymmetricEncryption.STRENGTH_HIGH ? 128 : 256;
+        this.keyLengthBit = symmetricEncryption.byteSizeLength(keyStrength) * 8;
         this.dataObfuscatorFactory = dataObfuscatorFactory;
     }
 
@@ -42,7 +42,11 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         try {
             fingerprintBytes = fingerprint.getBytes();
             byte[] encrypted = symmetricEncryption.encrypt(keyDerivationFunction(contentKey, fingerprintBytes, password), rawContent);
-            dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array()).obfuscate(encrypted);
+
+            DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
+            obfuscator.obfuscate(encrypted);
+            obfuscator.clearKey();
+
             return encrypted;
         } catch (SymmetricEncryptionException e) {
             throw new EncryptionProtocolException(e);
@@ -61,7 +65,11 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         byte[] fingerprintBytes = new byte[0];
         try {
             fingerprintBytes = fingerprint.getBytes();
-            dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array()).deobfuscate(encryptedContent);
+
+            DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
+            obfuscator.deobfuscate(encryptedContent);
+            obfuscator.clearKey();
+
             return symmetricEncryption.decrypt(keyDerivationFunction(contentKey, fingerprintBytes, password), encryptedContent);
         } catch (SymmetricEncryptionException e) {
             throw new EncryptionProtocolException(e);

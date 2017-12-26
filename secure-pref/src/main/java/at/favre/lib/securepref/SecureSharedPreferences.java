@@ -7,14 +7,12 @@ import android.support.annotation.NonNull;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
-import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
 import at.favre.lib.bytes.Bytes;
-import at.favre.lib.crypto.HKDF;
 
 /**
  * @author Patrick Favre-Bulle
@@ -27,26 +25,41 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     private final SharedPreferences sharedPreferences;
     private final EncryptionProtocol encryptionProtocol;
-    private final SecureRandom secureRandom;
     private final char[] password;
 
-    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol encryptionProtocol) {
-        this(context, preferenceName, encryptionProtocol, null, new SecureRandom());
+    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocolFactory) {
+        this(context, preferenceName, encryptionProtocolFactory, null);
     }
 
-    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol encryptionProtocol, SecureRandom secureRandom) {
-        this(context, preferenceName, encryptionProtocol, null, secureRandom);
+    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, char[] password) {
+        this(context.getSharedPreferences(encryptionProtocol.getContentKeyDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE), encryptionProtocol, password);
     }
 
-    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol encryptionProtocol, char[] password, SecureRandom secureRandom) {
-        this(context.getSharedPreferences(derivePrefName(preferenceName), Context.MODE_PRIVATE), encryptionProtocol, password, secureRandom);
-    }
-
-    public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol encryptionProtocol, char[] password, SecureRandom secureRandom) {
+    public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory, char[] password) {
         this.sharedPreferences = sharedPreferences;
-        this.encryptionProtocol = encryptionProtocol;
-        this.secureRandom = secureRandom;
         this.password = password;
+        this.encryptionProtocol = encryptionProtocolFactory.create(
+                getPreferencesRandom(
+                        encryptionProtocolFactory.getContentKeyDigest(),
+                        encryptionProtocolFactory.createDataObfuscator(),
+                        encryptionProtocolFactory.getSecureRandom()));
+    }
+
+    private byte[] getPreferencesRandom(ContentKeyDigest contentKeyDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
+        final String keyHash = contentKeyDigest.derive(KEY_RANDOM, "prefName");
+        String base64Random = sharedPreferences.getString(keyHash, null);
+        byte[] outBytes;
+        if (base64Random == null) {
+            byte[] rndBytes = Bytes.random(32, secureRandom).array();
+            dataObfuscator.obfuscate(rndBytes);
+            sharedPreferences.edit().putString(keyHash, Bytes.wrap(rndBytes).encodeBase64()).apply();
+            outBytes = rndBytes;
+        } else {
+            byte[] obfuscatedRandom = Bytes.parseBase64(base64Random).array();
+            dataObfuscator.deobfuscate(obfuscatedRandom);
+            outBytes = obfuscatedRandom;
+        }
+        return outBytes;
     }
 
     /**
@@ -67,7 +80,7 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     @Override
     public String getString(String key, String defaultValue) {
-        final String keyHash = deriveKey(key);
+        final String keyHash = encryptionProtocol.deriveContentKey(key);
         final String encryptedValue = sharedPreferences.getString(keyHash, null);
         if (encryptedValue == null) {
             return defaultValue;
@@ -78,7 +91,7 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     @Override
     public Set<String> getStringSet(String key, Set<String> defaultValues) {
-        final String keyHash = deriveKey(key);
+        final String keyHash = encryptionProtocol.deriveContentKey(key);
         final Set<String> encryptedSet = sharedPreferences.getStringSet(keyHash, null);
         if (encryptedSet == null) {
             return defaultValues;
@@ -94,7 +107,7 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     @Override
     public int getInt(String key, int defaultValue) {
-        final String keyHash = deriveKey(key);
+        final String keyHash = encryptionProtocol.deriveContentKey(key);
         final String encryptedValue = sharedPreferences.getString(keyHash, null);
         if (encryptedValue == null) {
             return defaultValue;
@@ -104,7 +117,7 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     @Override
     public long getLong(String key, long defaultValue) {
-        final String keyHash = deriveKey(key);
+        final String keyHash = encryptionProtocol.deriveContentKey(key);
         final String encryptedValue = sharedPreferences.getString(keyHash, null);
         if (encryptedValue == null) {
             return defaultValue;
@@ -115,7 +128,7 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     @Override
     public float getFloat(String key, float defaultValue) {
-        final String keyHash = deriveKey(key);
+        final String keyHash = encryptionProtocol.deriveContentKey(key);
         final String encryptedValue = sharedPreferences.getString(keyHash, null);
         if (encryptedValue == null) {
             return defaultValue;
@@ -126,7 +139,7 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     @Override
     public boolean getBoolean(String key, boolean defaultValue) {
-        final String keyHash = deriveKey(key);
+        final String keyHash = encryptionProtocol.deriveContentKey(key);
         final String encryptedValue = sharedPreferences.getString(keyHash, null);
         if (encryptedValue == null) {
             return defaultValue;
@@ -137,7 +150,7 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     @Override
     public boolean contains(String key) {
-        return sharedPreferences.contains(deriveKey(key));
+        return sharedPreferences.contains(encryptionProtocol.deriveContentKey(key));
     }
 
     @Override
@@ -173,14 +186,14 @@ public class SecureSharedPreferences implements SharedPreferences {
 
         @Override
         public SharedPreferences.Editor putString(String key, String value) {
-            final String keyHash = deriveKey(key);
+            final String keyHash = encryptionProtocol.deriveContentKey(key);
             internalEditor.putString(keyHash, encryptToBase64(keyHash, Bytes.from(value).array()));
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putStringSet(String key, Set<String> values) {
-            final String keyHash = deriveKey(key);
+            final String keyHash = encryptionProtocol.deriveContentKey(key);
 
             final Set<String> encryptedValues = new HashSet<>(values.size());
             for (String value : values) {
@@ -192,35 +205,35 @@ public class SecureSharedPreferences implements SharedPreferences {
 
         @Override
         public SharedPreferences.Editor putInt(String key, int value) {
-            final String keyHash = deriveKey(key);
+            final String keyHash = encryptionProtocol.deriveContentKey(key);
             internalEditor.putString(keyHash, encryptToBase64(keyHash, Bytes.from(value).array()));
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putLong(String key, long value) {
-            final String keyHash = deriveKey(key);
+            final String keyHash = encryptionProtocol.deriveContentKey(key);
             internalEditor.putString(keyHash, encryptToBase64(keyHash, Bytes.from(value).array()));
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putFloat(String key, float value) {
-            final String keyHash = deriveKey(key);
+            final String keyHash = encryptionProtocol.deriveContentKey(key);
             internalEditor.putString(keyHash, encryptToBase64(keyHash, ByteBuffer.allocate(4).putFloat(value).array()));
             return this;
         }
 
         @Override
         public SharedPreferences.Editor putBoolean(String key, boolean value) {
-            final String keyHash = deriveKey(key);
+            final String keyHash = encryptionProtocol.deriveContentKey(key);
             internalEditor.putString(keyHash, encryptToBase64(keyHash, Bytes.from(value ? (byte) 1 : (byte) 0).array()));
             return this;
         }
 
         @Override
         public SharedPreferences.Editor remove(String key) {
-            internalEditor.remove(deriveKey(key));
+            internalEditor.remove(encryptionProtocol.deriveContentKey(key));
             return this;
         }
 
@@ -244,7 +257,7 @@ public class SecureSharedPreferences implements SharedPreferences {
     @NonNull
     private String encryptToBase64(String keyHash, byte[] content) {
         try {
-            return Bytes.wrap(encryptionProtocol.encrypt(keyHash + getPreferenceRandom(), password, content)).encodeBase64();
+            return Bytes.wrap(encryptionProtocol.encrypt(keyHash, password, content)).encodeBase64();
         } catch (EncryptionProtocolException e) {
             throw new IllegalStateException(e);
         }
@@ -253,38 +266,9 @@ public class SecureSharedPreferences implements SharedPreferences {
     @NonNull
     private byte[] decrypt(String keyHash, @NonNull String base64Encrypted) {
         try {
-            return encryptionProtocol.decrypt(keyHash + getPreferenceRandom(), password, Bytes.parseBase64(base64Encrypted).array());
+            return encryptionProtocol.decrypt(keyHash, password, Bytes.parseBase64(base64Encrypted).array());
         } catch (EncryptionProtocolException e) {
             throw new IllegalStateException(e);
         }
-    }
-
-    private String getPreferenceRandom() {
-        final String keyHash = deriveKey(KEY_RANDOM);
-        String base64Random = sharedPreferences.getString(keyHash, null);
-        if (base64Random == null) {
-            byte[] rndBytes = Bytes.random(32, secureRandom).array();
-            base64Random = Bytes.wrap(rndBytes).encodeBase64();
-            encryptionProtocol.createDataObfuscator(encryptionProtocol.getFingerprint().getBytes()).obfuscate(rndBytes);
-            sharedPreferences.edit().putString(keyHash, Bytes.wrap(rndBytes).encodeBase64()).apply();
-        } else {
-            byte[] obfuscatedRandom = Bytes.parseBase64(base64Random).array();
-            encryptionProtocol.createDataObfuscator(encryptionProtocol.getFingerprint().getBytes()).deobfuscate(obfuscatedRandom);
-            base64Random = Bytes.wrap(obfuscatedRandom).encodeBase64();
-        }
-        return base64Random;
-    }
-
-    private static String deriveKey(String contentKey) {
-        return derive(contentKey, "contentKey");
-    }
-
-    private static String derivePrefName(String contentKey) {
-        return derive(contentKey, "prefName");
-    }
-
-    private static String derive(String contentKey, String useName) {
-        return Bytes.wrap(HKDF.fromHmacSha512().extractAndExpand(BuildConfig.PREF_SALT, Bytes.from(contentKey, Normalizer.Form.NFKD).array(),
-            Bytes.from(useName, Normalizer.Form.NFKD).array(), 20)).encodeHex();
     }
 }

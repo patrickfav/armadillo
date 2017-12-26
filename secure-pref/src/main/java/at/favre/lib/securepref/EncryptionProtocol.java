@@ -2,12 +2,16 @@ package at.favre.lib.securepref;
 
 import android.support.annotation.NonNull;
 
+import java.security.SecureRandom;
+
 /**
  * @author Patrick Favre-Bulle
  * @since 18.12.2017
  */
 
 public interface EncryptionProtocol {
+
+    String deriveContentKey(String originalContentKey);
 
     byte[] encrypt(@NonNull String contentKey, byte[] rawContent) throws EncryptionProtocolException;
 
@@ -17,7 +21,13 @@ public interface EncryptionProtocol {
 
     byte[] decrypt(@NonNull String contentKey, char[] password, byte[] encryptedContent) throws EncryptionProtocolException;
 
-    DataObfuscator createDataObfuscator(@NonNull byte[] key);
+    interface Factory {
+        EncryptionProtocol create(byte[] preferenceSalt);
 
-    EncryptionFingerprint getFingerprint();
+        ContentKeyDigest getContentKeyDigest();
+
+        DataObfuscator createDataObfuscator();
+
+        SecureRandom getSecureRandom();
+    }
 }

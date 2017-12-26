@@ -20,11 +20,11 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
         SecureRandom secureRandom = new SecureRandom();
         EncryptionFingerprint fingerprint = EncryptionFingerprintFactory.create(appContext, null);
         return new SecureSharedPreferences(
-            appContext,
-            name,
-            new DefaultEncryptionProtocol(
-                new AesGcmEncryption(secureRandom), new PBKDF2KeyStretcher(),
-                SymmetricEncryption.STRENGTH_HIGH,
-                fingerprint, new HkdfXorObfuscator.Factory()), pw, secureRandom);
+                appContext,
+                name,
+                new DefaultEncryptionProtocol.Factory(
+                        fingerprint, new HkdfKeyDigest(BuildConfig.PREF_SALT, 20),
+                        new AesGcmEncryption(), SymmetricEncryption.STRENGTH_HIGH,
+                        new PBKDF2KeyStretcher(), new HkdfXorObfuscator.Factory(), secureRandom), pw);
     }
 }

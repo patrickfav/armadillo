@@ -46,18 +46,4 @@ public interface SymmetricEncryption {
      * @return required size in byte
      */
     int byteSizeLength(@KeyStrength int keyStrengthType);
-
-    /**
-     * Factory method for obfuscator
-     */
-    interface Factory {
-
-        /**
-         * Creates a new data obfuscator with given key
-         *
-         * @param key can be used to key the obfuscator's output
-         * @return new instance
-         */
-        DataObfuscator create(byte[] key);
-    }
 }

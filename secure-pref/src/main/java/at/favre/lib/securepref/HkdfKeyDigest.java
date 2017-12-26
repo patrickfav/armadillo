@@ -7,7 +7,7 @@ import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
 
 /**
- * @author RISE GmbH (patrick.favre@rise-world.com)
+ *
  * @since 26.12.2017
  */
 

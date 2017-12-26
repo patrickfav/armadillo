@@ -9,7 +9,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
 /**
- * @author RISE GmbH (patrick.favre@rise-world.com)
+ *
  * @since 26.12.2017
  */
 public class ContentKeyDigestTest {

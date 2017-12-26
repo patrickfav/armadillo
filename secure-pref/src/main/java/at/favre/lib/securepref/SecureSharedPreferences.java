@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -25,18 +26,22 @@ public class SecureSharedPreferences implements SharedPreferences {
 
     private final SharedPreferences sharedPreferences;
     private final EncryptionProtocol encryptionProtocol;
+    private final RecoveryPolicy recoveryPolicy;
     private final char[] password;
 
-    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocolFactory) {
-        this(context, preferenceName, encryptionProtocolFactory, null);
-    }
-
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, char[] password) {
-        this(context.getSharedPreferences(encryptionProtocol.getContentKeyDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE), encryptionProtocol, password);
+        this(context, preferenceName, encryptionProtocol, new RecoveryPolicy.Default(false, true), password);
     }
 
-    public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory, char[] password) {
+    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, char[] password) {
+        this(context.getSharedPreferences(encryptionProtocol.getContentKeyDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
+                encryptionProtocol, recoveryPolicy, password);
+    }
+
+    public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory,
+                                   RecoveryPolicy recoveryPolicy, char[] password) {
         this.sharedPreferences = sharedPreferences;
+        this.recoveryPolicy = recoveryPolicy;
         this.password = password;
         this.encryptionProtocol = encryptionProtocolFactory.create(
                 getPreferencesRandom(
@@ -86,7 +91,11 @@ public class SecureSharedPreferences implements SharedPreferences {
             return defaultValue;
         }
 
-        return Bytes.from(decrypt(keyHash, encryptedValue)).encodeUtf8();
+        byte[] bytes = decrypt(keyHash, encryptedValue);
+        if (bytes == null) {
+            return defaultValue;
+        }
+        return Bytes.from(bytes).encodeUtf8();
     }
 
     @Override
@@ -100,7 +109,11 @@ public class SecureSharedPreferences implements SharedPreferences {
         final Set<String> decryptedSet = new HashSet<>(encryptedSet.size());
 
         for (String encryptedValue : encryptedSet) {
-            decryptedSet.add(Bytes.from(decrypt(keyHash, encryptedValue)).encodeUtf8());
+            byte[] bytes = decrypt(keyHash, encryptedValue);
+            if (bytes == null) {
+                return decryptedSet;
+            }
+            decryptedSet.add(Bytes.from(bytes).encodeUtf8());
         }
         return decryptedSet;
     }
@@ -112,7 +125,12 @@ public class SecureSharedPreferences implements SharedPreferences {
         if (encryptedValue == null) {
             return defaultValue;
         }
-        return Bytes.from(decrypt(keyHash, encryptedValue)).toInt();
+
+        byte[] bytes = decrypt(keyHash, encryptedValue);
+        if (bytes == null) {
+            return defaultValue;
+        }
+        return Bytes.from(bytes).toInt();
     }
 
     @Override
@@ -123,7 +141,11 @@ public class SecureSharedPreferences implements SharedPreferences {
             return defaultValue;
         }
 
-        return Bytes.from(decrypt(keyHash, encryptedValue)).toLong();
+        byte[] bytes = decrypt(keyHash, encryptedValue);
+        if (bytes == null) {
+            return defaultValue;
+        }
+        return Bytes.from(bytes).toLong();
     }
 
     @Override
@@ -134,7 +156,11 @@ public class SecureSharedPreferences implements SharedPreferences {
             return defaultValue;
         }
 
-        return Bytes.from(decrypt(keyHash, encryptedValue)).toFloat();
+        byte[] bytes = decrypt(keyHash, encryptedValue);
+        if (bytes == null) {
+            return defaultValue;
+        }
+        return Bytes.from(bytes).toFloat();
     }
 
     @Override
@@ -145,7 +171,11 @@ public class SecureSharedPreferences implements SharedPreferences {
             return defaultValue;
         }
 
-        return decrypt(keyHash, encryptedValue)[0] != 0;
+        byte[] bytes = decrypt(keyHash, encryptedValue);
+        if (bytes == null) {
+            return defaultValue;
+        }
+        return bytes[0] != 0;
     }
 
     @Override
@@ -263,12 +293,18 @@ public class SecureSharedPreferences implements SharedPreferences {
         }
     }
 
-    @NonNull
+    @Nullable
     private byte[] decrypt(String keyHash, @NonNull String base64Encrypted) {
         try {
             return encryptionProtocol.decrypt(keyHash, password, Bytes.parseBase64(base64Encrypted).array());
         } catch (EncryptionProtocolException e) {
-            throw new IllegalStateException(e);
+            if (recoveryPolicy.shouldRemoveBrokenContent()) {
+                sharedPreferences.edit().remove(keyHash).apply();
+            }
+            if (recoveryPolicy.shouldThrowRuntimeException()) {
+                throw new SecureSharedPreferenceCryptoException("could not decrypt " + keyHash, e);
+            }
         }
+        return null;
     }
 }

@@ -3,7 +3,7 @@ package at.favre.lib.securepref;
 import android.support.annotation.NonNull;
 
 /**
- * @author RISE GmbH (patrick.favre@rise-world.com)
+ *
  * @since 25.12.2017
  */
 

@@ -24,7 +24,12 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Before
     public void setup() {
-        preferences = create("test-prefs", null);
+        try {
+            preferences = create("test-prefs", null);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
     }
 
     @After
@@ -32,11 +37,11 @@ public abstract class ASecureSharedPreferencesTest {
         preferences.edit().clear().commit();
     }
 
-    protected abstract SecureSharedPreferences create(String name, char[] pw);
+    protected abstract SharedPreferences create(String name, char[] pw);
 
     @Test
     public void simpleMultipleStringGet() throws Exception {
-        SecureSharedPreferences preferences = create("manytest", null);
+        SharedPreferences preferences = create("manytest", null);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 100; j++) {
                 String content = "testäI/_²~" + Bytes.random(64 + j).encodeHex();
@@ -96,7 +101,7 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void simpleStringGetWithPassword() throws Exception {
-        SecureSharedPreferences preferences = create("withPw", "superSecret".toCharArray());
+        SharedPreferences preferences = create("withPw", "superSecret".toCharArray());
         String content = "testäI/_²~" + Bytes.random(64).encodeHex();
         preferences.edit().putString("k", content).commit();
         assertEquals(content, preferences.getString("k", null));

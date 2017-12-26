@@ -1,0 +1,66 @@
+# Possible Issues:
+#
+# .gradlw permission denied:
+# git update-index --chmod=+x gradlew //http://stackoverflow.com/questions/33820638/travis-yml-gradlew-permission-denied
+
+language: android
+jdk: oraclejdk8
+
+android:
+  components:
+    - tools # to get the new `repository-11.xml`
+    - platform-tools
+    - tools # to install Android SDK tools 25.1.x (x = 6 right now)
+    - build-tools-27.0.2
+    - android-26
+    - extra-google-m2repository
+    - extra-android-m2repository
+
+  licenses:
+      - 'android-sdk-preview-license-.+'
+      - 'android-sdk-license-.+'
+      - 'google-gdk-license-.+'
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_0a50a6dc4585_key -iv $encrypted_0a50a6dc4585_iv -in credentials.tar.enc -out credentials.tar -d
+  - tar xvf credentials.tar
+
+script:
+  - ./gradlew clean assemble --stacktrace
+#  - ./gradlew checkstyle lint --stacktrace
+  - ./gradlew testReleaseUnitTest --info
+
+after_success:
+#  - ./gradlew jacocoTestReleaseUnitTestReport coveralls --info
+
+deploy:
+  - provider: script
+    script: ./gradlew install bintrayUpload --info
+    skip_cleanup: true
+    on:
+      branch: master
+      tags: true
+  - provider: releases
+    api_key:
+       secure: "lwb8DJFAgSZzlrQ+NjsLSQqMju9vt/k63DQ24GW5lPTi5ZUcharrf+VexZmnxkYlIrrfYCpimqXw6GeSpi3hsys5pTT+0J53FjGvraT8g4X21teLhWlVLBeh5pIVw3VGWOcut/nJRcD4POnXTJV6kK/78qvUpddzrqYz72S9jGRt0kxDCxjYfcYBcx1OiFogy++nA9CTkMJkUsFC3asWwBSiZK2rc3TG5NIdrrlT6F0fOWELYxc1HT3W2P1tGi2f/V4G0XRop2Qe+zWNdlggkkQzw2slKrWbmf+nPK/TMCJLgXw2Uaru+P/SHW3Amg+thAibSJQFPQ1oJmUU7MuuCBAeu+Wyv//S35BjKhmQ94C0e8bSCJajGzR6/LjtOGVsAaJWLhq0F5k7v/UeGFb8fYDFDlbelzcQf2Df0ujBagDIadFzf+MQFnoG/B94lkPA/PSa9DFqZEPf4z1uTIRL0HL5ALFxRxpCyKaydmBvV4I9hHFZ2but1Pzx07ziP0JbQK7U1XdmPUHSePe/iLKz1NaXSwAChtwqsKTzww7vOCdlgjlU4x7uphu7HWk1m35hxBR5l7wPSp+jSw7gsmXmQlqPBJeNgGzGfBmH849dcV+PeVwYHiDsNzyqaeNCEir8UQBEe2ufTB+Irt+QvNswb35VHwXz2IhcrhRUzRdEs8Y="
+    file_glob: true
+    file:
+     - 'armadillo/build/outputs/aar/*.aar'
+    skip_cleanup: true
+    on:
+      branch: master
+      tags: true
+
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+
+notifications:
+  slack:
+    secure: "hmLLayT00t5WlI2lm5L9oofsmcQCa4+XSPDRjLhp0wEnqc+yGoU+luEugCxCJntNac38Qz823Qhep0PzGsLzrfL+FQa4t7bRqGIX0FtpYEfYucVQrcqj11N4WMYZHr39ZkglFlfsw/xNhI4N3jXL8/MH5+4HuWD1egyXwpNpTdNOx+rDeX5Wcwx/VTs1PwpAZCMt0Xqm9t4CBWOiPTE+3oVD5wjL6n+Tu1NeeD3+RPliAFOLLqrLmph/50TMoAea1/sLwCwXE9Mvep7CGYbEf3VY16T6p1o/jfnGPajsolHgYC3zj9urGnBbdqFuvpsaW3p61roBgj+53tiu5mH9S45dG+z+v0XKXp3NJdFAgkO3RrcQbq+XDwZeuov5vjnc32aikzHugJGKqbohfj4HTUySKunwpESzpDCFY8nP+mgiVWWH4y0IBkm1wYOwniCPlJ43uFZGFO+1hbbd3MDafIJlKm3BlKX50t594rox5PHD5vO72UusE3+saIPB9OHKVpw3bcL0TtU8oaqd0D8Rczv0NHsdAmimnhVnmUPUK9CPqGhSn0CmDXEvWj41Nhh5BBHN0nYn6M/nOEcM/0mul5fw0zCGhOjfkID6+rs9oQaqxy14fymJdHQcZo/4wU+o5lXrg5EmBgmA9dk2APIqV1q9FwgqBLcJnzHD61RiECc="
+  email: false

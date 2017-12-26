@@ -1,1 +1,1 @@
-include ':app', ':secure-pref'
+include ':app', ':armadillo'

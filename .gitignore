@@ -6,3 +6,11 @@
 /build
 /captures
 .externalNativeBuild
+
+# Keystore files
+*.jks
+
+signing.properties
+
+# never commit .tar files in root, might be unencrypted file
+/*.tar

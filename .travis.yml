@@ -12,7 +12,7 @@ android:
     - platform-tools
     - tools # to install Android SDK tools 25.1.x (x = 6 right now)
     - build-tools-27.0.2
-    - android-26
+    - android-27
     - extra-google-m2repository
     - extra-android-m2repository
 

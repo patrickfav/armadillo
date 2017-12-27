@@ -33,9 +33,9 @@ public final class Armadillo {
 
         private EncryptionFingerprint fingerprint;
         private StringMessageDigest stringMessageDigest = new HkdfMessageDigest(BuildConfig.PREF_SALT, CONTENT_KEY_OUT_BYTE_LENGTH);
-        @SymmetricEncryption.KeyStrength
-        private int keyStrength = SymmetricEncryption.STRENGTH_HIGH;
-        private SymmetricEncryption symmetricEncryption;
+        @AuthenticatedEncryption.KeyStrength
+        private int keyStrength = AuthenticatedEncryption.STRENGTH_HIGH;
+        private AuthenticatedEncryption authenticatedEncryption;
         private KeyStretchingFunction keyStretchingFunction = new BcryptKeyStretcher();
         private DataObfuscator.Factory dataObfuscatorFactory = new HkdfXorObfuscator.Factory();
         private SecureRandom secureRandom = new SecureRandom();
@@ -123,7 +123,7 @@ public final class Armadillo {
          * @param keyStrength HIGH (default) or VERY HIGH
          * @return builder
          */
-        public Builder encryptionKeyStrength(@SymmetricEncryption.KeyStrength int keyStrength) {
+        public Builder encryptionKeyStrength(@AuthenticatedEncryption.KeyStrength int keyStrength) {
             Objects.requireNonNull(keyStrength);
             this.keyStrength = keyStrength;
             return this;
@@ -146,18 +146,18 @@ public final class Armadillo {
         }
 
         /**
-         * Set your own implementation of {@link SymmetricEncryption}. Use this if setting
+         * Set your own implementation of {@link AuthenticatedEncryption}. Use this if setting
          * the security provider with {@link Armadillo.Builder#securityProvider(Provider)} is not enough
          * customization. With this a any symmetric encryption algorithm might be used.
          * <p>
          * Only set if you know what you are doing.
          *
-         * @param symmetricEncryption to be used by the shared preferences
+         * @param authenticatedEncryption to be used by the shared preferences
          * @return builder
          */
-        public Builder symmetricEncryption(SymmetricEncryption symmetricEncryption) {
-            Objects.requireNonNull(symmetricEncryption);
-            this.symmetricEncryption = symmetricEncryption;
+        public Builder symmetricEncryption(AuthenticatedEncryption authenticatedEncryption) {
+            Objects.requireNonNull(authenticatedEncryption);
+            this.authenticatedEncryption = authenticatedEncryption;
             return this;
         }
 
@@ -244,11 +244,11 @@ public final class Armadillo {
                 throw new IllegalArgumentException("No encryption fingerprint is set - see encryptionFingerprint() methods");
             }
 
-            if (symmetricEncryption == null) {
-                symmetricEncryption = new AesGcmEncryption(secureRandom, provider);
+            if (authenticatedEncryption == null) {
+                authenticatedEncryption = new AesGcmEncryption(secureRandom, provider);
             }
 
-            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(fingerprint, stringMessageDigest, symmetricEncryption, keyStrength,
+            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength,
                     keyStretchingFunction, dataObfuscatorFactory, secureRandom);
 
             if (sharedPreferences != null) {

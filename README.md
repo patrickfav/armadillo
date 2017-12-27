@@ -73,6 +73,7 @@ is 16 byte long in this implementation. A downside of GCM is the requirement
 to [never reuse](https://en.wikipedia.org/wiki/Galois/Counter_Mode#Security)
  a [IV](https://en.wikipedia.org/wiki/Initialization_vector) with the same key,
  which is avoided in this lib.
+* **Every put operation creates a different cipher text**
 * **KDFs with Key Stretching features for user passwords**
 * **Minimum SDK 19 (Android 4.4):** A way to increase security is to cap older
 implementation. SDK 19 seems to be a good compromise where most of the older

@@ -21,22 +21,22 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final byte[] preferenceSalt;
     private final EncryptionFingerprint fingerprint;
     private final KeyStretchingFunction keyStretchingFunction;
-    private final SymmetricEncryption symmetricEncryption;
+    private final AuthenticatedEncryption authenticatedEncryption;
     private final DataObfuscator.Factory dataObfuscatorFactory;
     private final StringMessageDigest stringMessageDigest;
     private final SecureRandom secureRandom;
     private final int keyLengthBit;
 
     private DefaultEncryptionProtocol(byte[] preferenceSalt, EncryptionFingerprint fingerprint,
-                                      StringMessageDigest stringMessageDigest, SymmetricEncryption symmetricEncryption,
-                                      @SymmetricEncryption.KeyStrength int keyStrength, KeyStretchingFunction keyStretchingFunction,
+                                      StringMessageDigest stringMessageDigest, AuthenticatedEncryption authenticatedEncryption,
+                                      @AuthenticatedEncryption.KeyStrength int keyStrength, KeyStretchingFunction keyStretchingFunction,
                                       DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom) {
         this.preferenceSalt = preferenceSalt;
-        this.symmetricEncryption = symmetricEncryption;
+        this.authenticatedEncryption = authenticatedEncryption;
         this.keyStretchingFunction = keyStretchingFunction;
         this.fingerprint = fingerprint;
         this.stringMessageDigest = stringMessageDigest;
-        this.keyLengthBit = symmetricEncryption.byteSizeLength(keyStrength) * 8;
+        this.keyLengthBit = authenticatedEncryption.byteSizeLength(keyStrength) * 8;
         this.dataObfuscatorFactory = dataObfuscatorFactory;
         this.secureRandom = secureRandom;
     }
@@ -61,14 +61,14 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
             fingerprintBytes = fingerprint.getBytes();
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
-            byte[] encrypted = symmetricEncryption.encrypt(key, rawContent);
+            byte[] encrypted = authenticatedEncryption.encrypt(key, rawContent);
 
             DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
             obfuscator.obfuscate(encrypted);
             obfuscator.clearKey();
 
             return encode(contentSalt, encrypted);
-        } catch (SymmetricEncryptionException e) {
+        } catch (AuthenticatedEncryptionException e) {
             throw new EncryptionProtocolException(e);
         } finally {
             Bytes.wrap(fingerprintBytes).mutable().secureWipe();
@@ -115,8 +115,8 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             obfuscator.clearKey();
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
 
-            return symmetricEncryption.decrypt(key, encrypted);
-        } catch (SymmetricEncryptionException e) {
+            return authenticatedEncryption.decrypt(key, encrypted);
+        } catch (AuthenticatedEncryptionException e) {
             throw new EncryptionProtocolException(e);
         } finally {
             Bytes.wrap(fingerprintBytes).mutable().secureWipe();
@@ -138,20 +138,20 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
         private final EncryptionFingerprint fingerprint;
         private final StringMessageDigest stringMessageDigest;
-        private final SymmetricEncryption symmetricEncryption;
-        @SymmetricEncryption.KeyStrength
+        private final AuthenticatedEncryption authenticatedEncryption;
+        @AuthenticatedEncryption.KeyStrength
         private final int keyStrength;
         private final KeyStretchingFunction keyStretchingFunction;
         private final DataObfuscator.Factory dataObfuscatorFactory;
         private final SecureRandom secureRandom;
 
         Factory(EncryptionFingerprint fingerprint, StringMessageDigest stringMessageDigest,
-                SymmetricEncryption symmetricEncryption, int keyStrength,
+                AuthenticatedEncryption authenticatedEncryption, int keyStrength,
                 KeyStretchingFunction keyStretchingFunction, DataObfuscator.Factory dataObfuscatorFactory,
                 SecureRandom secureRandom) {
             this.fingerprint = fingerprint;
             this.stringMessageDigest = stringMessageDigest;
-            this.symmetricEncryption = symmetricEncryption;
+            this.authenticatedEncryption = authenticatedEncryption;
             this.keyStrength = keyStrength;
             this.keyStretchingFunction = keyStretchingFunction;
             this.dataObfuscatorFactory = dataObfuscatorFactory;
@@ -160,7 +160,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
         @Override
         public EncryptionProtocol create(byte[] preferenceSalt) {
-            return new DefaultEncryptionProtocol(preferenceSalt, fingerprint, stringMessageDigest, symmetricEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory, secureRandom);
+            return new DefaultEncryptionProtocol(preferenceSalt, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory, secureRandom);
         }
 
         @Override

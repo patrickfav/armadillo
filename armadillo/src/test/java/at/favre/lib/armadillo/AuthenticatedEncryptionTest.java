@@ -10,12 +10,12 @@ import at.favre.lib.bytes.Bytes;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class SymmetricEncryptionTest {
-    private SymmetricEncryption symmetricEncryption;
+public class AuthenticatedEncryptionTest {
+    private AuthenticatedEncryption authenticatedEncryption;
 
     @Before
     public void setUp() throws Exception {
-        symmetricEncryption = new AesGcmEncryption(new SecureRandom());
+        authenticatedEncryption = new AesGcmEncryption(new SecureRandom());
     }
 
     @Test
@@ -42,15 +42,15 @@ public class SymmetricEncryptionTest {
         }
     }
 
-    private void testEncryptDecrypt(byte[] content, byte[] key) throws SymmetricEncryptionException {
-        byte[] encrypted = symmetricEncryption.encrypt(key, content);
+    private void testEncryptDecrypt(byte[] content, byte[] key) throws AuthenticatedEncryptionException {
+        byte[] encrypted = authenticatedEncryption.encrypt(key, content);
         assertTrue(encrypted.length >= content.length);
         assertFalse(Bytes.wrap(encrypted).equals(content));
 
         System.out.println("content:   " + Bytes.wrap(content).encodeHex());
         System.out.println("encrypted: " + Bytes.wrap(encrypted).encodeHex());
 
-        byte[] decrypt = symmetricEncryption.decrypt(key, encrypted);
+        byte[] decrypt = authenticatedEncryption.decrypt(key, encrypted);
         assertTrue(Bytes.wrap(decrypt).equals(content));
     }
 

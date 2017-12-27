@@ -29,7 +29,7 @@ import at.favre.lib.bytes.Bytes;
  * @author Patrick Favre-Bulle
  * @since 18.12.2017
  */
-final class AesGcmEncryption implements SymmetricEncryption {
+final class AesGcmEncryption implements AuthenticatedEncryption {
     private static final String ALGORITHM = "AES/GCM/NoPadding";
     private static final int TAG_LENGTH_BIT = 128;
     private static final int IV_LENGTH_BYTE = 12;
@@ -52,7 +52,7 @@ final class AesGcmEncryption implements SymmetricEncryption {
     }
 
     @Override
-    public byte[] encrypt(byte[] rawEncryptionKey, byte[] rawData) throws SymmetricEncryptionException {
+    public byte[] encrypt(byte[] rawEncryptionKey, byte[] rawData) throws AuthenticatedEncryptionException {
         if (rawEncryptionKey.length < 16) {
             throw new IllegalArgumentException("key length must be longer than 16 byte");
         }
@@ -72,12 +72,12 @@ final class AesGcmEncryption implements SymmetricEncryption {
             byteBuffer.put(encrypted);
             return byteBuffer.array();
         } catch (Exception e) {
-            throw new SymmetricEncryptionException("could not encrypt", e);
+            throw new AuthenticatedEncryptionException("could not encrypt", e);
         }
     }
 
     @Override
-    public byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData) throws SymmetricEncryptionException {
+    public byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData) throws AuthenticatedEncryptionException {
         try {
             ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
 
@@ -97,7 +97,7 @@ final class AesGcmEncryption implements SymmetricEncryption {
 
             return decrypted;
         } catch (Exception e) {
-            throw new SymmetricEncryptionException("could not decrypt", e);
+            throw new AuthenticatedEncryptionException("could not decrypt", e);
         }
     }
 

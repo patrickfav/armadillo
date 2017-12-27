@@ -2,6 +2,9 @@
 
 Armadillo is an implementation of encrypted shared preferences.
 
+[![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg) ](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
+[![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
+
 
 ## Features
 
@@ -30,6 +33,33 @@ A very minimal example
 ```
 
 ## Description
+
+## Persistence Profile
+
+### Key
+
+The key is hashed with [HKDF](https://en.wikipedia.org/wiki/HKDF) (which uses
+Hmac with Sha512 internally) expanded to a 20 byte hash which will be encoded with
+[base16 (hex)](https://en.wikipedia.org/wiki/Hexadecimal). The key generation
+is salted by the encryption fingerprint, so different shared preferences will
+generate different hashes for the same keys.
+
+### Content
+
+The diagram below illustrates the used data format. To disguise the format
+a little bit it will be obfuscated by a simple xor cipher.
+
+![screenshot gallery](doc/persistence_profile.png)
+
+The resulting data will be encoded with [base64](https://en.wikipedia.org/wiki/Base64) and looks like this in the shared preferences xml:
+
+```xml
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <string name="39e3e4f83dda81c44f8a9063196b28b3d5091fca">hwbchXlqDAQcig6q3UWxdbOb2wouDGGwjUGNIzREiy0=</string>
+    <string name="62ef41ac992322bdd669e96799c12a66a2cce111">IOIpvllJPY+aIwv+Z+w+SSJLxHD218vOUpd+e10eCczZURrNSN8h49V+Oy3thjEsbp/2zuqa6uNlGJ8tMpgk/uU0b+iLIciN+0EGYLKso6UYgbtgH/3n9GcQzqOvAIZvZeuurk4f9x9gL3fknHpFaXSIOYrSGZOjwD8WnOk1w2/tSufyZNSIdxUGvjniwpNaeawACi1EKitA4Oj+GRZRjW5NFY3jpYlzDPw=</string>
+</map>
+```
 
 ### Design Choices
 

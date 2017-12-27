@@ -20,7 +20,7 @@ import at.favre.lib.bytes.Bytes;
  * @since 18.12.2017
  */
 
-public class SecureSharedPreferences implements SharedPreferences {
+public final class SecureSharedPreferences implements SharedPreferences {
 
     private final static String KEY_RANDOM = "at.favre.lib.securepref.KEY_RANDOM";
 
@@ -34,7 +34,7 @@ public class SecureSharedPreferences implements SharedPreferences {
     }
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, char[] password) {
-        this(context.getSharedPreferences(encryptionProtocol.getContentKeyDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
+        this(context.getSharedPreferences(encryptionProtocol.getStringMessageDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
                 encryptionProtocol, recoveryPolicy, password);
     }
 
@@ -45,13 +45,13 @@ public class SecureSharedPreferences implements SharedPreferences {
         this.password = password;
         this.encryptionProtocol = encryptionProtocolFactory.create(
                 getPreferencesRandom(
-                        encryptionProtocolFactory.getContentKeyDigest(),
+                        encryptionProtocolFactory.getStringMessageDigest(),
                         encryptionProtocolFactory.createDataObfuscator(),
                         encryptionProtocolFactory.getSecureRandom()));
     }
 
-    private byte[] getPreferencesRandom(ContentKeyDigest contentKeyDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
-        final String keyHash = contentKeyDigest.derive(KEY_RANDOM, "prefName");
+    private byte[] getPreferencesRandom(StringMessageDigest stringMessageDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
+        final String keyHash = stringMessageDigest.derive(KEY_RANDOM, "prefName");
         String base64Random = sharedPreferences.getString(keyHash, null);
         byte[] outBytes;
         if (base64Random == null) {

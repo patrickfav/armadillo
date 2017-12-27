@@ -21,7 +21,7 @@ import at.favre.lib.crypto.HKDF;
  *
  * This is optimized to be fast and not as secure as possible.
  */
-public class HkdfXorObfuscator implements DataObfuscator {
+public final class HkdfXorObfuscator implements DataObfuscator {
     private final static int BLOCK_SIZE_BYTE = 128;
 
     private final byte[] key;

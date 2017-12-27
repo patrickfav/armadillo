@@ -7,7 +7,7 @@ import android.support.annotation.NonNull;
  * @since 25.12.2017
  */
 
-public class NoObfuscator implements DataObfuscator {
+public final class NoObfuscator implements DataObfuscator {
     @Override
     public void obfuscate(@NonNull byte[] original) {
         //no-op

@@ -18,7 +18,7 @@ import at.favre.lib.bytes.Bytes;
  * @since 19.12.2017
  */
 
-public class EncryptionFingerprintFactory {
+public final class EncryptionFingerprintFactory {
 
     public static EncryptionFingerprint create(Context context, @Nullable String additionalData) {
         return new EncryptionFingerprint.Default(Bytes.wrap(getApkSignatureHash(context))

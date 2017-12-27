@@ -32,7 +32,7 @@ public final class Armadillo {
         private final String prefName;
 
         private EncryptionFingerprint fingerprint;
-        private ContentKeyDigest contentKeyDigest = new HkdfKeyDigest(BuildConfig.PREF_SALT, CONTENT_KEY_OUT_BYTE_LENGTH);
+        private StringMessageDigest stringMessageDigest = new HkdfMessageDigest(BuildConfig.PREF_SALT, CONTENT_KEY_OUT_BYTE_LENGTH);
         @SymmetricEncryption.KeyStrength
         private int keyStrength = SymmetricEncryption.STRENGTH_HIGH;
         private SymmetricEncryption symmetricEncryption;
@@ -92,16 +92,16 @@ public final class Armadillo {
         }
 
         public Builder contentKeyDigest(byte[] salt) {
-            return contentKeyDigest(new HkdfKeyDigest(salt, CONTENT_KEY_OUT_BYTE_LENGTH));
+            return contentKeyDigest(new HkdfMessageDigest(salt, CONTENT_KEY_OUT_BYTE_LENGTH));
         }
 
         public Builder contentKeyDigest(int contentKeyOutLength) {
-            return contentKeyDigest(new HkdfKeyDigest(BuildConfig.PREF_SALT, contentKeyOutLength));
+            return contentKeyDigest(new HkdfMessageDigest(BuildConfig.PREF_SALT, contentKeyOutLength));
         }
 
-        public Builder contentKeyDigest(ContentKeyDigest contentKeyDigest) {
-            Objects.requireNonNull(contentKeyDigest);
-            this.contentKeyDigest = contentKeyDigest;
+        public Builder contentKeyDigest(StringMessageDigest stringMessageDigest) {
+            Objects.requireNonNull(stringMessageDigest);
+            this.stringMessageDigest = stringMessageDigest;
             return this;
         }
 
@@ -145,18 +145,47 @@ public final class Armadillo {
             return this;
         }
 
+        /**
+         * Set your own implementation of {@link SymmetricEncryption}. Use this if setting
+         * the security provider with {@link Armadillo.Builder#securityProvider(Provider)} is not enough
+         * customization. With this a any symmetric encryption algorithm might be used.
+         * <p>
+         * Only set if you know what you are doing.
+         *
+         * @param symmetricEncryption to be used by the shared preferences
+         * @return builder
+         */
         public Builder symmetricEncryption(SymmetricEncryption symmetricEncryption) {
             Objects.requireNonNull(symmetricEncryption);
             this.symmetricEncryption = symmetricEncryption;
             return this;
         }
 
+        /**
+         * Set a different key derivation function for provided password. Per default {@link BcryptKeyStretcher}
+         * is used. There is also a implementation PBKDF2 (see {@link PBKDF2KeyStretcher}. If you want
+         * to use a different function (e.g. scrypt) set the implementation here.
+         *
+         * If you want to disable the key stretching feature you might use {@link FastKeyStretcher} here.
+         *
+         * @param keyStretchingFunction to be used by the shared preferences
+         * @return builder
+         */
         public Builder keyStretchingFunction(KeyStretchingFunction keyStretchingFunction) {
             Objects.requireNonNull(keyStretchingFunction);
             this.keyStretchingFunction = keyStretchingFunction;
             return this;
         }
 
+        /**
+         * Set your own data obfuscation implementation. Data obfuscation is used to disguise the
+         * persistence data format. See {@link HkdfXorObfuscator} for the default obfuscation technique.
+         * <p>
+         * Only set if you know what you are doing.
+         *
+         * @param dataObfuscatorFactory that creates a obfuscator with given key
+         * @return builder
+         */
         public Builder dataObfuscatorFactory(DataObfuscator.Factory dataObfuscatorFactory) {
             Objects.requireNonNull(dataObfuscatorFactory);
             this.dataObfuscatorFactory = dataObfuscatorFactory;
@@ -219,7 +248,7 @@ public final class Armadillo {
                 symmetricEncryption = new AesGcmEncryption(secureRandom, provider);
             }
 
-            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(fingerprint, contentKeyDigest, symmetricEncryption, keyStrength,
+            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(fingerprint, stringMessageDigest, symmetricEncryption, keyStrength,
                     keyStretchingFunction, dataObfuscatorFactory, secureRandom);
 
             if (sharedPreferences != null) {

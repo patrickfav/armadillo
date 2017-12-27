@@ -24,7 +24,7 @@ public interface EncryptionProtocol {
     interface Factory {
         EncryptionProtocol create(byte[] preferenceSalt);
 
-        ContentKeyDigest getContentKeyDigest();
+        StringMessageDigest getStringMessageDigest();
 
         DataObfuscator createDataObfuscator();
 

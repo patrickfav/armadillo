@@ -23,19 +23,19 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final KeyStretchingFunction keyStretchingFunction;
     private final SymmetricEncryption symmetricEncryption;
     private final DataObfuscator.Factory dataObfuscatorFactory;
-    private final ContentKeyDigest contentKeyDigest;
+    private final StringMessageDigest stringMessageDigest;
     private final SecureRandom secureRandom;
     private final int keyLengthBit;
 
     private DefaultEncryptionProtocol(byte[] preferenceSalt, EncryptionFingerprint fingerprint,
-                                      ContentKeyDigest contentKeyDigest, SymmetricEncryption symmetricEncryption,
+                                      StringMessageDigest stringMessageDigest, SymmetricEncryption symmetricEncryption,
                                       @SymmetricEncryption.KeyStrength int keyStrength, KeyStretchingFunction keyStretchingFunction,
                                       DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom) {
         this.preferenceSalt = preferenceSalt;
         this.symmetricEncryption = symmetricEncryption;
         this.keyStretchingFunction = keyStretchingFunction;
         this.fingerprint = fingerprint;
-        this.contentKeyDigest = contentKeyDigest;
+        this.stringMessageDigest = stringMessageDigest;
         this.keyLengthBit = symmetricEncryption.byteSizeLength(keyStrength) * 8;
         this.dataObfuscatorFactory = dataObfuscatorFactory;
         this.secureRandom = secureRandom;
@@ -43,7 +43,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     @Override
     public String deriveContentKey(String originalContentKey) {
-        return contentKeyDigest.derive(Bytes.from(originalContentKey).append(preferenceSalt).encodeUtf8(), "contentKey");
+        return stringMessageDigest.derive(Bytes.from(originalContentKey).append(preferenceSalt).encodeUtf8(), "contentKey");
     }
 
     @Override
@@ -137,7 +137,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     public static final class Factory implements EncryptionProtocol.Factory {
 
         private final EncryptionFingerprint fingerprint;
-        private final ContentKeyDigest contentKeyDigest;
+        private final StringMessageDigest stringMessageDigest;
         private final SymmetricEncryption symmetricEncryption;
         @SymmetricEncryption.KeyStrength
         private final int keyStrength;
@@ -145,12 +145,12 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         private final DataObfuscator.Factory dataObfuscatorFactory;
         private final SecureRandom secureRandom;
 
-        Factory(EncryptionFingerprint fingerprint, ContentKeyDigest contentKeyDigest,
+        Factory(EncryptionFingerprint fingerprint, StringMessageDigest stringMessageDigest,
                 SymmetricEncryption symmetricEncryption, int keyStrength,
                 KeyStretchingFunction keyStretchingFunction, DataObfuscator.Factory dataObfuscatorFactory,
                 SecureRandom secureRandom) {
             this.fingerprint = fingerprint;
-            this.contentKeyDigest = contentKeyDigest;
+            this.stringMessageDigest = stringMessageDigest;
             this.symmetricEncryption = symmetricEncryption;
             this.keyStrength = keyStrength;
             this.keyStretchingFunction = keyStretchingFunction;
@@ -160,12 +160,12 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
         @Override
         public EncryptionProtocol create(byte[] preferenceSalt) {
-            return new DefaultEncryptionProtocol(preferenceSalt, fingerprint, contentKeyDigest, symmetricEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory, secureRandom);
+            return new DefaultEncryptionProtocol(preferenceSalt, fingerprint, stringMessageDigest, symmetricEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory, secureRandom);
         }
 
         @Override
-        public ContentKeyDigest getContentKeyDigest() {
-            return contentKeyDigest;
+        public StringMessageDigest getStringMessageDigest() {
+            return stringMessageDigest;
         }
 
         @Override

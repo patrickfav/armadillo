@@ -6,6 +6,8 @@ import android.support.annotation.NonNull;
  * Data obfuscation which obfuscates the given byte arrays.
  * Obfuscation is the deliberate act of creating data that is difficult for humans to understand.
  * It is not cryptographic encryption.
+ *
+ * @author Patrick Favre-Bulle
  */
 public interface DataObfuscator {
     /**

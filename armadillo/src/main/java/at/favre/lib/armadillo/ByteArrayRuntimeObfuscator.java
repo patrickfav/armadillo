@@ -9,6 +9,8 @@ import at.favre.lib.bytes.Bytes;
  * during runtime, to make it harder to read the content when instrumenting or doing a memory
  * dump. This uses a very simple and fast xor encryption and stores the encrypted data and
  * the key as fields in a 2d byte array.
+ *
+ * @author Patrick Favre-Bulle
  */
 public interface ByteArrayRuntimeObfuscator {
 

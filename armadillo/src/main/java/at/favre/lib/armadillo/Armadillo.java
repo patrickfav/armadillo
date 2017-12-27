@@ -36,7 +36,7 @@ public final class Armadillo {
         @SymmetricEncryption.KeyStrength
         private int keyStrength = SymmetricEncryption.STRENGTH_HIGH;
         private SymmetricEncryption symmetricEncryption;
-        private KeyStretchingFunction keyStretchingFunction = new PBKDF2KeyStretcher();
+        private KeyStretchingFunction keyStretchingFunction = new BcryptKeyStretcher();
         private DataObfuscator.Factory dataObfuscatorFactory = new HkdfXorObfuscator.Factory();
         private SecureRandom secureRandom = new SecureRandom();
         private RecoveryPolicy recoveryPolicy = new RecoveryPolicy.Default(false, true);
@@ -105,12 +105,40 @@ public final class Armadillo {
             return this;
         }
 
+        /**
+         * Set the key length for the symmetric encryption.
+         * <p>
+         * Currently there are 2 options:
+         * <p>
+         * <ul>
+         * <li>HIGH - is (or comparable) to AES with 128 bit key length</li>
+         * <li>VERY HIGH - is (or comparable) to AES with 256 bit key length</li>
+         * </ul>
+         * <p>
+         * <em>Note:</em> Usually there is no real advantage to set it to VERY HIGH as HIGH (128 bit key
+         * length) is fully secure for the foreseeable future. VERY HIGH only adds more security margin
+         * for possible quantum computer attacks (but if you are a user which is threatened by these
+         * kinds of attacks you wouldn't use this lib anyway)
+         *
+         * @param keyStrength HIGH (default) or VERY HIGH
+         * @return builder
+         */
         public Builder encryptionKeyStrength(@SymmetricEncryption.KeyStrength int keyStrength) {
             Objects.requireNonNull(keyStrength);
             this.keyStrength = keyStrength;
             return this;
         }
 
+        /**
+         * Set the security provider for most cryptographic primitives (symmetric encryption,
+         * pbkdf2, ...). Per default the default provider is used and this should be fine in most
+         * cases.
+         * <p>
+         * Only set if you know what you are doing.
+         *
+         * @param provider JCA provider
+         * @return builder
+         */
         public Builder securityProvider(Provider provider) {
             Objects.requireNonNull(provider);
             this.provider = provider;
@@ -135,6 +163,16 @@ public final class Armadillo {
             return this;
         }
 
+        /**
+         * Provide your own {@link SecureRandom} implementation.
+         * Per default a no-provider constructor is used for {@link SecureRandom} which
+         * is the currently recommended way (https://tersesystems.com/blog/2015/12/17/the-right-way-to-use-securerandom/)
+         * <p>
+         * Only set if you know what you are doing.
+         *
+         * @param secureRandom implementation
+         * @return builder
+         */
         public Builder secureRandom(SecureRandom secureRandom) {
             Objects.requireNonNull(secureRandom);
             this.secureRandom = secureRandom;
@@ -152,11 +190,26 @@ public final class Armadillo {
             return this;
         }
 
+        /**
+         * Provide a user password used for all of entries of the {@link SharedPreferences}.
+         * <p>
+         * The password is treated as weak and is therefore subject to be stretched by the provided key
+         * derivation function with key stretching property (see {@link Builder#keyStretchingFunction(KeyStretchingFunction)}.
+         * A side-effect is that putting or reading content is expensive and should not be done on the main thread.
+         *
+         * @param password provided by user
+         * @return builder
+         */
         public Builder password(char[] password) {
             this.password = password;
             return this;
         }
 
+        /**
+         * Build a {@link SharedPreferences} instance
+         *
+         * @return shared preference with given properties
+         */
         public SharedPreferences build() {
             if (fingerprint == null) {
                 throw new IllegalArgumentException("No encryption fingerprint is set - see encryptionFingerprint() methods");

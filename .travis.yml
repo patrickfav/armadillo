@@ -29,7 +29,7 @@ script:
   - ./gradlew testReleaseUnitTest --info
 
 after_success:
-#  - ./gradlew jacocoTestReleaseUnitTestReport coveralls --info
+  - ./gradlew jacocoTestReleaseUnitTestReport coveralls --info
 
 deploy:
   - provider: script

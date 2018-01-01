@@ -1,5 +1,7 @@
 package at.favre.lib.armadillo;
 
+import android.support.annotation.Nullable;
+
 import java.nio.ByteBuffer;
 import java.security.Provider;
 import java.security.SecureRandom;
@@ -14,14 +16,14 @@ import at.favre.lib.bytes.Bytes;
  * Implements AES (Advanced Encryption Standard) with Galois/Counter Mode (GCM), which is a mode of
  * operation for symmetric key cryptographic block ciphers that has been widely adopted because of
  * its efficiency and performance.
- *
+ * <p>
  * Every encryption produces a new 12 byte random IV (see http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38d.pdf)
  * because the security of GCM depends choosing a unique initialization vector for every encryption performed with the same key.
- *
+ * <p>
  * The iv, encrypted content and auth tag will be encoded to the following format:
- *
+ * <p>
  * out = byte[] {x y y y y y y y y y y y y z z z ...}
- *
+ * <p>
  * x = IV length as byte
  * y = IV bytes
  * z = content bytes
@@ -52,7 +54,7 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
     }
 
     @Override
-    public byte[] encrypt(byte[] rawEncryptionKey, byte[] rawData) throws AuthenticatedEncryptionException {
+    public byte[] encrypt(byte[] rawEncryptionKey, byte[] rawData, @Nullable byte[] associatedData) throws AuthenticatedEncryptionException {
         if (rawEncryptionKey.length < 16) {
             throw new IllegalArgumentException("key length must be longer than 16 byte");
         }
@@ -62,6 +64,9 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             secureRandom.nextBytes(iv);
 
             final Cipher cipher = getCipher();
+            if (associatedData != null) {
+                cipher.updateAAD(associatedData);
+            }
             cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
 
             byte[] encrypted = cipher.doFinal(rawData);
@@ -77,7 +82,7 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
     }
 
     @Override
-    public byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData) throws AuthenticatedEncryptionException {
+    public byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData, @Nullable byte[] associatedData) throws AuthenticatedEncryptionException {
         try {
             ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
 
@@ -89,6 +94,9 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
 
             final Cipher cipher = getCipher();
             cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+            if (associatedData != null) {
+                cipher.updateAAD(associatedData);
+            }
             byte[] decrypted = cipher.doFinal(encrypted);
 
             Bytes.wrap(iv).mutable().secureWipe();

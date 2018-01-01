@@ -17,6 +17,9 @@ import at.favre.lib.bytes.Bytes;
 public final class Armadillo {
     public static final int CONTENT_KEY_OUT_BYTE_LENGTH = 20;
 
+    private Armadillo() {
+    }
+
     public static Builder create(SharedPreferences sharedPreferences) {
         return new Builder(sharedPreferences);
     }
@@ -25,7 +28,7 @@ public final class Armadillo {
         return new Builder(context, prefName);
     }
 
-    public final static class Builder {
+    public static final class Builder {
 
         private final SharedPreferences sharedPreferences;
         private final Context context;

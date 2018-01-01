@@ -25,7 +25,7 @@ before_install:
 
 script:
   - ./gradlew clean assemble --stacktrace
-#  - ./gradlew checkstyle lint --stacktrace
+  - ./gradlew checkstyle lint --stacktrace
   - ./gradlew testReleaseUnitTest --info
 
 after_success:

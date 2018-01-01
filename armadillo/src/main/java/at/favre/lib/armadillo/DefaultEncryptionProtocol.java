@@ -61,7 +61,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
             fingerprintBytes = fingerprint.getBytes();
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
-            byte[] encrypted = authenticatedEncryption.encrypt(key, rawContent);
+            byte[] encrypted = authenticatedEncryption.encrypt(key, rawContent, null);
 
             DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
             obfuscator.obfuscate(encrypted);
@@ -115,7 +115,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             obfuscator.clearKey();
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
 
-            return authenticatedEncryption.decrypt(key, encrypted);
+            return authenticatedEncryption.decrypt(key, encrypted, null);
         } catch (AuthenticatedEncryptionException e) {
             throw new EncryptionProtocolException(e);
         } finally {

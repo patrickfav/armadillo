@@ -43,14 +43,14 @@ public class AuthenticatedEncryptionTest {
     }
 
     private void testEncryptDecrypt(byte[] content, byte[] key) throws AuthenticatedEncryptionException {
-        byte[] encrypted = authenticatedEncryption.encrypt(key, content);
+        byte[] encrypted = authenticatedEncryption.encrypt(key, content, null);
         assertTrue(encrypted.length >= content.length);
         assertFalse(Bytes.wrap(encrypted).equals(content));
 
         System.out.println("content:   " + Bytes.wrap(content).encodeHex());
         System.out.println("encrypted: " + Bytes.wrap(encrypted).encodeHex());
 
-        byte[] decrypt = authenticatedEncryption.decrypt(key, encrypted);
+        byte[] decrypt = authenticatedEncryption.decrypt(key, encrypted, null);
         assertTrue(Bytes.wrap(decrypt).equals(content));
     }
 

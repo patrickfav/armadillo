@@ -20,6 +20,9 @@ import at.favre.lib.bytes.Bytes;
 
 public final class EncryptionFingerprintFactory {
 
+    private EncryptionFingerprintFactory() {
+    }
+
     public static EncryptionFingerprint create(Context context, @Nullable String additionalData) {
         return new EncryptionFingerprint.Default(Bytes.wrap(getApkSignatureHash(context))
                 .append(Bytes.from(getAndroidId(context)))

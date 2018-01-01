@@ -22,7 +22,7 @@ import at.favre.lib.bytes.Bytes;
 
 public final class SecureSharedPreferences implements SharedPreferences {
 
-    private final static String KEY_RANDOM = "at.favre.lib.securepref.KEY_RANDOM";
+    private static final String KEY_RANDOM = "at.favre.lib.securepref.KEY_RANDOM";
 
     private final SharedPreferences sharedPreferences;
     private final EncryptionProtocol encryptionProtocol;

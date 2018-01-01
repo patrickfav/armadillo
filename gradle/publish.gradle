@@ -1,0 +1,159 @@
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+def final publishConfig = [
+        name                    : 'Armadillo - Encrypted Shared Preferences',
+        repoName                : 'armadillo', //repo name in bintray 'maven/<reponame>'
+        group                   : 'at.favre.lib',
+        version                 : rootProject.ext.versionNameLib,
+        descriptionText         : 'A shared preference implementation for confidential data. Per default uses AES-GCM, BCrypt and HKDF as cryptographic primitives. Uses the concept of Fingerprinting combined with optional user provided passwords.',
+        inceptionYear           : '201/',
+        siteUrl                 : 'https://github.com/patrickfav/armadillo',
+        gitUrl                  : 'https://github.com/patrickfav/armadillo.git',
+        issueTrackerUrl         : 'https://github.com/patrickfav/armadillo/issues',
+        issueTrackerName        : 'Github',
+        githubRepo              : 'patrickfav/armadillo',
+
+        pomDevId                : 'pfavre',
+        pomDevName              : 'Patrick Favre-Bulle',
+        pomDevMail              : 'patrick.favrebulle@gmail.com',
+
+        licenseName             : 'The Apache Software License, Version 2.0',
+        licenseBintray          : ['Apache-2.0'],
+        licenseUrl              : 'http://www.apache.org/licenses/LICENSE-2.0.txt',
+
+        bintrayLabels           : ['android', 'debugging', 'noop', 'debug-view'],
+
+        bintrayUploadDryRun     : false, //Whether to only mock uploading
+        bintrayUploadAutoPublish: true, //Whether version should be auto published after an upload
+        bintrayUploadOverride   : true, //[Default: false] Whether to override version artifacts already published
+        bintrayPubDlNumbers     : true, //Whether to show public dl stats in bintray
+        bintraySyncMavenCentral : true
+]
+
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            version publishConfig.version
+            project {
+                name publishConfig.name
+                groupId publishConfig.group
+                packaging 'aar'
+                description publishConfig.descriptionText
+                url publishConfig.siteUrl
+                inceptionYear publishConfig.inceptionYear
+
+                licenses {
+                    license {
+                        name publishConfig.licenseName
+                        url publishConfig.licenseUrl
+                    }
+                }
+                developers {
+                    developer {
+                        id publishConfig.pomDevId
+                        name publishConfig.pomDevName
+                        email publishConfig.pomDevMail
+                    }
+                }
+                scm {
+                    connection publishConfig.gitUrl
+                    developerConnection publishConfig.gitUrl
+                    url publishConfig.siteUrl
+                }
+
+                issueManagement {
+                    system publishConfig.issueTrackerName
+                    url publishConfig.issueTrackerUrl
+                }
+            }
+        }
+
+        pom.whenConfigured { pom ->
+            def found = pom.dependencies.find { dep ->
+                dep.groupId == publishConfig.group
+            }
+
+            if (found != null) {
+                found.type = "aar"
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    failOnError false
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+
+// https://github.com/bintray/gradle-bintray-plugin
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    configurations = ['archives']
+
+    dryRun = publishConfig.bintrayUploadDryRun
+    publish = publishConfig.bintrayUploadAutoPublish
+    //Whether version should be auto published after an upload
+    override = publishConfig.bintrayUploadOverride
+    //[Default: false] Whether to override version artifacts already published
+
+    pkg {
+        repo = "maven"
+        name = publishConfig.repoName
+        group publishConfig.group
+
+        desc = publishConfig.descriptionText
+        issueTrackerUrl = publishConfig.issueTrackerUrl
+        websiteUrl = publishConfig.siteUrl
+        vcsUrl = publishConfig.gitUrl
+
+        licenses = publishConfig.licenseBintray
+
+        githubRepo = publishConfig.githubRepo
+        githubReleaseNotesFile = 'CHANGELOG'
+        labels = publishConfig.bintrayLabels
+        publicDownloadNumbers = publishConfig.bintrayPubDlNumbers
+
+        version {
+            name = publishConfig.version
+            vcsTag = publishConfig.version
+            released = new Date()
+
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
+                passphrase = properties.getProperty("bintray.gpg.password")
+            }
+
+            mavenCentralSync {
+                sync = publishConfig.bintraySyncMavenCentral
+                //Optional (true by default). Determines whether to sync the version to Maven Central.
+                user = properties.getProperty("bintray.oss.user") //OSS user token
+                password = properties.getProperty("bintray.oss.password") //OSS user password
+                close = '1'
+                //Optional property. By default the staging repository is closed and artifacts are released to Maven Central. You can optionally turn this behaviour off (by puting 0 as value) and release the version manually.
+            }
+        }
+    }
+}

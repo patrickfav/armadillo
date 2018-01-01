@@ -43,10 +43,11 @@ calculate pseudo-random data from it's source material which requires mandatory 
 
 The following implementations are available:
 
-* PBKDF2 (basically using a hash functions multiple times; no memory workfactor)
+* PBKDF2 (basically using a hash functions multiple times; no memory work-factor)
 * BCrypt (requires much more memory, making it harder to implement on GPU cores)
 
-It is possible to provide any KDF to the storage with implementing the `KeyStretchingFunction`.
+It is possible to provide any KDF implementation to the storage with providing
+a custom `KeyStretchingFunction` implementation.
 
 ### Encryption Fingerprint
 
@@ -69,7 +70,7 @@ can only use generic data. In detail the following properties are incorporated:
 * Application Package Name
 * Brand, model and name of the device
 * A 32 byte hardcoded static random value
-* A 32 byte per-shared-pererence random value
+* A 32 byte per-shared-preference random value
 * A 16 byte random salt per content entry
 
 #### Enhancing the Strength of the Encryption Fingerprint

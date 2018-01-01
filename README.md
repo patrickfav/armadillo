@@ -5,10 +5,9 @@ Armadillo is an implementation of encrypted shared preferences.
 [![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg) ](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
 [![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
 
-
 ## Features
 
-* **No-Nonse-Crypto**: Uses [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard)-[GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode), [Bcrypt](https://en.wikipedia.org/wiki/Bcrypt) and [HKDF](https://en.wikipedia.org/wiki/HKDF)
+* **No-Nonse State-of-the-Art Crypto**: Authenticated Encryption with [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard)-[GCM](https://en.wikipedia.org/wiki/Galois/Counter_Mode), key derivation functions [Bcrypt](https://en.wikipedia.org/wiki/Bcrypt) and [HKDF](https://en.wikipedia.org/wiki/HKDF)
 * **Flexible**: Tons of nobs and switches while having sane defaults
 * **Modular**: use your own implementation of symmetric cipher, key stretching, data obfuscation, etc.
 * **Lightweight**: No massive dependencies required like [BouncyCastle](https://www.bouncycastle.org/) or [Facebook Conceal](https://github.com/facebook/conceal)
@@ -34,9 +33,59 @@ A very minimal example
 
 ## Description
 
-## Persistence Profile
+### User provided Passwords
 
-### Key
+A high entropy value not known to any system but the user is a good and strong
+base for a cryptographic key. Unfortunately user-based passwords are often
+weak (low-entropy). To mitigate that fact and help preventing easy brute-forcing
+key derivation functions with key stretching properties are used. These functions
+calculate pseudo-random data from it's source material which requires mandatory work.
+
+The following implementations are available:
+
+* PBKDF2 (basically using a hash functions multiple times; no memory workfactor)
+* BCrypt (requires much more memory, making it harder to implement on GPU cores)
+
+It is possible to provide any KDF to the storage with implementing the `KeyStretchingFunction`.
+
+### Encryption Fingerprint
+
+This store bases part of it's security on so called fingerprinting. That
+basically means, during runtime entropy from e.g. the device, system or other
+parts are used to create a cryptographic key with which the data is encrypted.
+It basically is encryption with a semi-secret key.
+
+This has the following benefits:
+
+* Binding the data to the executing runtime (ie. making it harder lifting the data and trying to read it in a different environment)
+* Strongly obfuscating the data bordering actual encryption when the used fingerprint is hard to guess
+* Be able to scope the data to a specific environment (e.g. when using the Android OS image build number, every update invalidates the data)
+
+This store has a default implementation of `EncryptionFingerprint` which
+can only use generic data. In detail the following properties are incorporated:
+
+* Fingerprint of the APK signature
+* Android ID: a 8 byte random value either unique to the OS user (SDK 23 and below) or to the OS user and App (SDK 24 and above)
+* Application Package Name
+* Brand, model and name of the device
+* A 32 byte hardcoded static random value
+* A 32 byte per-shared-pererence random value
+* A 16 byte random salt per content entry
+
+#### Enhancing the Strength of the Encryption Fingerprint
+
+The security of this mechanism increases considerably if the user adds it's
+own data. Here are some suggestions:
+
+* Random values hardcoded, locally generated or provided by a remote service
+* Unique user-id (if the application has the concept of login)
+* Device Serial (requires dangerous permission SDK > 25)
+* Sim-ID/ICCID (if changing the sim should/can invalidate the data)
+* Android OS image build fingerprint (if you want to invalidate the data after OS update)
+
+### Persistence Profile
+
+#### Key
 
 The key is hashed with [HKDF](https://en.wikipedia.org/wiki/HKDF) (which uses
 Hmac with Sha512 internally) expanded to a 20 byte hash which will be encoded with
@@ -44,7 +93,7 @@ Hmac with Sha512 internally) expanded to a 20 byte hash which will be encoded wi
 is salted by the encryption fingerprint, so different shared preferences will
 generate different hashes for the same keys.
 
-### Content
+#### Content
 
 The diagram below illustrates the used data format. To disguise the format
 a little bit it will be obfuscated by a simple xor cipher.

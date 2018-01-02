@@ -1,6 +1,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'jacoco-android'
 apply plugin: 'com.github.kt3k.coveralls'
+apply from: "$rootDir/gradle/jacoco-utils.gradle"
 apply from: "$rootDir/gradle/checkstyle.gradle"
 
 android {

@@ -24,12 +24,12 @@ before_install:
   - echo -e "\n504667f4c0de7af1a06de9f4b1727b84351f2910" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
 
 script:
-  - ./gradlew clean assemble --stacktrace
-  - ./gradlew checkstyle lint --stacktrace
-  - ./gradlew testReleaseUnitTest --info
+  - ./gradlew clean :armadillo:assemble --stacktrace
+  - ./gradlew :armadillo:checkstyle lint --stacktrace
+  - ./gradlew :armadillo:testReleaseUnitTest --info
 
 after_success:
-  - ./gradlew jacocoTestReleaseUnitTestReport coveralls --info
+  - ./gradlew :armadillo:jacocoTestReleaseUnitTestReport :armadillo:copyJacocoReport coveralls --info
 
 deploy:
   - provider: script

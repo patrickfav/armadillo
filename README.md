@@ -33,6 +33,22 @@ A very minimal example
     String s = preferences.getString("key1", null);
 ```
 
+### Advanced Example
+
+The following example shows some of the configurations available to the developer:
+
+```java
+String userId = ...
+SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
+        .password("mySuperSecretPassword".toCharArray()) //use user based password
+        .securityProvider(Security.getProvider("BC")) //use bouncy-castle security provider
+        .keyStretchingFunction(new PBKDF2KeyStretcher()) //use PBKDF2 as user password kdf
+        .contentKeyDigest((providedMessage, usageName) -> sha256((usageName + providedMessage).getBytes(StandardCharsets.UTF_8))) //use sha256 as message digest
+        .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation
+        .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
+        .build();
+```
+
 ## Description
 
 ### Design Choices
@@ -47,8 +63,12 @@ is 16 byte long in this implementation. A downside of GCM is the requirement
 to [never reuse](https://en.wikipedia.org/wiki/Galois/Counter_Mode#Security)
  a [IV](https://en.wikipedia.org/wiki/Initialization_vector) with the same key,
  which is avoided in this lib.
-* **Every put operation creates a different cipher text**
-* **KDFs with Key Stretching features for user passwords**
+* **Every put operation creates a different cipher text:** Every put operation
+generates new salts, iv so the the resulting cipher text will be unrecognizably
+different even with the same underlying data. This makes it harder to check if
+the data actually has changed.
+* **KDFs with Key Stretching features for user passwords:** Add brute-force
+protection to possibly weak user provided passwords.
 * **Minimum SDK 19 (Android 4.4):** A way to increase security is to cap older
 implementation. SDK 19 seems to be a good compromise where most of the older
 [security hack fixes](https://android-developers.googleblog.com/2013/08/some-securerandom-thoughts.html)
@@ -70,7 +90,9 @@ heavily used by e.g. TLS implementation.
   is not easy and has [some major drawbacks](https://issuetracker.google.com/issues/36983155).
   Due to working in a security relevant field I have a lot of expirence with
   this technology, therefore the decision was made to not support it.
-* **Use of data obfuscation**: To make the data appear uniformly without
+* **Use of data obfuscation**: To disguise the actual data format and appear
+as a pseudo random byte array, obfuscation is used. This deliberately uses
+non standard ways to make it a bit harder to reverse engineer.
 
 ### User provided Passwords
 
@@ -89,6 +111,10 @@ The following implementations are available:
 
 It is possible to provide any KDF implementation to the storage with providing
 a custom `KeyStretchingFunction` implementation.
+
+Note, if you use key stretching put/get operations will get very slow (depeding
+on the work factor of course), so consider accessing the store in a background
+thread.
 
 ### Encryption Fingerprint
 

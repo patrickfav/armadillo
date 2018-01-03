@@ -1,5 +1,10 @@
 # Releases
 
-## v0.1.0 (2018-??)
+## v0.2.0
+
+* add authenticated encryption additional associated data
+* add crypto protocol version
+
+## v0.1.0
 
 initial release

@@ -45,6 +45,7 @@ public final class Armadillo {
         private RecoveryPolicy recoveryPolicy = new RecoveryPolicy.Default(false, true);
         private char[] password;
         private Provider provider;
+        private int cryptoProtocolVersion = 0;
 
         private Builder(SharedPreferences sharedPreferences) {
             this(sharedPreferences, null, null);
@@ -168,7 +169,7 @@ public final class Armadillo {
          * Set a different key derivation function for provided password. Per default {@link BcryptKeyStretcher}
          * is used. There is also a implementation PBKDF2 (see {@link PBKDF2KeyStretcher}. If you want
          * to use a different function (e.g. scrypt) set the implementation here.
-         *
+         * <p>
          * If you want to disable the key stretching feature you might use {@link FastKeyStretcher} here.
          *
          * @param keyStretchingFunction to be used by the shared preferences
@@ -238,6 +239,21 @@ public final class Armadillo {
         }
 
         /**
+         * Per default the crypto/data format version is '0', but if the behavior is changed by e.g.
+         * setting a different key-stretching function or contentKey digest, a custom crypto protocol
+         * version can be set, to be able to migrate the data.
+         * <p>
+         * The protocol version will be used as additional associated data with the authenticated encryption.
+         *
+         * @param version to persist with the data
+         * @return builder
+         */
+        public Builder cryptoProtocolVersion(int version) {
+            this.cryptoProtocolVersion = version;
+            return this;
+        }
+
+        /**
          * Build a {@link SharedPreferences} instance
          *
          * @return shared preference with given properties
@@ -251,7 +267,7 @@ public final class Armadillo {
                 authenticatedEncryption = new AesGcmEncryption(secureRandom, provider);
             }
 
-            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength,
+            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(cryptoProtocolVersion, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength,
                     keyStretchingFunction, dataObfuscatorFactory, secureRandom);
 
             if (sharedPreferences != null) {

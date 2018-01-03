@@ -8,6 +8,10 @@ import android.support.test.runner.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.nio.charset.StandardCharsets;
+import java.security.SecureRandom;
+import java.security.Security;
+
 /**
  * Instrumented test, which will execute on an Android device.
  *
@@ -30,5 +34,26 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
 
         preferences.edit().putString("key1", "string").apply();
         String s = preferences.getString("key1", null);
+    }
+
+    @Test
+    public void advancedTest() throws Exception {
+        Context context = InstrumentationRegistry.getTargetContext();
+        String userId = "1234";
+        SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
+                .password("mySuperSecretPassword".toCharArray()) //use user based password
+                .securityProvider(Security.getProvider("BC")) //use bouncy-castle security provider
+                .keyStretchingFunction(new PBKDF2KeyStretcher()) //use PBKDF2 as user password kdf
+                .contentKeyDigest((providedMessage, usageName) -> sha256((usageName + providedMessage).getBytes(StandardCharsets.UTF_8))) //use sha256 as message digest
+                .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation
+                .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
+                .build();
+
+        preferences.edit().putString("key1", "string").apply();
+        String s = preferences.getString("key1", null);
+    }
+
+    private String sha256(byte[] bytes) {
+        return new String(bytes);
     }
 }

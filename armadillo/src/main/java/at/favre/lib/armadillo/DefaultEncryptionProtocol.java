@@ -26,11 +26,11 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final int keyLengthBit;
     private final int protocolVersion;
 
-    private DefaultEncryptionProtocol(int protocolVerion, byte[] preferenceSalt, EncryptionFingerprint fingerprint,
+    private DefaultEncryptionProtocol(int protocolVersion, byte[] preferenceSalt, EncryptionFingerprint fingerprint,
                                       StringMessageDigest stringMessageDigest, AuthenticatedEncryption authenticatedEncryption,
                                       @AuthenticatedEncryption.KeyStrength int keyStrength, KeyStretchingFunction keyStretchingFunction,
                                       DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom) {
-        this.protocolVersion = protocolVerion;
+        this.protocolVersion = protocolVersion;
         this.preferenceSalt = preferenceSalt;
         this.authenticatedEncryption = authenticatedEncryption;
         this.keyStretchingFunction = keyStretchingFunction;

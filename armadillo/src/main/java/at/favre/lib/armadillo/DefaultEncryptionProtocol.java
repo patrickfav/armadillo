@@ -77,7 +77,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     }
 
     private byte[] encode(byte[] contentSalt, byte[] encrypted) {
-        ByteBuffer buffer = ByteBuffer.allocate(1 + 1 + contentSalt.length + 4 + encrypted.length);
+        ByteBuffer buffer = ByteBuffer.allocate(4 + 1 + contentSalt.length + 4 + encrypted.length);
         buffer.putInt(protocolVersion);
         buffer.put((byte) contentSalt.length);
         buffer.put(contentSalt);

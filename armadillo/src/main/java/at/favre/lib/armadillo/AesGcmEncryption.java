@@ -64,10 +64,11 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             secureRandom.nextBytes(iv);
 
             final Cipher cipher = getCipher();
+            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+
             if (associatedData != null) {
                 cipher.updateAAD(associatedData);
             }
-            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
 
             byte[] encrypted = cipher.doFinal(rawData);
 

@@ -88,8 +88,9 @@ heavily used by e.g. TLS implementation.
   data on an Android device. Unfortunately, due to the massive fragmentation
   in the ecosystem properly handling and using the Android Keystore System
   is not easy and has [some major drawbacks](https://issuetracker.google.com/issues/36983155).
-  Due to working in a security relevant field I have a lot of expirence with
-  this technology, therefore the decision was made to not support it.
+  Due to working in a security relevant field I have a lot of exigence with
+  this technology, therefore the decision was made to not support it _for this
+  implementation_ i.e. to keep it simple.
 * **Use of data obfuscation**: To disguise the actual data format and appear
 as a pseudo random byte array, obfuscation is used. This deliberately uses
 non standard ways to make it a bit harder to reverse engineer.
@@ -202,6 +203,7 @@ The `.aar` files can then be found in `/armadillo/build/outputs/aar` folder
 * [secure-preferences using AES-CBC](https://github.com/scottyab/secure-preferences)
 * [secure-preferences supporting Android Keystore System](https://github.com/ophio/secure-preferences)
 * [secure-preferences using FB Conceal framework](https://github.com/KaKaVip/secure-preferences)
+* [secure-preferences supporting Android Keystore System](https://github.com/adorsys/secure-storage-android)
 
 # License
 

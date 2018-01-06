@@ -22,6 +22,8 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final AuthenticatedEncryption authenticatedEncryption;
     private final DataObfuscator.Factory dataObfuscatorFactory;
     private final StringMessageDigest stringMessageDigest;
+    @Nullable
+    private final Compressor compressor;
     private final SecureRandom secureRandom;
     private final int keyLengthBit;
     private final int protocolVersion;
@@ -29,13 +31,14 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private DefaultEncryptionProtocol(int protocolVersion, byte[] preferenceSalt, EncryptionFingerprint fingerprint,
                                       StringMessageDigest stringMessageDigest, AuthenticatedEncryption authenticatedEncryption,
                                       @AuthenticatedEncryption.KeyStrength int keyStrength, KeyStretchingFunction keyStretchingFunction,
-                                      DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom) {
+                                      DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom, @Nullable Compressor compressor) {
         this.protocolVersion = protocolVersion;
         this.preferenceSalt = preferenceSalt;
         this.authenticatedEncryption = authenticatedEncryption;
         this.keyStretchingFunction = keyStretchingFunction;
         this.fingerprint = fingerprint;
         this.stringMessageDigest = stringMessageDigest;
+        this.compressor = compressor;
         this.keyLengthBit = authenticatedEncryption.byteSizeLength(keyStrength) * 8;
         this.dataObfuscatorFactory = dataObfuscatorFactory;
         this.secureRandom = secureRandom;
@@ -145,11 +148,12 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         private final KeyStretchingFunction keyStretchingFunction;
         private final DataObfuscator.Factory dataObfuscatorFactory;
         private final SecureRandom secureRandom;
+        private final Compressor compressor;
 
         Factory(int protocolVersion, EncryptionFingerprint fingerprint, StringMessageDigest stringMessageDigest,
                 AuthenticatedEncryption authenticatedEncryption, int keyStrength,
                 KeyStretchingFunction keyStretchingFunction, DataObfuscator.Factory dataObfuscatorFactory,
-                SecureRandom secureRandom) {
+                SecureRandom secureRandom, @Nullable Compressor compressor) {
             this.protocolVersion = protocolVersion;
             this.fingerprint = fingerprint;
             this.stringMessageDigest = stringMessageDigest;
@@ -158,11 +162,12 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             this.keyStretchingFunction = keyStretchingFunction;
             this.dataObfuscatorFactory = dataObfuscatorFactory;
             this.secureRandom = secureRandom;
+            this.compressor = compressor;
         }
 
         @Override
         public EncryptionProtocol create(byte[] preferenceSalt) {
-            return new DefaultEncryptionProtocol(protocolVersion, preferenceSalt, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory, secureRandom);
+            return new DefaultEncryptionProtocol(protocolVersion, preferenceSalt, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
         }
 
         @Override

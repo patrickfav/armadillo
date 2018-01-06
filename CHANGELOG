@@ -1,5 +1,9 @@
 # Releases
 
+## v1.0.0
+
+* add compressor feature
+
 ## v0.2.0
 
 * add authenticated encryption additional associated data

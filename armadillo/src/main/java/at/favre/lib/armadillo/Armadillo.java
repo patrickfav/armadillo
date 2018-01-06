@@ -46,6 +46,7 @@ public final class Armadillo {
         private char[] password;
         private Provider provider;
         private int cryptoProtocolVersion = 0;
+        private Compressor compressor = null;
 
         private Builder(SharedPreferences sharedPreferences) {
             this(sharedPreferences, null, null);
@@ -254,6 +255,17 @@ public final class Armadillo {
         }
 
         /**
+         * Compresses the content with Gzip before encrypting and writing it to shared preference. This only makes
+         * sense if bigger structural data is persisted like long xml or json.
+         *
+         * @return builder
+         */
+        public Builder compress() {
+            this.compressor = new GzipCompressor();
+            return this;
+        }
+
+        /**
          * Build a {@link SharedPreferences} instance
          *
          * @return shared preference with given properties
@@ -268,7 +280,7 @@ public final class Armadillo {
             }
 
             EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(cryptoProtocolVersion, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength,
-                    keyStretchingFunction, dataObfuscatorFactory, secureRandom);
+                    keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
 
             if (sharedPreferences != null) {
                 return new SecureSharedPreferences(sharedPreferences, factory, recoveryPolicy, password);

@@ -17,10 +17,11 @@ import at.favre.lib.bytes.Bytes;
 import timber.log.Timber;
 
 /**
+ * A simple wrapper implementation using the {@link DefaultEncryptionProtocol} before persisting
+ * the data.
+ *
  * @author Patrick Favre-Bulle
- * @since 18.12.2017
  */
-
 public final class SecureSharedPreferences implements SharedPreferences {
 
     private static final String KEY_RANDOM = "at.favre.lib.securepref.KEY_RANDOM";

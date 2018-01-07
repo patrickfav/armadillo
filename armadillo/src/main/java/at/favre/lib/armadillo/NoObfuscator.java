@@ -3,8 +3,9 @@ package at.favre.lib.armadillo;
 import android.support.annotation.NonNull;
 
 /**
+ * A simple No-Op implementation for {@link DataObfuscator}. Use this for testing purpose.
  *
- * @since 25.12.2017
+ * @author Patrick Favre-Bulle
  */
 
 public final class NoObfuscator implements DataObfuscator {

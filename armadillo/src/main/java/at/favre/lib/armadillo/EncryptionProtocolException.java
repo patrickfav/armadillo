@@ -1,8 +1,9 @@
 package at.favre.lib.armadillo;
 
 /**
+ * Exception thrown during {@link EncryptionProtocol} encrypt or decrpyt
+ *
  * @author Patrick Favre-Bulle
- * @since 18.12.2017
  */
 public class EncryptionProtocolException extends Exception {
 

@@ -48,7 +48,8 @@ android {
 
 dependencies {
     implementation 'at.favre.lib:hkdf:1.0.0'
-    implementation 'at.favre.lib:bytes:0.4.5'
+    implementation 'at.favre.lib:bytes:0.4.6'
+    implementation 'com.jakewharton.timber:timber:4.6.0'
     implementation 'org.mindrot:jbcrypt:0.4'
     implementation group: 'com.android.support', name: 'support-annotations', version: rootProject.ext.dependencies.support
 

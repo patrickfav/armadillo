@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 import at.favre.lib.bytes.Bytes;
+import timber.log.Timber;
 
 /**
  * @author Patrick Favre-Bulle
@@ -35,19 +36,20 @@ public final class SecureSharedPreferences implements SharedPreferences {
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, char[] password) {
         this(context.getSharedPreferences(encryptionProtocol.getStringMessageDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
-                encryptionProtocol, recoveryPolicy, password);
+            encryptionProtocol, recoveryPolicy, password);
     }
 
     public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory,
                                    RecoveryPolicy recoveryPolicy, char[] password) {
+        Timber.d("create new secure shared preferences");
         this.sharedPreferences = sharedPreferences;
         this.recoveryPolicy = recoveryPolicy;
         this.password = password;
         this.encryptionProtocol = encryptionProtocolFactory.create(
-                getPreferencesRandom(
-                        encryptionProtocolFactory.getStringMessageDigest(),
-                        encryptionProtocolFactory.createDataObfuscator(),
-                        encryptionProtocolFactory.getSecureRandom()));
+            getPreferencesRandom(
+                encryptionProtocolFactory.getStringMessageDigest(),
+                encryptionProtocolFactory.createDataObfuscator(),
+                encryptionProtocolFactory.getSecureRandom()));
     }
 
     private byte[] getPreferencesRandom(StringMessageDigest stringMessageDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {

@@ -5,6 +5,8 @@ import java.io.ByteArrayOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
+import timber.log.Timber;
+
 /**
  * A compressor using Gzip algorithm provided by the JDK
  *
@@ -33,6 +35,7 @@ public final class GzipCompressor implements Compressor {
             gzipInputStream.close();
             returnBuffer = bos.toByteArray();
             bos.close();
+            Timber.v("compression saved %d byte", compressed.length - returnBuffer.length);
             return returnBuffer;
         } catch (Exception e) {
             throw new IllegalStateException("could not decompress gzip", e);

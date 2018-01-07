@@ -9,6 +9,7 @@ import java.text.Normalizer;
 
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
+import timber.log.Timber;
 
 /**
  * The Armadillo Encryption Protocol. The whole protocol logic, orchestrating all the other parts.
@@ -57,6 +58,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     @Override
     public byte[] encrypt(@NonNull String contentKey, char[] password, byte[] rawContent) throws EncryptionProtocolException {
+        long start = System.currentTimeMillis();
         byte[] fingerprintBytes = new byte[0];
         byte[] key = new byte[0];
 
@@ -77,6 +79,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         } finally {
             Bytes.wrap(fingerprintBytes).mutable().secureWipe();
             Bytes.wrap(key).mutable().secureWipe();
+            Timber.v("encrypt took %d ms", System.currentTimeMillis() - start);
         }
     }
 
@@ -97,6 +100,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     @Override
     public byte[] decrypt(@NonNull String contentKey, char[] password, byte[] encryptedContent) throws EncryptionProtocolException {
+        long start = System.currentTimeMillis();
         byte[] fingerprintBytes = new byte[0];
         byte[] key = new byte[0];
 
@@ -125,6 +129,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         } finally {
             Bytes.wrap(fingerprintBytes).mutable().secureWipe();
             Bytes.wrap(key).mutable().secureWipe();
+            Timber.v("decrypt took %d ms", System.currentTimeMillis() - start);
         }
     }
 

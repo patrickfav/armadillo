@@ -57,12 +57,12 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void simpleGetString() throws Exception {
-        putAndTestString("string1", 1);
-        putAndTestString("string2", 16);
-        putAndTestString("string3", 200);
+        putAndTestString(preferences, "string1", 1);
+        putAndTestString(preferences, "string2", 16);
+        putAndTestString(preferences, "string3", 200);
     }
 
-    private void putAndTestString(String key, int length) {
+    private void putAndTestString(SharedPreferences preferences, String key, int length) {
         String content = Bytes.random(length).encodeBase64();
         preferences.edit().putString(key, content).commit();
         assertEquals(content, preferences.getString(key, null));
@@ -119,7 +119,7 @@ public abstract class ASecureSharedPreferencesTest {
     public void testRemove() {
         int count = 10;
         for (int i = 0; i < count; i++) {
-            putAndTestString("string" + i, new Random().nextInt(32) + 1);
+            putAndTestString(preferences, "string" + i, new Random().nextInt(32) + 1);
         }
 
         assertTrue(preferences.getAll().size() >= count);
@@ -128,6 +128,14 @@ public abstract class ASecureSharedPreferencesTest {
             preferences.edit().remove("string" + i).commit();
             assertNull(preferences.getString("string" + i, null));
         }
+    }
+
+    @Test
+    public void testIntializeTwice() throws Exception {
+        SharedPreferences sharedPreferences = create("init", null).build();
+        putAndTestString(sharedPreferences, "s", 12);
+        sharedPreferences = create("init", null).build();
+        putAndTestString(sharedPreferences, "s2", 24);
     }
 
     @Test
@@ -140,6 +148,12 @@ public abstract class ASecureSharedPreferencesTest {
     public void simpleStringGetWithBcryptPassword() throws Exception {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
             .keyStretchingFunction(new BcryptKeyStretcher(8)).build());
+    }
+
+    @Test
+    public void simpleStringGetWithFastKDF() throws Exception {
+        preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build());
     }
 
     @Test
@@ -167,8 +181,14 @@ public abstract class ASecureSharedPreferencesTest {
             .secureRandom(new SecureRandom()).build());
     }
 
+    @Test
+    public void testWithNoObfuscation() throws Exception {
+        preferenceSmokeTest(create("fingerprint", null)
+            .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
+    }
+
     void preferenceSmokeTest(SharedPreferences preferences) {
-        putAndTestString("string", new Random().nextInt(500) + 1);
+        putAndTestString(preferences, "string", new Random().nextInt(500) + 1);
         assertNull(preferences.getString("string2", null));
 
         long contentLong = new Random().nextLong();

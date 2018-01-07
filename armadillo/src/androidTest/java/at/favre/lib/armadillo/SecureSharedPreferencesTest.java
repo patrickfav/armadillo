@@ -21,19 +21,25 @@ import java.security.Security;
 public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
     protected Armadillo.Builder create(String name, char[] pw) {
         return Armadillo.create(InstrumentationRegistry.getTargetContext(), name)
-                .encryptionFingerprint(InstrumentationRegistry.getTargetContext())
-                .password(pw);
+            .encryptionFingerprint(InstrumentationRegistry.getTargetContext())
+            .password(pw);
     }
 
     @Test
     public void quickStartTest() throws Exception {
         Context context = InstrumentationRegistry.getTargetContext();
         SharedPreferences preferences = Armadillo.create(context, "myPrefs")
-                .encryptionFingerprint(context)
-                .build();
+            .encryptionFingerprint(context)
+            .build();
 
         preferences.edit().putString("key1", "string").apply();
         String s = preferences.getString("key1", null);
+    }
+
+    @Test
+    public void testWithDifferentKeyStrength() throws Exception {
+        preferenceSmokeTest(create("fingerprint", null)
+            .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_VERY_HIGH).build());
     }
 
     @Test
@@ -41,13 +47,13 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
         Context context = InstrumentationRegistry.getTargetContext();
         String userId = "1234";
         SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
-                .password("mySuperSecretPassword".toCharArray()) //use user based password
-                .securityProvider(Security.getProvider("BC")) //use bouncy-castle security provider
-                .keyStretchingFunction(new PBKDF2KeyStretcher()) //use PBKDF2 as user password kdf
-                .contentKeyDigest((providedMessage, usageName) -> sha256((usageName + providedMessage).getBytes(StandardCharsets.UTF_8))) //use sha256 as message digest
-                .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation
-                .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
-                .build();
+            .password("mySuperSecretPassword".toCharArray()) //use user based password
+            .securityProvider(Security.getProvider("BC")) //use bouncy-castle security provider
+            .keyStretchingFunction(new PBKDF2KeyStretcher()) //use PBKDF2 as user password kdf
+            .contentKeyDigest((providedMessage, usageName) -> sha256((usageName + providedMessage).getBytes(StandardCharsets.UTF_8))) //use sha256 as message digest
+            .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation
+            .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
+            .build();
 
         preferences.edit().putString("key1", "string").apply();
         String s = preferences.getString("key1", null);

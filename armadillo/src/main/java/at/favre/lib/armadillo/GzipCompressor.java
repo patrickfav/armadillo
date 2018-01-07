@@ -17,14 +17,14 @@ public final class GzipCompressor implements Compressor {
     }
 
     @Override
-    public byte[] compress(byte[] uncompressed) {
+    public byte[] decompress(byte[] compressed) {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         GZIPInputStream gzipInputStream = null;
         byte[] returnBuffer;
         try {
             int len;
             byte[] buffer = new byte[2048];
-            gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(uncompressed));
+            gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(compressed));
 
             while ((len = gzipInputStream.read(buffer)) > 0) {
                 bos.write(buffer, 0, len);
@@ -40,13 +40,13 @@ public final class GzipCompressor implements Compressor {
     }
 
     @Override
-    public byte[] decompress(byte[] compressed) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(compressed.length);
+    public byte[] compress(byte[] uncompressed) {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(uncompressed.length);
         GZIPOutputStream gzipOutputStream = null;
         byte[] returnBuffer;
         try {
             gzipOutputStream = new GZIPOutputStream(bos);
-            gzipOutputStream.write(compressed);
+            gzipOutputStream.write(uncompressed);
             gzipOutputStream.close();
             returnBuffer = bos.toByteArray();
             bos.close();

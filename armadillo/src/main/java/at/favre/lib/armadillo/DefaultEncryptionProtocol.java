@@ -11,6 +11,8 @@ import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
 
 /**
+ * The Armadillo Encryption Protocol. The whole protocol logic, orchestrating all the other parts.
+ *
  * @author Patrick Favre-Bulle
  * @since 18.12.2017
  */
@@ -22,7 +24,6 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final AuthenticatedEncryption authenticatedEncryption;
     private final DataObfuscator.Factory dataObfuscatorFactory;
     private final StringMessageDigest stringMessageDigest;
-    @Nullable
     private final Compressor compressor;
     private final SecureRandom secureRandom;
     private final int keyLengthBit;
@@ -31,7 +32,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private DefaultEncryptionProtocol(int protocolVersion, byte[] preferenceSalt, EncryptionFingerprint fingerprint,
                                       StringMessageDigest stringMessageDigest, AuthenticatedEncryption authenticatedEncryption,
                                       @AuthenticatedEncryption.KeyStrength int keyStrength, KeyStretchingFunction keyStretchingFunction,
-                                      DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom, @Nullable Compressor compressor) {
+                                      DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom, Compressor compressor) {
         this.protocolVersion = protocolVersion;
         this.preferenceSalt = preferenceSalt;
         this.authenticatedEncryption = authenticatedEncryption;
@@ -64,7 +65,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
             fingerprintBytes = fingerprint.getBytes();
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
-            byte[] encrypted = authenticatedEncryption.encrypt(key, rawContent, Bytes.from(protocolVersion).array());
+            byte[] encrypted = authenticatedEncryption.encrypt(key, compressor.compress(rawContent), Bytes.from(protocolVersion).array());
 
             DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
             obfuscator.obfuscate(encrypted);
@@ -118,7 +119,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             obfuscator.clearKey();
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
 
-            return authenticatedEncryption.decrypt(key, encrypted, Bytes.from(protocolVersion).array());
+            return compressor.decompress(authenticatedEncryption.decrypt(key, encrypted, Bytes.from(protocolVersion).array()));
         } catch (AuthenticatedEncryptionException e) {
             throw new EncryptionProtocolException(e);
         } finally {

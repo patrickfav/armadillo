@@ -6,12 +6,16 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.security.SecureRandom;
 import java.util.HashSet;
+import java.util.Random;
 import java.util.Set;
 
 import at.favre.lib.bytes.Bytes;
 
+import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -53,9 +57,15 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void simpleGetString() throws Exception {
-        String content = "testäI/_²~";
-        preferences.edit().putString("string", content).commit();
-        assertEquals(content, preferences.getString("string", null));
+        putAndTestString("string1", 1);
+        putAndTestString("string2", 16);
+        putAndTestString("string3", 200);
+    }
+
+    private void putAndTestString(String key, int length) {
+        String content = Bytes.random(length).encodeBase64();
+        preferences.edit().putString(key, content).commit();
+        assertEquals(content, preferences.getString(key, null));
     }
 
     @Test
@@ -90,28 +100,95 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void simpleGetStringSet() throws Exception {
-        Set<String> set = new HashSet<>(7);
-        for (int i = 0; i < 7; i++) {
-            set.add("input" + i);
+        addStringSet(preferences, 1);
+        addStringSet(preferences, 7);
+        addStringSet(preferences, 128);
+    }
+
+    private void addStringSet(SharedPreferences preferences, int count) {
+        Set<String> set = new HashSet<>(count);
+        for (int i = 0; i < count; i++) {
+            set.add(Bytes.random(32).encodeBase36() + "input" + i);
         }
 
-        preferences.edit().putStringSet("stringSet", set).commit();
-        assertEquals(set, preferences.getStringSet("stringSet", null));
+        preferences.edit().putStringSet("stringSet" + count, set).commit();
+        assertEquals(set, preferences.getStringSet("stringSet" + count, null));
+    }
+
+    @Test
+    public void testRemove() {
+        int count = 10;
+        for (int i = 0; i < count; i++) {
+            putAndTestString("string" + i, new Random().nextInt(32) + 1);
+        }
+
+        assertTrue(preferences.getAll().size() >= count);
+
+        for (int i = 0; i < count; i++) {
+            preferences.edit().remove("string" + i).commit();
+            assertNull(preferences.getString("string" + i, null));
+        }
     }
 
     @Test
     public void simpleStringGetWithPkdf2Password() throws Exception {
-        SharedPreferences preferences = create("withPw", "superSecret".toCharArray()).keyStretchingFunction(new PBKDF2KeyStretcher()).build();
-        String content = "testäI/_²~" + Bytes.random(64).encodeHex();
-        preferences.edit().putString("k", content).commit();
-        assertEquals(content, preferences.getString("k", null));
+        preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
+            .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
     }
 
     @Test
     public void simpleStringGetWithBcryptPassword() throws Exception {
-        SharedPreferences preferences = create("withPw", "superSecret".toCharArray()).keyStretchingFunction(new BcryptKeyStretcher()).build();
-        String content = "testäI/_²~" + Bytes.random(64).encodeHex();
-        preferences.edit().putString("k", content).commit();
-        assertEquals(content, preferences.getString("k", null));
+        preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
+            .keyStretchingFunction(new BcryptKeyStretcher(8)).build());
+    }
+
+    @Test
+    public void testWithCompression() throws Exception {
+        preferenceSmokeTest(create("compressed", null).compress().build());
+    }
+
+    @Test
+    public void testWithDifferentFingerprint() throws Exception {
+        preferenceSmokeTest(create("fingerprint", null)
+            .encryptionFingerprint(Bytes.random(16).array()).build());
+    }
+
+    @Test
+    public void testWithDifferentContentDigest() throws Exception {
+        preferenceSmokeTest(create("contentDigest1", null)
+            .contentKeyDigest(8).build());
+        preferenceSmokeTest(create("contentDigest2", null)
+            .contentKeyDigest(Bytes.random(16).array()).build());
+    }
+
+    @Test
+    public void testWithSecureRandom() throws Exception {
+        preferenceSmokeTest(create("fingerprint", null)
+            .secureRandom(new SecureRandom()).build());
+    }
+
+    void preferenceSmokeTest(SharedPreferences preferences) {
+        putAndTestString("string", new Random().nextInt(500) + 1);
+        assertNull(preferences.getString("string2", null));
+
+        long contentLong = new Random().nextLong();
+        preferences.edit().putLong("long", contentLong).commit();
+        assertEquals(contentLong, preferences.getLong("long", 0));
+
+        float contentFloat = new Random().nextFloat();
+        preferences.edit().putFloat("float", contentFloat).commit();
+        assertEquals(contentFloat, preferences.getFloat("float", 0), 0.001);
+
+        boolean contentBoolean = new Random().nextBoolean();
+        preferences.edit().putBoolean("boolean", contentBoolean).commit();
+        assertEquals(contentBoolean, preferences.getBoolean("boolean", !contentBoolean));
+
+        addStringSet(preferences, new Random().nextInt(31) + 1);
+
+        preferences.edit().remove("string").commit();
+        assertNull(preferences.getString("string", null));
+
+        preferences.edit().remove("float").commit();
+        assertEquals(-1, preferences.getFloat("float", -1), 0.00001);
     }
 }

@@ -46,7 +46,7 @@ public final class Armadillo {
         private char[] password;
         private Provider provider;
         private int cryptoProtocolVersion = 0;
-        private Compressor compressor = null;
+        private Compressor compressor = new DisabledCompressor();
 
         private Builder(SharedPreferences sharedPreferences) {
             this(sharedPreferences, null, null);
@@ -261,7 +261,16 @@ public final class Armadillo {
          * @return builder
          */
         public Builder compress() {
-            this.compressor = new GzipCompressor();
+            return compress(new GzipCompressor());
+        }
+
+        /**
+         * Compresses the content with given compressor before encrypting and writing it to shared preference.
+         *
+         * @return builder
+         */
+        public Builder compress(Compressor compressor) {
+            this.compressor = compressor;
             return this;
         }
 
@@ -280,7 +289,7 @@ public final class Armadillo {
             }
 
             EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(cryptoProtocolVersion, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength,
-                    keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
+                keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
 
             if (sharedPreferences != null) {
                 return new SecureSharedPreferences(sharedPreferences, factory, recoveryPolicy, password);

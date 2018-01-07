@@ -165,6 +165,8 @@ public abstract class ASecureSharedPreferencesTest {
     public void testWithDifferentFingerprint() throws Exception {
         preferenceSmokeTest(create("fingerprint", null)
             .encryptionFingerprint(Bytes.random(16).array()).build());
+        preferenceSmokeTest(create("fingerprint2", null)
+            .encryptionFingerprint(() -> new byte[16]).build());
     }
 
     @Test
@@ -177,14 +179,46 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void testWithSecureRandom() throws Exception {
-        preferenceSmokeTest(create("fingerprint", null)
+        preferenceSmokeTest(create("secureRandom", null)
             .secureRandom(new SecureRandom()).build());
     }
 
     @Test
+    public void testEncryptionStrength() throws Exception {
+        preferenceSmokeTest(create("secureRandom", null)
+            .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
+    }
+
+    @Test
+    public void testProvider() throws Exception {
+        preferenceSmokeTest(create("provider", null)
+            .securityProvider(null).build());
+    }
+
+    @Test
     public void testWithNoObfuscation() throws Exception {
-        preferenceSmokeTest(create("fingerprint", null)
+        preferenceSmokeTest(create("obfuscate", null)
             .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
+    }
+
+    @Test
+    public void testSetEncryption() throws Exception {
+        preferenceSmokeTest(create("enc", null)
+            .symmetricEncryption(new AesGcmEncryption()).build());
+    }
+
+    @Test
+    public void testRecoveryPolicy() throws Exception {
+        preferenceSmokeTest(create("recovery", null)
+            .recoveryPolicy(true, true).build());
+        preferenceSmokeTest(create("recovery", null)
+            .recoveryPolicy(new RecoveryPolicy.Default(true, true)).build());
+    }
+
+    @Test
+    public void testCustomProtocolVersion() throws Exception {
+        preferenceSmokeTest(create("protocol", null)
+            .cryptoProtocolVersion(14221).build());
     }
 
     void preferenceSmokeTest(SharedPreferences preferences) {

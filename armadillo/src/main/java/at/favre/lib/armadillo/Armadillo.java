@@ -147,7 +147,6 @@ public final class Armadillo {
          * @return builder
          */
         public Builder securityProvider(Provider provider) {
-            Objects.requireNonNull(provider);
             this.provider = provider;
             return this;
         }

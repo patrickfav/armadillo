@@ -11,9 +11,11 @@ import java.util.Objects;
 import at.favre.lib.bytes.Bytes;
 
 /**
+ * The main API of this library.
  * @since 26.12.2017
  */
 
+@SuppressWarnings("WeakerAccess")
 public final class Armadillo {
     public static final int CONTENT_KEY_OUT_BYTE_LENGTH = 20;
 

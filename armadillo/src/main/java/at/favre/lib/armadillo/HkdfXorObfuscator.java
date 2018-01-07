@@ -3,7 +3,6 @@ package at.favre.lib.armadillo;
 import android.support.annotation.NonNull;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Objects;
 
 import at.favre.lib.bytes.Bytes;
@@ -12,13 +11,13 @@ import at.favre.lib.crypto.HKDF;
 /**
  * A simple obfuscator using HKDF to derive keys for individual blocks and uses
  * a simple version of CTR block mode. Uses XOR as the encryption primitive.
- *
+ * <p>
  * The main design choices for this obfuscator:
  * <ul>
- *     <li>Non-Standard implementation and concept</li>
- *     <li>Simple and fast (using xor)</li>
+ * <li>Non-Standard implementation and concept</li>
+ * <li>Simple and fast (using xor)</li>
  * </ul>
- *
+ * <p>
  * This is optimized to be fast and not as secure as possible.
  */
 public final class HkdfXorObfuscator implements DataObfuscator {
@@ -50,11 +49,11 @@ public final class HkdfXorObfuscator implements DataObfuscator {
             for (int i = 0; i < temp.length; i++) {
                 original[byteIter++] = (byte) (temp[i] ^ roundKey[i]);
             }
-            Arrays.fill(temp, (byte) 0);
-            Arrays.fill(roundKey, (byte) 0);
+            Bytes.wrap(temp).mutable().fill((byte) 0);
+            Bytes.wrap(roundKey).mutable().fill((byte) 0);
         }
 
-        Arrays.fill(okm, (byte) 0);
+        Bytes.wrap(okm).mutable().fill((byte) 0);
     }
 
     @Override

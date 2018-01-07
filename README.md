@@ -1,6 +1,8 @@
 # Armadillo - Encrypted Shared Preference
 
-Armadillo is an implementation of encrypted shared preferences.
+A shared preference implementation for secret data providing confidentiality,
+integrity and authenticity . Per default uses AES-GCM, BCrypt and HKDF as cryptographic
+primitives.
 
 [![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg) ](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
 [![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
@@ -133,9 +135,9 @@ This has the following benefits:
 This store has a default implementation of `EncryptionFingerprint` which
 can only use generic data. In detail the following properties are incorporated:
 
-* Fingerprint of the APK signature
-* Android ID: a 8 byte random value either unique to the OS user (SDK 23 and below) or to the OS user and App (SDK 24 and above)
-* Application package name, Brand, model and name of the device
+* Fingerprint of the [APK signature](https://source.android.com/security/apksigning/)
+* [Android ID](https://developer.android.com/reference/android/provider/Settings.Secure.html#ANDROID_ID) : a 64-bit number (expressed as a hexadecimal string) byte random value; on SDK 26 and higher, unique to each combination of app-signing key, user, and device - on SDK 25 lower only unique to user and device
+* [Application package name](https://developer.android.com/studio/build/application-id.html), [brand](https://developer.android.com/reference/android/os/Build.html#BRAND), [model](https://developer.android.com/reference/android/os/Build.html#MODEL) and name of the device
 * 32 byte hardcoded static random value
 
 #### Enhancing the Strength of the Encryption Fingerprint

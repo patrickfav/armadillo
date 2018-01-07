@@ -1,6 +1,8 @@
 package at.favre.lib.armadillo;
 
 /**
+ * Thrown during the process of {@link AuthenticatedEncryptionException}
+ *
  * @author Patrick Favre-Bulle
  * @since 18.12.2017
  */

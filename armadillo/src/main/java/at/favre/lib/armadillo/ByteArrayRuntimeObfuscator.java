@@ -5,7 +5,7 @@ import java.security.SecureRandom;
 import at.favre.lib.bytes.Bytes;
 
 /**
- * Simple wrapper for obfuscated byte array. The idea is to have some kind of data obfuscation
+ * Simple wrapper for obfuscated in-memory byte array. The idea is to have some kind of data obfuscation
  * during runtime, to make it harder to read the content when instrumenting or doing a memory
  * dump. This uses a very simple and fast xor encryption and stores the encrypted data and
  * the key as fields in a 2d byte array.

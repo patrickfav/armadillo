@@ -1,6 +1,6 @@
 # Releases
 
-## v1.0.0
+## v0.3.0
 
 * add compressor feature
 * fixes issue were storage salt was incorrectly created

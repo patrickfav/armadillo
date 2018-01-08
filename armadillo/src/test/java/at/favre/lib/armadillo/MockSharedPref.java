@@ -4,6 +4,7 @@ import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,7 @@ import java.util.Set;
 
 public class MockSharedPref implements SharedPreferences {
     private final Map<String, Object> internalMap = new HashMap<>();
+    private final Set<OnSharedPreferenceChangeListener> listeners = new HashSet<>();
 
     @Override
     public Map<String, ?> getAll() {
@@ -91,24 +93,32 @@ public class MockSharedPref implements SharedPreferences {
 
     @Override
     public void registerOnSharedPreferenceChangeListener(OnSharedPreferenceChangeListener onSharedPreferenceChangeListener) {
-        throw new UnsupportedOperationException("listener not supported");
+        listeners.add(onSharedPreferenceChangeListener);
     }
 
     @Override
     public void unregisterOnSharedPreferenceChangeListener(OnSharedPreferenceChangeListener onSharedPreferenceChangeListener) {
-        throw new UnsupportedOperationException("listener not supported");
+        listeners.remove(onSharedPreferenceChangeListener);
     }
 
     void executeTransaction(Map<String, Object> putMap, List<String> removeList, boolean clear) {
         if (!clear) {
             for (Map.Entry<String, Object> stringObjectEntry : putMap.entrySet()) {
                 this.internalMap.put(stringObjectEntry.getKey(), stringObjectEntry.getValue());
+                informListeners(stringObjectEntry.getKey());
             }
             for (String s : removeList) {
                 this.internalMap.remove(s);
+                informListeners(s);
             }
         } else {
             this.internalMap.clear();
+        }
+    }
+
+    private void informListeners(String key) {
+        for (OnSharedPreferenceChangeListener listener : listeners) {
+            listener.onSharedPreferenceChanged(this, key);
         }
     }
 

@@ -10,6 +10,7 @@ import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import at.favre.lib.bytes.Bytes;
 
@@ -63,9 +64,17 @@ public abstract class ASecureSharedPreferencesTest {
         putAndTestString(preferences, "string3", 200);
     }
 
+    @Test
+    public void simpleGetStringApply() throws Exception {
+        String content = Bytes.random(16).encodeBase64();
+        preferences.edit().putString("d", content).apply();
+        assertEquals(content, preferences.getString("d", null));
+    }
+
     private String putAndTestString(SharedPreferences preferences, String key, int length) {
         String content = Bytes.random(length).encodeBase64();
         preferences.edit().putString(key, content).commit();
+        assertTrue(preferences.contains(key));
         assertEquals(content, preferences.getString(key, null));
         return content;
     }
@@ -74,6 +83,7 @@ public abstract class ASecureSharedPreferencesTest {
     public void simpleGetInt() throws Exception {
         int content = 3782633;
         preferences.edit().putInt("int", content).commit();
+        assertTrue(preferences.contains("int"));
         assertEquals(content, preferences.getInt("int", 0));
     }
 
@@ -81,6 +91,7 @@ public abstract class ASecureSharedPreferencesTest {
     public void simpleGetLong() throws Exception {
         long content = 3782633654323456L;
         preferences.edit().putLong("long", content).commit();
+        assertTrue(preferences.contains("long"));
         assertEquals(content, preferences.getLong("long", 0));
     }
 
@@ -88,12 +99,14 @@ public abstract class ASecureSharedPreferencesTest {
     public void simpleGetFloat() throws Exception {
         float content = 728.1891f;
         preferences.edit().putFloat("float", content).commit();
+        assertTrue(preferences.contains("float"));
         assertEquals(content, preferences.getFloat("float", 0), 0.001);
     }
 
     @Test
     public void simpleGetBoolean() throws Exception {
         preferences.edit().putBoolean("boolean", true).commit();
+        assertTrue(preferences.contains("boolean"));
         assertEquals(true, preferences.getBoolean("boolean", false));
 
         preferences.edit().putBoolean("boolean2", false).commit();
@@ -114,7 +127,28 @@ public abstract class ASecureSharedPreferencesTest {
         }
 
         preferences.edit().putStringSet("stringSet" + count, set).commit();
+        assertTrue(preferences.contains("stringSet" + count));
         assertEquals(set, preferences.getStringSet("stringSet" + count, null));
+    }
+
+    @Test
+    public void testGetDefaults() throws Exception {
+        assertNull(preferences.getString("s", null));
+        assertNull(preferences.getStringSet("s", null));
+        assertFalse(preferences.getBoolean("s", false));
+        assertEquals(2, preferences.getInt("s", 2));
+        assertEquals(2, preferences.getLong("s", 2));
+        assertEquals(2f, preferences.getFloat("s", 2f), 0.0001);
+    }
+
+    @Test
+    public void testChangeListener() throws Exception {
+        AtomicBoolean b = new AtomicBoolean(false);
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, s) -> b.set(true);
+        preferences.registerOnSharedPreferenceChangeListener(listener);
+        preferences.edit().putString("s", "test").commit();
+        assertTrue(b.get());
+        preferences.unregisterOnSharedPreferenceChangeListener(listener);
     }
 
     @Test

@@ -10,7 +10,6 @@ import java.security.SecureRandom;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import at.favre.lib.bytes.Bytes;
 
@@ -26,7 +25,7 @@ import static org.junit.Assert.assertNull;
  */
 public abstract class ASecureSharedPreferencesTest {
     private static final String DEFAULT_PREF_NAME = "test-prefs";
-    private SharedPreferences preferences;
+    SharedPreferences preferences;
 
     @Before
     public void setup() {
@@ -139,16 +138,6 @@ public abstract class ASecureSharedPreferencesTest {
         assertEquals(2, preferences.getInt("s", 2));
         assertEquals(2, preferences.getLong("s", 2));
         assertEquals(2f, preferences.getFloat("s", 2f), 0.0001);
-    }
-
-    @Test
-    public void testChangeListener() throws Exception {
-        AtomicBoolean b = new AtomicBoolean(false);
-        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, s) -> b.set(true);
-        preferences.registerOnSharedPreferenceChangeListener(listener);
-        preferences.edit().putString("s", "test").commit();
-        assertTrue(b.get());
-        preferences.unregisterOnSharedPreferenceChangeListener(listener);
     }
 
     @Test

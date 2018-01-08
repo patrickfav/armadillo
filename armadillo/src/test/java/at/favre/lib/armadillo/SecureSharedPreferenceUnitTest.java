@@ -2,8 +2,13 @@ package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
 
+import org.junit.Test;
+
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static junit.framework.Assert.assertTrue;
 
 public class SecureSharedPreferenceUnitTest extends ASecureSharedPreferencesTest {
     private Map<String, MockSharedPref> prefMap = new HashMap<>();
@@ -20,5 +25,15 @@ public class SecureSharedPreferenceUnitTest extends ASecureSharedPreferencesTest
             prefMap.put(name, new MockSharedPref());
         }
         return prefMap.get(name);
+    }
+
+    @Test
+    public void testChangeListener() throws Exception {
+        AtomicBoolean b = new AtomicBoolean(false);
+        SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, s) -> b.set(true);
+        preferences.registerOnSharedPreferenceChangeListener(listener);
+        preferences.edit().putString("s", "test").commit();
+        assertTrue(b.get());
+        preferences.unregisterOnSharedPreferenceChangeListener(listener);
     }
 }

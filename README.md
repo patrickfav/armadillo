@@ -31,7 +31,7 @@ A very minimal example
         .encryptionFingerprint(context)
         .build();
 
-    preferences.edit().putString("key1", "string").apply();
+    preferences.edit().putString("key1", "stringValue").apply();
     String s = preferences.getString("key1", null);
 ```
 
@@ -49,6 +49,21 @@ SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
         .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation
         .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
         .build();
+```
+
+A xml file named like `f1a4e61ffb59c6e6a3d6ceae9a20cb5726aade06.xml` will
+be created with the resulting data looking something like that after the
+first put operation:
+
+```xml
+<?xml version='1.0' encoding='utf-8' standalone='yes' ?>
+<map>
+    <!-- storage random salt -->
+    <string name="39e3e4f83dda81c44f8a9063196b28b3d5091fca">4YefvCf1UJ+lVPUAEgmX9Ote9CIgWOINmXq/8s1QUNw=</string>
+     <!-- 'key1':'stringValue' -->
+    <string name="152b866fd2d63899678c21f247bb6df0d2e38072">AAAAABCk6riLYVyqozCrBfCzNLuaAAAALZfqipKoXeLtCOuzX2iPa4aYII8FlWVQxORICY5AikR3ISUv/BkUnDsTSeGxAg==</string>
+</map>
+
 ```
 
 ## Description
@@ -151,6 +166,22 @@ own data. Here are some suggestions:
 * Sim-ID/ICCID (if changing the sim should/can invalidate the data)
 * Android OS image build fingerprint (if you want to invalidate the data after OS update)
 
+### Key Derivation Process
+
+The cryptographic key used to encrypt the data is composed of the following
+parts:
+
+![screenshot key derivation](doc/key_derivation.png)
+
+* User password (optional): provided by the caller and stretched with e.g. Bcrypt
+* Encryption Fingerprint (see section below)
+* Entry Key: the hashed version of the key passed by the caller; this will bind the data to that specific entry key
+* Entry Salt: a random 16 byte value unique to that specific entry that will be created on every put operation (will also be used for the key stretching function)
+* Storage Salt: a random 32 byte value unique to that specific storage, created on first creation of the storage
+
+The concatenated key material will be derived and stretched to the desired length
+with [HKDF](https://en.wikipedia.org/wiki/HKDF) derivation function.
+
 ### Persistence Profile
 
 #### Key
@@ -198,6 +229,8 @@ The `.aar` files can then be found in `/armadillo/build/outputs/aar` folder
 ## Libraries & Credits
 
 * [jBcrypt](https://github.com/jeremyh/jBCrypt)
+* [HKDF Standalone](https://github.com/patrickfav/hkdf)
+* [Bytes](https://github.com/patrickfav/bytes-java)
 * [Icon by Freepik](https://www.flaticon.com/free-icon/armadillo_371647#term=armadillo&page=1&position=4)
 
 ## Similar Projects:

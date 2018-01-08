@@ -44,7 +44,7 @@ public final class Armadillo {
         private KeyStretchingFunction keyStretchingFunction = new BcryptKeyStretcher();
         private DataObfuscator.Factory dataObfuscatorFactory = new HkdfXorObfuscator.Factory();
         private SecureRandom secureRandom = new SecureRandom();
-        private RecoveryPolicy recoveryPolicy = new RecoveryPolicy.Default(false, true);
+        private RecoveryPolicy recoveryPolicy = new RecoveryPolicy.Default(true, false);
         private char[] password;
         private Provider provider;
         private int cryptoProtocolVersion = 0;

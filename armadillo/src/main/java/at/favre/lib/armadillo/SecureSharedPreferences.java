@@ -18,7 +18,13 @@ import timber.log.Timber;
 
 /**
  * A simple wrapper implementation using the {@link DefaultEncryptionProtocol} before persisting
- * the data.
+ * the data. It deviates from the expected behaviour in the following way:
+ *
+ * <ul>
+ *     <li>The storage adds a meta entry containing a storage scoped salt value</li>
+ *     <li>getAll() will return the hashed keys and an empty string as content</li>
+ *     <li>getAll() will NOT include the storage salt (i.e size of the returned map only reflects the user added values)</li>
+ * </ul>
  *
  * @author Patrick Favre-Bulle
  */
@@ -27,9 +33,11 @@ public final class SecureSharedPreferences implements SharedPreferences {
     private static final String KEY_RANDOM = "at.favre.lib.securepref.KEY_RANDOM";
 
     private final SharedPreferences sharedPreferences;
-    private final EncryptionProtocol encryptionProtocol;
+    private final EncryptionProtocol.Factory factory;
     private final RecoveryPolicy recoveryPolicy;
     private final char[] password;
+    private String preferenceRandomContentKey;
+    private EncryptionProtocol encryptionProtocol;
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, char[] password) {
         this(context, preferenceName, encryptionProtocol, new RecoveryPolicy.Default(false, true), password);
@@ -37,7 +45,7 @@ public final class SecureSharedPreferences implements SharedPreferences {
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, char[] password) {
         this(context.getSharedPreferences(encryptionProtocol.getStringMessageDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
-            encryptionProtocol, recoveryPolicy, password);
+                encryptionProtocol, recoveryPolicy, password);
     }
 
     public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory,
@@ -46,22 +54,29 @@ public final class SecureSharedPreferences implements SharedPreferences {
         this.sharedPreferences = sharedPreferences;
         this.recoveryPolicy = recoveryPolicy;
         this.password = password;
-        this.encryptionProtocol = encryptionProtocolFactory.create(
-            getPreferencesRandom(
-                encryptionProtocolFactory.getStringMessageDigest(),
-                encryptionProtocolFactory.createDataObfuscator(),
-                encryptionProtocolFactory.getSecureRandom()));
+        this.factory = encryptionProtocolFactory;
+        createProtocol();
+    }
+
+    private void createProtocol() {
+        encryptionProtocol = factory.create(
+                getPreferencesRandom(
+                        factory.getStringMessageDigest(),
+                        factory.createDataObfuscator(),
+                        factory.getSecureRandom()));
     }
 
     private byte[] getPreferencesRandom(StringMessageDigest stringMessageDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
-        final String keyHash = stringMessageDigest.derive(KEY_RANDOM, "prefName");
-        String base64Random = sharedPreferences.getString(keyHash, null);
+        preferenceRandomContentKey = stringMessageDigest.derive(KEY_RANDOM, "prefName");
+        String base64Random = sharedPreferences.getString(preferenceRandomContentKey, null);
         byte[] outBytes;
         if (base64Random == null) {
+            Timber.v("create new preference random");
             byte[] rndBytes = Bytes.random(32, secureRandom).array();
+            outBytes = Bytes.from(rndBytes).array();
             dataObfuscator.obfuscate(rndBytes);
-            sharedPreferences.edit().putString(keyHash, Bytes.wrap(rndBytes).encodeBase64()).apply();
-            outBytes = rndBytes;
+            sharedPreferences.edit().putString(preferenceRandomContentKey, Bytes.wrap(rndBytes).encodeBase64()).apply();
+            Bytes.wrap(rndBytes).mutable().secureWipe();
         } else {
             byte[] obfuscatedRandom = Bytes.parseBase64(base64Random).array();
             dataObfuscator.deobfuscate(obfuscatedRandom);
@@ -81,7 +96,9 @@ public final class SecureSharedPreferences implements SharedPreferences {
         final Map<String, ?> encryptedMap = sharedPreferences.getAll();
         final Map<String, String> keyOnlyMap = new HashMap<>(encryptedMap.size());
         for (String key : encryptedMap.keySet()) {
-            keyOnlyMap.put(key, null);
+            if (!key.equals(preferenceRandomContentKey)) {
+                keyOnlyMap.put(key, "");
+            }
         }
         return keyOnlyMap;
     }
@@ -211,6 +228,7 @@ public final class SecureSharedPreferences implements SharedPreferences {
      */
     public final class Editor implements SharedPreferences.Editor {
         private final SharedPreferences.Editor internalEditor;
+        private boolean clear = false;
 
         @SuppressLint("CommitPrefEdits")
         private Editor() {
@@ -273,17 +291,29 @@ public final class SecureSharedPreferences implements SharedPreferences {
         @Override
         public SharedPreferences.Editor clear() {
             internalEditor.clear();
+            clear = true;
             return this;
         }
 
         @Override
         public boolean commit() {
-            return internalEditor.commit();
+            try {
+                return internalEditor.commit();
+            } finally {
+                handlePossibleClear();
+            }
         }
 
         @Override
         public void apply() {
             internalEditor.apply();
+            handlePossibleClear();
+        }
+
+        private void handlePossibleClear() {
+            if (clear) {
+                createProtocol();
+            }
         }
     }
 

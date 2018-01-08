@@ -13,6 +13,7 @@ import java.util.Set;
 
 import at.favre.lib.bytes.Bytes;
 
+import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -23,13 +24,13 @@ import static org.junit.Assert.assertNull;
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
 public abstract class ASecureSharedPreferencesTest {
-
+    private static final String DEFAULT_PREF_NAME = "test-prefs";
     private SharedPreferences preferences;
 
     @Before
     public void setup() {
         try {
-            preferences = create("test-prefs", null).build();
+            preferences = create(DEFAULT_PREF_NAME, null).build();
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
@@ -62,10 +63,11 @@ public abstract class ASecureSharedPreferencesTest {
         putAndTestString(preferences, "string3", 200);
     }
 
-    private void putAndTestString(SharedPreferences preferences, String key, int length) {
+    private String putAndTestString(SharedPreferences preferences, String key, int length) {
         String content = Bytes.random(length).encodeBase64();
         preferences.edit().putString(key, content).commit();
         assertEquals(content, preferences.getString(key, null));
+        return content;
     }
 
     @Test
@@ -131,7 +133,25 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void testIntializeTwice() throws Exception {
+    public void testClear() {
+        int count = 10;
+        for (int i = 0; i < count; i++) {
+            putAndTestString(preferences, "string" + i, new Random().nextInt(32) + 1);
+        }
+
+        assertFalse(preferences.getAll().isEmpty());
+        preferences.edit().clear().commit();
+        assertTrue(preferences.getAll().isEmpty());
+
+        String newContent = putAndTestString(preferences, "new", new Random().nextInt(32) + 1);
+        assertFalse(preferences.getAll().isEmpty());
+
+        preferences = create(DEFAULT_PREF_NAME, null).build();
+        assertEquals(newContent, preferences.getString("new", null));
+    }
+
+    @Test
+    public void testInitializeTwice() throws Exception {
         SharedPreferences sharedPreferences = create("init", null).build();
         putAndTestString(sharedPreferences, "s", 12);
         sharedPreferences = create("init", null).build();
@@ -139,21 +159,30 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
+    public void testContainsAfterReinitialization() throws Exception {
+        SharedPreferences sharedPreferences = create("twice", null).build();
+        String t = putAndTestString(sharedPreferences, "s", 12);
+        sharedPreferences = create("twice", null).build();
+        assertEquals(t, sharedPreferences.getString("s", null));
+        putAndTestString(sharedPreferences, "s2", 24);
+    }
+
+    @Test
     public void simpleStringGetWithPkdf2Password() throws Exception {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
+                .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
     }
 
     @Test
     public void simpleStringGetWithBcryptPassword() throws Exception {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new BcryptKeyStretcher(8)).build());
+                .keyStretchingFunction(new BcryptKeyStretcher(8)).build());
     }
 
     @Test
     public void simpleStringGetWithFastKDF() throws Exception {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build());
+                .keyStretchingFunction(new FastKeyStretcher()).build());
     }
 
     @Test
@@ -164,61 +193,61 @@ public abstract class ASecureSharedPreferencesTest {
     @Test
     public void testWithDifferentFingerprint() throws Exception {
         preferenceSmokeTest(create("fingerprint", null)
-            .encryptionFingerprint(Bytes.random(16).array()).build());
+                .encryptionFingerprint(Bytes.random(16).array()).build());
         preferenceSmokeTest(create("fingerprint2", null)
-            .encryptionFingerprint(() -> new byte[16]).build());
+                .encryptionFingerprint(() -> new byte[16]).build());
     }
 
     @Test
     public void testWithDifferentContentDigest() throws Exception {
         preferenceSmokeTest(create("contentDigest1", null)
-            .contentKeyDigest(8).build());
+                .contentKeyDigest(8).build());
         preferenceSmokeTest(create("contentDigest2", null)
-            .contentKeyDigest(Bytes.random(16).array()).build());
+                .contentKeyDigest(Bytes.random(16).array()).build());
     }
 
     @Test
     public void testWithSecureRandom() throws Exception {
         preferenceSmokeTest(create("secureRandom", null)
-            .secureRandom(new SecureRandom()).build());
+                .secureRandom(new SecureRandom()).build());
     }
 
     @Test
     public void testEncryptionStrength() throws Exception {
         preferenceSmokeTest(create("secureRandom", null)
-            .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
+                .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
     }
 
     @Test
     public void testProvider() throws Exception {
         preferenceSmokeTest(create("provider", null)
-            .securityProvider(null).build());
+                .securityProvider(null).build());
     }
 
     @Test
     public void testWithNoObfuscation() throws Exception {
         preferenceSmokeTest(create("obfuscate", null)
-            .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
+                .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
     }
 
     @Test
     public void testSetEncryption() throws Exception {
         preferenceSmokeTest(create("enc", null)
-            .symmetricEncryption(new AesGcmEncryption()).build());
+                .symmetricEncryption(new AesGcmEncryption()).build());
     }
 
     @Test
     public void testRecoveryPolicy() throws Exception {
         preferenceSmokeTest(create("recovery", null)
-            .recoveryPolicy(true, true).build());
+                .recoveryPolicy(true, true).build());
         preferenceSmokeTest(create("recovery", null)
-            .recoveryPolicy(new RecoveryPolicy.Default(true, true)).build());
+                .recoveryPolicy(new RecoveryPolicy.Default(true, true)).build());
     }
 
     @Test
     public void testCustomProtocolVersion() throws Exception {
         preferenceSmokeTest(create("protocol", null)
-            .cryptoProtocolVersion(14221).build());
+                .cryptoProtocolVersion(14221).build());
     }
 
     void preferenceSmokeTest(SharedPreferences preferences) {

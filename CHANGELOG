@@ -3,6 +3,7 @@
 ## v1.0.0
 
 * add compressor feature
+* fixes issue were storage salt was incorrectly created
 
 ## v0.2.0
 

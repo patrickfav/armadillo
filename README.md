@@ -240,6 +240,10 @@ The `.aar` files can then be found in `/armadillo/build/outputs/aar` folder
 * [secure-preferences using FB Conceal framework](https://github.com/KaKaVip/secure-preferences)
 * [secure-preferences supporting Android Keystore System](https://github.com/adorsys/secure-storage-android)
 
+## Further Reading
+
+* [Security Best Practices: Symmetric Encryption with AES in Java and Android](https://proandroiddev.com/security-best-practices-symmetric-encryption-with-aes-in-java-7616beaaade9)
+
 # License
 
 Copyright 2017 Patrick Favre-Bulle

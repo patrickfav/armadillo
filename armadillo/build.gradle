@@ -47,11 +47,12 @@ android {
 }
 
 dependencies {
-    implementation 'at.favre.lib:hkdf:1.0.0'
-    implementation 'at.favre.lib:bytes:0.4.6'
-    implementation 'com.jakewharton.timber:timber:4.6.0'
-    implementation 'org.mindrot:jbcrypt:0.4'
-    implementation group: 'com.android.support', name: 'support-annotations', version: rootProject.ext.dependencies.support
+    api 'at.favre.lib:hkdf:1.0.0'
+    api 'at.favre.lib:bytes:0.4.6'
+    api 'com.jakewharton.timber:timber:4.6.1'
+    api 'org.mindrot:jbcrypt:0.4'
+
+    api group: 'com.android.support', name: 'support-annotations', version: rootProject.ext.dependencies.support
 
     testImplementation "junit:junit:$rootProject.ext.dependencies.junit"
     androidTestImplementation 'com.android.support.test:runner:1.0.1'

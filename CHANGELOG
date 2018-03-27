@@ -1,5 +1,9 @@
 # Releases
 
+## v0.4.0
+
+* fixes missing transitive dependency in pom
+
 ## v0.3.0
 
 * add compressor feature

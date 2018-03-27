@@ -24,7 +24,7 @@ def final publishConfig = [
 
         bintrayLabels           : ['android', 'debugging', 'noop', 'debug-view'],
 
-        bintrayUploadDryRun     : false, //Whether to only mock uploading
+        bintrayUploadDryRun     : true, //Whether to only mock uploading
         bintrayUploadAutoPublish: true, //Whether version should be auto published after an upload
         bintrayUploadOverride   : true, //[Default: false] Whether to override version artifacts already published
         bintrayPubDlNumbers     : true, //Whether to show public dl stats in bintray

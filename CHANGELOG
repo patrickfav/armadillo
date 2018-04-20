@@ -1,5 +1,9 @@
 # Releases
 
+## v0.4.2
+
+* supporting `null` in `.putString()` and `.putStringSet()`; same as calling `remove()` as per API spec
+
 ## v0.4.1
 
 * fixes missing using incorrect dependency type '.aar'

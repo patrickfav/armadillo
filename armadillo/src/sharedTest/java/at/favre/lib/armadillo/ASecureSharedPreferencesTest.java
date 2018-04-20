@@ -156,6 +156,22 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
+    public void testPutNullString() {
+        String id = "testPutNullString";
+        putAndTestString(preferences, id, new Random().nextInt(32) + 1);
+        preferences.edit().putString(id, null).apply();
+        assertFalse(preferences.contains(id));
+    }
+
+    @Test
+    public void testPutNullStringSet() {
+        String id = "testPutNullStringSet";
+        addStringSet(preferences, 8);
+        preferences.edit().putStringSet(id, null).apply();
+        assertFalse(preferences.contains(id));
+    }
+
+    @Test
     public void testClear() {
         int count = 10;
         for (int i = 0; i < count; i++) {

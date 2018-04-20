@@ -19,11 +19,11 @@ import timber.log.Timber;
 /**
  * A simple wrapper implementation using the {@link DefaultEncryptionProtocol} before persisting
  * the data. It deviates from the expected behaviour in the following way:
- *
+ * <p>
  * <ul>
- *     <li>The storage adds a meta entry containing a storage scoped salt value</li>
- *     <li>getAll() will return the hashed keys and an empty string as content</li>
- *     <li>getAll() will NOT include the storage salt (i.e size of the returned map only reflects the user added values)</li>
+ * <li>The storage adds a meta entry containing a storage scoped salt value</li>
+ * <li>getAll() will return the hashed keys and an empty string as content</li>
+ * <li>getAll() will NOT include the storage salt (i.e size of the returned map only reflects the user added values)</li>
  * </ul>
  *
  * @author Patrick Favre-Bulle
@@ -236,21 +236,30 @@ public final class SecureSharedPreferences implements SharedPreferences {
         }
 
         @Override
-        public SharedPreferences.Editor putString(String key, String value) {
+        public SharedPreferences.Editor putString(String key, @Nullable String value) {
             final String keyHash = encryptionProtocol.deriveContentKey(key);
-            internalEditor.putString(keyHash, encryptToBase64(keyHash, Bytes.from(value).array()));
+
+            if (value == null) {
+                internalEditor.remove(encryptionProtocol.deriveContentKey(key));
+            } else {
+                internalEditor.putString(keyHash, encryptToBase64(keyHash, Bytes.from(value).array()));
+            }
             return this;
         }
 
         @Override
-        public SharedPreferences.Editor putStringSet(String key, Set<String> values) {
+        public SharedPreferences.Editor putStringSet(String key, @Nullable Set<String> values) {
             final String keyHash = encryptionProtocol.deriveContentKey(key);
 
-            final Set<String> encryptedValues = new HashSet<>(values.size());
-            for (String value : values) {
-                encryptedValues.add(encryptToBase64(keyHash, Bytes.from(value).array()));
+            if (values == null) {
+                internalEditor.remove(encryptionProtocol.deriveContentKey(key));
+            } else {
+                final Set<String> encryptedValues = new HashSet<>(values.size());
+                for (String value : values) {
+                    encryptedValues.add(encryptToBase64(keyHash, Bytes.from(value).array()));
+                }
+                internalEditor.putStringSet(keyHash, encryptedValues);
             }
-            internalEditor.putStringSet(keyHash, encryptedValues);
             return this;
         }
 

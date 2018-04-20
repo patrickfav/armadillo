@@ -2,6 +2,10 @@
 
 ## v0.4.0
 
+* fixes missing using incorrect dependency type '.aar'
+
+## v0.4.0
+
 * fixes missing transitive dependency in pom
 
 ## v0.3.0

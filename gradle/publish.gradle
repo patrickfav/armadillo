@@ -7,7 +7,7 @@ def final publishConfig = [
         group                   : 'at.favre.lib',
         version                 : rootProject.ext.versionNameLib,
         descriptionText         : 'A shared preference implementation for confidential data. Per default uses AES-GCM, BCrypt and HKDF as cryptographic primitives. Uses the concept of Fingerprinting combined with optional user provided passwords.',
-        inceptionYear           : '201/',
+        inceptionYear           : '2017',
         siteUrl                 : 'https://github.com/patrickfav/armadillo',
         gitUrl                  : 'https://github.com/patrickfav/armadillo.git',
         issueTrackerUrl         : 'https://github.com/patrickfav/armadillo/issues',
@@ -67,16 +67,6 @@ install {
                     system publishConfig.issueTrackerName
                     url publishConfig.issueTrackerUrl
                 }
-            }
-        }
-
-        pom.whenConfigured { pom ->
-            def found = pom.dependencies.find { dep ->
-                dep.groupId == publishConfig.group
-            }
-
-            if (found != null) {
-                found.type = "aar"
             }
         }
     }

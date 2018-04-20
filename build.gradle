@@ -43,7 +43,7 @@ ext {
     javaVersion = JavaVersion.VERSION_1_8
 
     dependencies = [
-            support     : "27.1.0",
+            support     : "27.1.1",
             espresso    : "3.0.1",
             junit       : "4.12"
     ]

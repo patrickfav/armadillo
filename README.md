@@ -105,7 +105,7 @@ heavily used by e.g. TLS implementation.
   data on an Android device. Unfortunately, due to the massive fragmentation
   in the ecosystem properly handling and using the Android Keystore System
   is not easy and has [some major drawbacks](https://issuetracker.google.com/issues/36983155).
-  Due to working in a security relevant field I have a lot of exigence with
+  Due to working in a security relevant field I have a lot of experience with
   this technology, therefore the decision was made to not support it _for this
   implementation_ i.e. to keep it simple.
 * **Use of data obfuscation**: To disguise the actual data format and appear

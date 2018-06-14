@@ -70,8 +70,11 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             byte[] encrypted = authenticatedEncryption.encrypt(key, compressor.compress(rawContent), Bytes.from(protocolVersion).array());
 
             DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
-            obfuscator.obfuscate(encrypted);
-            obfuscator.clearKey();
+            try {
+                obfuscator.obfuscate(encrypted);
+            } finally {
+                obfuscator.clearKey();
+            }
 
             return encode(contentSalt, encrypted);
         } catch (AuthenticatedEncryptionException e) {

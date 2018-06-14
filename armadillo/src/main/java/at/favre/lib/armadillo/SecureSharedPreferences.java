@@ -73,10 +73,13 @@ public final class SecureSharedPreferences implements SharedPreferences {
         if (base64Random == null) {
             Timber.v("create new preference random");
             byte[] rndBytes = Bytes.random(32, secureRandom).array();
-            outBytes = Bytes.from(rndBytes).array();
-            dataObfuscator.obfuscate(rndBytes);
-            sharedPreferences.edit().putString(preferenceRandomContentKey, Bytes.wrap(rndBytes).encodeBase64()).apply();
-            Bytes.wrap(rndBytes).mutable().secureWipe();
+            try {
+                outBytes = Bytes.from(rndBytes).array();
+                dataObfuscator.obfuscate(rndBytes);
+                sharedPreferences.edit().putString(preferenceRandomContentKey, Bytes.wrap(rndBytes).encodeBase64()).apply();
+            } finally {
+                Bytes.wrapNullSafe(rndBytes).mutable().secureWipe();
+            }
         } else {
             byte[] obfuscatedRandom = Bytes.parseBase64(base64Random).array();
             dataObfuscator.deobfuscate(obfuscatedRandom);

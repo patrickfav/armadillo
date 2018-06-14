@@ -2,6 +2,7 @@ package at.favre.lib.armadillo;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -39,6 +40,18 @@ public final class GzipCompressor implements Compressor {
             return returnBuffer;
         } catch (Exception e) {
             throw new IllegalStateException("could not decompress gzip", e);
+        } finally {
+            try {
+                bos.close();
+            } catch (IOException ignore) {
+            }
+
+            if (gzipInputStream != null) {
+                try {
+                    gzipInputStream.close();
+                } catch (IOException ignore) {
+                }
+            }
         }
     }
 
@@ -56,6 +69,18 @@ public final class GzipCompressor implements Compressor {
             return returnBuffer;
         } catch (Exception e) {
             throw new IllegalStateException("could not compress gzip", e);
+        } finally {
+            try {
+                bos.close();
+            } catch (IOException ignore) {
+            }
+
+            if (gzipOutputStream != null) {
+                try {
+                    gzipOutputStream.close();
+                } catch (IOException ignore) {
+                }
+            }
         }
     }
 }

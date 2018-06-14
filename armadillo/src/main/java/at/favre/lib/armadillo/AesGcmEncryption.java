@@ -80,18 +80,22 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             return byteBuffer.array();
         } catch (Exception e) {
             throw new AuthenticatedEncryptionException("could not encrypt", e);
+        } finally {
+
         }
     }
 
     @Override
     public byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData, @Nullable byte[] associatedData) throws AuthenticatedEncryptionException {
+        byte[] iv = null;
+        byte[] encrypted = null;
         try {
             ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
 
             int ivLength = byteBuffer.get();
-            byte[] iv = new byte[ivLength];
+            iv = new byte[ivLength];
             byteBuffer.get(iv);
-            byte[] encrypted = new byte[byteBuffer.remaining()];
+            encrypted = new byte[byteBuffer.remaining()];
             byteBuffer.get(encrypted);
 
             final Cipher cipher = getCipher();
@@ -99,15 +103,13 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             if (associatedData != null) {
                 cipher.updateAAD(associatedData);
             }
-            byte[] decrypted = cipher.doFinal(encrypted);
-
-            Bytes.wrap(iv).mutable().secureWipe();
-            Bytes.wrap(rawEncryptionKey).mutable().secureWipe();
-            Bytes.wrap(encrypted).mutable().secureWipe();
-
-            return decrypted;
+            return cipher.doFinal(encrypted);
         } catch (Exception e) {
             throw new AuthenticatedEncryptionException("could not decrypt", e);
+        } finally {
+            Bytes.wrapNullSafe(iv).mutable().secureWipe();
+            Bytes.wrapNullSafe(rawEncryptionKey).mutable().secureWipe();
+            Bytes.wrapNullSafe(encrypted).mutable().secureWipe();
         }
     }
 

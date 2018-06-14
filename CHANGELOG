@@ -1,5 +1,9 @@
 # Releases
 
+## v0.4.3
+
+* better exception clean up with resources and some byte wipe
+
 ## v0.4.2
 
 * supporting `null` in `.putString()` and `.putStringSet()`; same as calling `remove()` as per API spec

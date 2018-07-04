@@ -7,11 +7,10 @@
 </p>
 
 <p align="center">
-
-[![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg) ](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
-[![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
-[![Javadocs](https://www.javadoc.io/badge/at.favre.lib/armadillo.svg)](https://www.javadoc.io/doc/at.favre.lib/armadillo)
-[![Coverage Status](https://coveralls.io/repos/github/patrickfav/armadillo/badge.svg?branch=master)](https://coveralls.io/github/patrickfav/armadillo?branch=master)
+<a href ="https://bintray.com/patrickfav/maven/armadillo/_latestVersion"><img src="https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg" alt="Download" title="Download" /></a>
+<a href ="https://travis-ci.org/patrickfav/armadillo"><img src="https://travis-ci.org/patrickfav/armadillo.svg?branch=master" alt="Build Status" title="Build Status" /></a>
+<a href ="https://www.javadoc.io/doc/at.favre.lib/armadillo"><img src="https://www.javadoc.io/badge/at.favre.lib/armadillo.svg" alt="Javadocs" title="Javadocs" /></a>
+<a href ="https://coveralls.io/github/patrickfav/armadillo?branch=master"><img src="https://coveralls.io/repos/github/patrickfav/armadillo/badge.svg?branch=master" alt="Coverage Status" title="Coverage Status" /></a>
 </p>
 
 # Armadillo - Encrypted Shared Preference

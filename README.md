@@ -2,8 +2,11 @@
 
 <p align="center">
 
-![projectlogo](doc/logo/logo_hdpi.png)
+<img src="doc/logo/logo_hdpi.png" alt="armadillo_logo" title="armadillo_logo" height="200"/>
 
+</p>
+
+<p align="center">
 
 [![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg) ](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
 [![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)

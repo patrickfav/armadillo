@@ -1,6 +1,10 @@
-![projectlogo](doc/logo/logo_hdpi.png)
+
 
 <p align="center">
+
+![projectlogo](doc/logo/logo_hdpi.png)
+
+
 [![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg) ](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
 [![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
 [![Javadocs](https://www.javadoc.io/badge/at.favre.lib/armadillo.svg)](https://www.javadoc.io/doc/at.favre.lib/armadillo)

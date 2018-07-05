@@ -39,7 +39,7 @@ ext {
     buildToolsVersion = "27.0.3"
     targetSdkVersion = 27
 
-    minSdkVersion = 21
+    minSdkVersion = 19
     javaVersion = JavaVersion.VERSION_1_8
 
     dependencies = [

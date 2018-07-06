@@ -58,9 +58,9 @@ public interface AuthenticatedEncryption {
     byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData, @Nullable byte[] associatedData) throws AuthenticatedEncryptionException;
 
     /**
-     * Get the required key size length in byte for given security strenght type
+     * Get the required key size length in bytes for given security strength type
      *
-     * @param keyStrengthType
+     * @param keyStrengthType STRENGTH_HIGH or STRENGTH_VERY_HIGH
      * @return required size in byte
      */
     int byteSizeLength(@KeyStrength int keyStrengthType);

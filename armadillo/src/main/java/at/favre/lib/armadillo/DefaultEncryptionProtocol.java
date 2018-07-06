@@ -13,6 +13,16 @@ import timber.log.Timber;
 
 /**
  * The Armadillo Encryption Protocol. The whole protocol logic, orchestrating all the other parts.
+ * <p>
+ * The rawContent, contentSalt and protocolVersion will be encoded to the following format:
+ * <p>
+ * out = byte[] {v v v v w x x x x x x x x x x… y y y y z z z z z z z z z z z z z z z z z z…}
+ * <p>
+ * v = Protocol version
+ * w = Content salt length
+ * x = Content salt
+ * y = Encrypted content length
+ * z = Encrypted content
  *
  * @author Patrick Favre-Bulle
  * @since 18.12.2017

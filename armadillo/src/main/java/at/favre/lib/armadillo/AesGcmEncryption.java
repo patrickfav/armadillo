@@ -26,7 +26,7 @@ import at.favre.lib.bytes.Bytes;
  * <p>
  * x = IV length as byte
  * y = IV bytes
- * z = content bytes
+ * z = content bytes (encrypted content, auth tag)
  *
  * @author Patrick Favre-Bulle
  * @since 18.12.2017
@@ -57,7 +57,7 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
     @Override
     public byte[] encrypt(byte[] rawEncryptionKey, byte[] rawData, @Nullable byte[] associatedData) throws AuthenticatedEncryptionException {
         if (rawEncryptionKey.length < 16) {
-            throw new IllegalArgumentException("key length must be longer than 16 byte");
+            throw new IllegalArgumentException("key length must be longer than 16 bytes");
         }
 
         try {

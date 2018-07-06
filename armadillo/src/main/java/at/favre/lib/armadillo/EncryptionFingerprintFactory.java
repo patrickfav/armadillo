@@ -101,7 +101,7 @@ public final class EncryptionFingerprintFactory {
             }
             return Bytes.wrap(bos.toByteArray()).hashSha256().array();
         } catch (Exception e) {
-            throw new IllegalStateException("could not apk signature has", e);
+            throw new IllegalStateException("could not get apk signature hash", e);
         }
     }
 }

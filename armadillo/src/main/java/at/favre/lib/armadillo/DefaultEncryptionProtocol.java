@@ -29,6 +29,13 @@ import timber.log.Timber;
  */
 
 final class DefaultEncryptionProtocol implements EncryptionProtocol {
+
+    private static final int CONTENT_SALT_LENGTH_BYTES = 16;
+    private static final int STRETCHED_PASSWORD_LENGTH_BYTES = 32;
+    private static final int PROTOCOL_VERSION_LENGTH_BYTES = 4;
+    private static final int CONTENT_SALT_SIZE_LENGTH_BYTES = 1;
+    private static final int ENCRYPTED_CONTENT_SIZE_LENGTH_BYTES = 4;
+
     private final byte[] preferenceSalt;
     private final EncryptionFingerprint fingerprint;
     private final KeyStretchingFunction keyStretchingFunction;
@@ -73,7 +80,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         byte[] key = new byte[0];
 
         try {
-            byte[] contentSalt = Bytes.random(16, secureRandom).array();
+            byte[] contentSalt = Bytes.random(CONTENT_SALT_LENGTH_BYTES, secureRandom).array();
 
             fingerprintBytes = fingerprint.getBytes();
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
@@ -97,7 +104,9 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     }
 
     private byte[] encode(byte[] contentSalt, byte[] encrypted) {
-        ByteBuffer buffer = ByteBuffer.allocate(4 + 1 + contentSalt.length + 4 + encrypted.length);
+        ByteBuffer buffer = ByteBuffer.allocate(PROTOCOL_VERSION_LENGTH_BYTES
+                + CONTENT_SALT_SIZE_LENGTH_BYTES + contentSalt.length
+                + ENCRYPTED_CONTENT_SIZE_LENGTH_BYTES + encrypted.length);
         buffer.putInt(protocolVersion);
         buffer.put((byte) contentSalt.length);
         buffer.put(contentSalt);
@@ -150,7 +159,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         Bytes ikm = Bytes.wrap(fingerprint).append(contentSalt).append(Bytes.from(contentKey, Normalizer.Form.NFKD));
 
         if (password != null) {
-            ikm.append(keyStretchingFunction.stretch(contentSalt, password, 32));
+            ikm.append(keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES));
         }
 
         return HKDF.fromHmacSha512().extractAndExpand(preferenceSalt, ikm.array(), "DefaultEncryptionProtocol".getBytes(), keyLengthBit / 8);

@@ -141,8 +141,12 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             buffer.get(encrypted);
 
             DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
-            obfuscator.deobfuscate(encrypted);
-            obfuscator.clearKey();
+            try {
+                obfuscator.deobfuscate(encrypted);
+            } finally {
+                obfuscator.clearKey();
+            }
+
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
 
             return compressor.decompress(authenticatedEncryption.decrypt(key, encrypted, Bytes.from(protocolVersion).array()));

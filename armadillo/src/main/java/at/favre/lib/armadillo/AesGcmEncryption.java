@@ -111,7 +111,6 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             throw new AuthenticatedEncryptionException("could not decrypt", e);
         } finally {
             Bytes.wrapNullSafe(iv).mutable().secureWipe();
-            Bytes.wrapNullSafe(rawEncryptionKey).mutable().secureWipe();
             Bytes.wrapNullSafe(encrypted).mutable().secureWipe();
         }
     }

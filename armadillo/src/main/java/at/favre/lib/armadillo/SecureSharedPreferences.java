@@ -30,7 +30,8 @@ import timber.log.Timber;
  */
 public final class SecureSharedPreferences implements SharedPreferences {
 
-    private static final String KEY_RANDOM = "at.favre.lib.securepref.KEY_RANDOM";
+    private static final String PREFERENCES_SALT_KEY = "at.favre.lib.securepref.KEY_RANDOM";
+    private static final int PREFERENCES_SALT_LENGTH_BYTES = 32;
 
     private final SharedPreferences sharedPreferences;
     private final EncryptionProtocol.Factory factory;
@@ -60,19 +61,19 @@ public final class SecureSharedPreferences implements SharedPreferences {
 
     private void createProtocol() {
         encryptionProtocol = factory.create(
-                getPreferencesRandom(
+                getPreferencesSalt(
                         factory.getStringMessageDigest(),
                         factory.createDataObfuscator(),
                         factory.getSecureRandom()));
     }
 
-    private byte[] getPreferencesRandom(StringMessageDigest stringMessageDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
-        preferenceRandomContentKey = stringMessageDigest.derive(KEY_RANDOM, "prefName");
+    private byte[] getPreferencesSalt(StringMessageDigest stringMessageDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
+        preferenceRandomContentKey = stringMessageDigest.derive(PREFERENCES_SALT_KEY, "prefName");
         String base64Random = sharedPreferences.getString(preferenceRandomContentKey, null);
         byte[] outBytes;
         if (base64Random == null) {
-            Timber.v("create new preference random");
-            byte[] rndBytes = Bytes.random(32, secureRandom).array();
+            Timber.v("create new preferences random salt");
+            byte[] rndBytes = Bytes.random(PREFERENCES_SALT_LENGTH_BYTES, secureRandom).array();
             try {
                 outBytes = Bytes.from(rndBytes).array();
                 dataObfuscator.obfuscate(rndBytes);

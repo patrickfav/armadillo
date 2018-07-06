@@ -60,18 +60,20 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             throw new IllegalArgumentException("key length must be longer than 16 bytes");
         }
 
+        byte[] iv = null;
+        byte[] encrypted = null;
         try {
-            byte[] iv = new byte[IV_LENGTH_BYTE];
+            iv = new byte[IV_LENGTH_BYTE];
             secureRandom.nextBytes(iv);
 
-            final Cipher cipher = getCipher();
-            cipher.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+            final Cipher cipherEnc = getCipher();
+            cipherEnc.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
 
             if (associatedData != null) {
-                cipher.updateAAD(associatedData);
+                cipherEnc.updateAAD(associatedData);
             }
 
-            byte[] encrypted = cipher.doFinal(rawData);
+            encrypted = cipherEnc.doFinal(rawData);
 
             ByteBuffer byteBuffer = ByteBuffer.allocate(1 + iv.length + encrypted.length);
             byteBuffer.put((byte) iv.length);
@@ -81,7 +83,8 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
         } catch (Exception e) {
             throw new AuthenticatedEncryptionException("could not encrypt", e);
         } finally {
-
+            Bytes.wrapNullSafe(iv).mutable().secureWipe();
+            Bytes.wrapNullSafe(encrypted).mutable().secureWipe();
         }
     }
 
@@ -98,12 +101,12 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             encrypted = new byte[byteBuffer.remaining()];
             byteBuffer.get(encrypted);
 
-            final Cipher cipher = getCipher();
-            cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+            final Cipher cipherDec = getCipher();
+            cipherDec.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
             if (associatedData != null) {
-                cipher.updateAAD(associatedData);
+                cipherDec.updateAAD(associatedData);
             }
-            return cipher.doFinal(encrypted);
+            return cipherDec.doFinal(encrypted);
         } catch (Exception e) {
             throw new AuthenticatedEncryptionException("could not decrypt", e);
         } finally {

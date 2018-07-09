@@ -5,7 +5,7 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode rootProject.ext.versionCode
         versionName rootProject.ext.versionNameApp
@@ -22,7 +22,7 @@ android {
 }
 
 dependencies {
-    implementation 'at.favre.lib:armadillo:0.4.3'
+    implementation project(':armadillo')
     implementation "com.android.support:appcompat-v7:$rootProject.ext.dependencies.support"
     testImplementation "junit:junit:$rootProject.ext.dependencies.junit"
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

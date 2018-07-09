@@ -5,12 +5,16 @@ import android.support.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.security.Provider;
 import java.security.SecureRandom;
+import java.security.spec.AlgorithmParameterSpec;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
+import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import at.favre.lib.bytes.Bytes;
+
+import static at.favre.lib.armadillo.Utils.isKitKat;
 
 /**
  * Implements AES (Advanced Encryption Standard) with Galois/Counter Mode (GCM), which is a mode of
@@ -31,11 +35,12 @@ import at.favre.lib.bytes.Bytes;
  * @author Patrick Favre-Bulle
  * @since 18.12.2017
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "SameParameterValue"})
 final class AesGcmEncryption implements AuthenticatedEncryption {
+
     private static final String ALGORITHM = "AES/GCM/NoPadding";
-    private static final int TAG_LENGTH_BIT = 128;
-    private static final int IV_LENGTH_BYTE = 12;
+    private static final int TAG_LENGTH_BYTES = 16;
+    private static final int IV_LENGTH_BYTES = 12;
 
     private final SecureRandom secureRandom;
     private final Provider provider;
@@ -63,11 +68,11 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
         byte[] iv = null;
         byte[] encrypted = null;
         try {
-            iv = new byte[IV_LENGTH_BYTE];
+            iv = new byte[IV_LENGTH_BYTES];
             secureRandom.nextBytes(iv);
 
             final Cipher cipherEnc = getCipher();
-            cipherEnc.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+            cipherEnc.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), getParams(iv));
 
             if (associatedData != null) {
                 cipherEnc.updateAAD(associatedData);
@@ -102,7 +107,7 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             byteBuffer.get(encrypted);
 
             final Cipher cipherDec = getCipher();
-            cipherDec.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+            cipherDec.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), getParams(iv));
             if (associatedData != null) {
                 cipherDec.updateAAD(associatedData);
             }
@@ -133,5 +138,19 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             }
         }
         return cipher;
+    }
+
+    private AlgorithmParameterSpec getParams(final byte[] iv) {
+        return getParams(iv, 0, iv.length);
+    }
+
+    private AlgorithmParameterSpec getParams(final byte[] buf, int offset, int len) {
+        if (isKitKat()) {
+            // GCMParameterSpec should always be present in Java 7 or newer, but it's missing on
+            // some Android devices with API level <= 19. Fortunately, we can initialize the cipher
+            // with just an IvParameterSpec. It will use a tag size of 128 bits.
+            return new IvParameterSpec(buf, offset, len);
+        }
+        return new GCMParameterSpec(TAG_LENGTH_BYTES * 8, buf, offset, len);
     }
 }

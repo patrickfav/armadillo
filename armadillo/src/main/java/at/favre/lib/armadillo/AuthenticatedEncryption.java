@@ -39,7 +39,9 @@ public interface AuthenticatedEncryption {
      *
      * @param rawEncryptionKey to use as encryption key material
      * @param rawData          to encrypt
-     * @param associatedData   additional data used to create the auth tag and will be subject to integrity/authentication check
+     * @param associatedData   additional data used to create the auth tag and will be subject to
+     *                         integrity/authentication check (associatedData is not available on
+     *                         Android KitKat (API level 19), it will be ignored)
      * @return encrypted content
      * @throws AuthenticatedEncryptionException if any crypto fails
      */
@@ -51,7 +53,8 @@ public interface AuthenticatedEncryption {
      * @param rawEncryptionKey to use as decryption key material
      * @param encryptedData    to decrypt
      * @param associatedData   additional data used to create the auth tag; must be same as provided
-     *                         in the encrypt step
+     *                         in the encrypt step (associatedData is not available on Android KitKat
+     *                         (API level 19), it will be ignored)
      * @return decrypted, original data
      * @throws AuthenticatedEncryptionException if any crypto fails
      */

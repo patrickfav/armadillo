@@ -174,7 +174,7 @@ parts:
 ![screenshot key derivation](doc/key_derivation.png)
 
 * User password (optional): provided by the caller and stretched with e.g. Bcrypt
-* Encryption Fingerprint (see section below)
+* Encryption Fingerprint (see section above)
 * Entry Key: the hashed version of the key passed by the caller; this will bind the data to that specific entry key
 * Entry Salt: a random 16 byte value unique to that specific entry that will be created on every put operation (will also be used for the key stretching function)
 * Storage Salt: a random 32 byte value unique to that specific storage, created on first creation of the storage

@@ -5,9 +5,6 @@ import android.support.annotation.NonNull;
 
 import org.mindrot.jbcrypt.BCrypt;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
 
@@ -61,7 +58,7 @@ final class BcryptKeyStretcher implements KeyStretchingFunction {
      * @param logRounds log2(Iterations). e.g. 12 ==> 2^12 = 4,096 iterations
      * @return the Bcrypt hash of the password
      */
-    private static byte[] bcrypt(char[] password, byte[] salt, int logRounds) throws NoSuchAlgorithmException, InvalidKeySpecException {
+    private static byte[] bcrypt(char[] password, byte[] salt, int logRounds) {
         StrictMode.noteSlowCall("bcrypt is a very expensive call and should not be done on the main thread");
         return Bytes.from(BCrypt.hashpw(String.valueOf(password) + Bytes.wrap(salt).encodeHex(), generateSalt(salt, logRounds))).array();
     }

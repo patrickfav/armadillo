@@ -18,7 +18,7 @@ interface EncryptionProtocol {
 
     /**
      * Given a original content key provided by the user creates a message digest of this key
-     * with wich the original key cannot be recovered other than brute force.
+     * with witch the original key cannot be recovered other than brute force.
      *
      * @param originalContentKey to create the digest for
      * @return the digest (hash)

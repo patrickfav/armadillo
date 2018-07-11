@@ -317,11 +317,11 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void testChangePassword() {
-        Set<String> testSet = new HashSet<String>() {{
-            add("t1");
-            add("t2");
-            add("t3");
-        }};
+        Set<String> testSet = new HashSet<String>();
+        testSet.add("t1");
+        testSet.add("t2");
+        testSet.add("t3");
+
         // open new shared pref and add some data
         ArmadilloSharedPreferences pref = create("testChangePassword", "pw1".toCharArray())
             .keyStretchingFunction(new FastKeyStretcher()).build();
@@ -363,7 +363,7 @@ public abstract class ASecureSharedPreferencesTest {
         try {
             pref.getString("k1", null);
             fail("should throw exception, since cannot decrypt");
-        } catch (SecureSharedPreferenceCryptoException e) {
+        } catch (SecureSharedPreferenceCryptoException ignored) {
         }
     }
 
@@ -389,17 +389,17 @@ public abstract class ASecureSharedPreferencesTest {
         try {
             pref.getString("k1", null);
             fail("should throw exception, since cannot decrypt");
-        } catch (SecureSharedPreferenceCryptoException e) {
+        } catch (SecureSharedPreferenceCryptoException ignored) {
         }
         try {
             pref.getInt("k2", 0);
             fail("should throw exception, since cannot decrypt");
-        } catch (SecureSharedPreferenceCryptoException e) {
+        } catch (SecureSharedPreferenceCryptoException ignored) {
         }
         try {
             pref.getBoolean("k3", false);
             fail("should throw exception, since cannot decrypt");
-        } catch (SecureSharedPreferenceCryptoException e) {
+        } catch (SecureSharedPreferenceCryptoException ignored) {
         }
     }
 }

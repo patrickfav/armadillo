@@ -230,22 +230,56 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         StrictMode.noteSlowCall("changing password should only be done in a background thread");
         SharedPreferences.Editor editor = this.edit();
         for (String keyHash : getAll().keySet()) {
-            //TODO handling for string sets
-            final String encryptedValue = sharedPreferences.getString(keyHash, null);
-            if (encryptedValue == null) {
-                continue;
+            if (!reencryptStringType(newPassword, (Editor) editor, keyHash)) {
+                reencryptStringSetType(newPassword, (Editor) editor, keyHash);
             }
-
-            byte[] bytes = decrypt(keyHash, password, encryptedValue);
-            if (bytes == null) {
-                continue;
-            }
-            ((Editor) editor).putEncryptedBase64(keyHash, encryptToBase64(keyHash, newPassword, bytes));
         }
         editor.commit();
 
         Arrays.fill(password, (char) 0);
         password = newPassword;
+    }
+
+    private boolean reencryptStringType(char[] newPassword, Editor editor, String keyHash) {
+        try {
+            final String encryptedValue = sharedPreferences.getString(keyHash, null);
+
+            if (encryptedValue == null) {
+                return false;
+            }
+
+            byte[] bytes = decrypt(keyHash, password, encryptedValue);
+            if (bytes == null) {
+                return true;
+            }
+            editor.putEncryptedBase64(keyHash, encryptToBase64(keyHash, newPassword, bytes));
+            return true;
+        } catch (ClassCastException e) {
+            return false;
+        }
+    }
+
+    private boolean reencryptStringSetType(char[] newPassword, Editor editor, String keyHash) {
+        final Set<String> encryptedSet = sharedPreferences.getStringSet(keyHash, null);
+        if (encryptedSet == null) {
+            return false;
+        }
+
+        final Set<String> decryptedSet = new HashSet<>(encryptedSet.size());
+        for (String encryptedValue : encryptedSet) {
+            byte[] bytes = decrypt(keyHash, password, encryptedValue);
+            if (bytes == null) {
+                continue;
+            }
+            decryptedSet.add(Bytes.from(bytes).encodeUtf8());
+        }
+
+        final Set<String> encryptedValues = new HashSet<>(decryptedSet.size());
+        for (String value : decryptedSet) {
+            encryptedValues.add(encryptToBase64(keyHash, newPassword, Bytes.from(value).array()));
+        }
+        editor.putEncryptedStringSet(keyHash, encryptedValues);
+        return true;
     }
 
     @Override
@@ -302,6 +336,11 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
                 }
                 internalEditor.putStringSet(keyHash, encryptedValues);
             }
+            return this;
+        }
+
+        SharedPreferences.Editor putEncryptedStringSet(String key, @Nullable Set<String> values) {
+            internalEditor.putStringSet(key, values);
             return this;
         }
 

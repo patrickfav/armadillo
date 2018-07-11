@@ -317,10 +317,16 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void testChangePassword() {
+        Set<String> testSet = new HashSet<String>() {{
+            add("t1");
+            add("t2");
+            add("t3");
+        }};
         // open new shared pref and add some data
         ArmadilloSharedPreferences pref = create("testChangePassword", "pw1".toCharArray())
             .keyStretchingFunction(new FastKeyStretcher()).build();
-        pref.edit().putString("k1", "string1").putInt("k2", 2).putBoolean("k3", true).commit();
+        pref.edit().putString("k1", "string1").putInt("k2", 2).putStringSet("set", testSet)
+            .putBoolean("k3", true).commit();
         pref.close();
 
         // open again and check if can be used
@@ -329,6 +335,7 @@ public abstract class ASecureSharedPreferencesTest {
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
         assertEquals(true, pref.getBoolean("k3", false));
+        assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
         // open with old pw and change to new one, all the values should be accessible
@@ -338,6 +345,7 @@ public abstract class ASecureSharedPreferencesTest {
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
         assertEquals(true, pref.getBoolean("k3", false));
+        assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
         // open with new pw, should be accessible
@@ -346,6 +354,7 @@ public abstract class ASecureSharedPreferencesTest {
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
         assertEquals(true, pref.getBoolean("k3", false));
+        assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
         // open with old pw, should throw exception, since cannot decrypt

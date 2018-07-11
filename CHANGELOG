@@ -1,5 +1,16 @@
 # Releases
 
+## v0.5.0
+
+* [Security] a user provided password was NOT used for the creation of the secret key #11 (thx @davidmigloz)
+* various small fixes cleaning memory from security relevant data (internal keys, salts, etc.)
+* fix minSdk to be 19 instead of 21
+
+### Known Issues
+
+* currently the AES mode GCM does not work correctly on Kitkat, working on a fix
+* currently migration is needed if user password was used (will add a migration guide later)
+
 ## v0.4.3
 
 * better exception clean up with resources and some byte wipe

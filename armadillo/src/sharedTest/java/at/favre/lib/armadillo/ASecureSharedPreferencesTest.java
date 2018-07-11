@@ -15,6 +15,7 @@ import at.favre.lib.bytes.Bytes;
 
 import static junit.framework.Assert.assertFalse;
 import static junit.framework.Assert.assertTrue;
+import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -45,7 +46,7 @@ public abstract class ASecureSharedPreferencesTest {
     protected abstract Armadillo.Builder create(String name, char[] pw);
 
     @Test
-    public void simpleMultipleStringGet() throws Exception {
+    public void simpleMultipleStringGet() {
         SharedPreferences preferences = create("manytest", null).build();
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 100; j++) {
@@ -57,14 +58,14 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void simpleGetString() throws Exception {
+    public void simpleGetString() {
         putAndTestString(preferences, "string1", 1);
         putAndTestString(preferences, "string2", 16);
         putAndTestString(preferences, "string3", 200);
     }
 
     @Test
-    public void simpleGetStringApply() throws Exception {
+    public void simpleGetStringApply() {
         String content = Bytes.random(16).encodeBase64();
         preferences.edit().putString("d", content).apply();
         assertEquals(content, preferences.getString("d", null));
@@ -79,7 +80,7 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void simpleGetInt() throws Exception {
+    public void simpleGetInt() {
         int content = 3782633;
         preferences.edit().putInt("int", content).commit();
         assertTrue(preferences.contains("int"));
@@ -87,7 +88,7 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void simpleGetLong() throws Exception {
+    public void simpleGetLong() {
         long content = 3782633654323456L;
         preferences.edit().putLong("long", content).commit();
         assertTrue(preferences.contains("long"));
@@ -95,7 +96,7 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void simpleGetFloat() throws Exception {
+    public void simpleGetFloat() {
         float content = 728.1891f;
         preferences.edit().putFloat("float", content).commit();
         assertTrue(preferences.contains("float"));
@@ -103,7 +104,7 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void simpleGetBoolean() throws Exception {
+    public void simpleGetBoolean() {
         preferences.edit().putBoolean("boolean", true).commit();
         assertTrue(preferences.contains("boolean"));
         assertEquals(true, preferences.getBoolean("boolean", false));
@@ -113,7 +114,7 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void simpleGetStringSet() throws Exception {
+    public void simpleGetStringSet() {
         addStringSet(preferences, 1);
         addStringSet(preferences, 7);
         addStringSet(preferences, 128);
@@ -131,7 +132,7 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void testGetDefaults() throws Exception {
+    public void testGetDefaults() {
         assertNull(preferences.getString("s", null));
         assertNull(preferences.getStringSet("s", null));
         assertFalse(preferences.getBoolean("s", false));
@@ -190,7 +191,7 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void testInitializeTwice() throws Exception {
+    public void testInitializeTwice() {
         SharedPreferences sharedPreferences = create("init", null).build();
         putAndTestString(sharedPreferences, "s", 12);
         sharedPreferences = create("init", null).build();
@@ -198,7 +199,7 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void testContainsAfterReinitialization() throws Exception {
+    public void testContainsAfterReinitialization() {
         SharedPreferences sharedPreferences = create("twice", null).build();
         String t = putAndTestString(sharedPreferences, "s", 12);
         sharedPreferences = create("twice", null).build();
@@ -207,86 +208,86 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void simpleStringGetWithPkdf2Password() throws Exception {
+    public void simpleStringGetWithPkdf2Password() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-                .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
+            .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
     }
 
     @Test
-    public void simpleStringGetWithBcryptPassword() throws Exception {
+    public void simpleStringGetWithBcryptPassword() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-                .keyStretchingFunction(new BcryptKeyStretcher(8)).build());
+            .keyStretchingFunction(new BcryptKeyStretcher(8)).build());
     }
 
     @Test
-    public void simpleStringGetWithFastKDF() throws Exception {
+    public void simpleStringGetWithFastKDF() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-                .keyStretchingFunction(new FastKeyStretcher()).build());
+            .keyStretchingFunction(new FastKeyStretcher()).build());
     }
 
     @Test
-    public void testWithCompression() throws Exception {
+    public void testWithCompression() {
         preferenceSmokeTest(create("compressed", null).compress().build());
     }
 
     @Test
-    public void testWithDifferentFingerprint() throws Exception {
+    public void testWithDifferentFingerprint() {
         preferenceSmokeTest(create("fingerprint", null)
-                .encryptionFingerprint(Bytes.random(16).array()).build());
+            .encryptionFingerprint(Bytes.random(16).array()).build());
         preferenceSmokeTest(create("fingerprint2", null)
-                .encryptionFingerprint(() -> new byte[16]).build());
+            .encryptionFingerprint(() -> new byte[16]).build());
     }
 
     @Test
-    public void testWithDifferentContentDigest() throws Exception {
+    public void testWithDifferentContentDigest() {
         preferenceSmokeTest(create("contentDigest1", null)
-                .contentKeyDigest(8).build());
+            .contentKeyDigest(8).build());
         preferenceSmokeTest(create("contentDigest2", null)
-                .contentKeyDigest(Bytes.random(16).array()).build());
+            .contentKeyDigest(Bytes.random(16).array()).build());
     }
 
     @Test
-    public void testWithSecureRandom() throws Exception {
+    public void testWithSecureRandom() {
         preferenceSmokeTest(create("secureRandom", null)
-                .secureRandom(new SecureRandom()).build());
+            .secureRandom(new SecureRandom()).build());
     }
 
     @Test
-    public void testEncryptionStrength() throws Exception {
+    public void testEncryptionStrength() {
         preferenceSmokeTest(create("secureRandom", null)
-                .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
+            .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
     }
 
     @Test
-    public void testProvider() throws Exception {
+    public void testProvider() {
         preferenceSmokeTest(create("provider", null)
-                .securityProvider(null).build());
+            .securityProvider(null).build());
     }
 
     @Test
-    public void testWithNoObfuscation() throws Exception {
+    public void testWithNoObfuscation() {
         preferenceSmokeTest(create("obfuscate", null)
-                .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
+            .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
     }
 
     @Test
-    public void testSetEncryption() throws Exception {
+    public void testSetEncryption() {
         preferenceSmokeTest(create("enc", null)
-                .symmetricEncryption(new AesGcmEncryption()).build());
+            .symmetricEncryption(new AesGcmEncryption()).build());
     }
 
     @Test
-    public void testRecoveryPolicy() throws Exception {
+    public void testRecoveryPolicy() {
         preferenceSmokeTest(create("recovery", null)
-                .recoveryPolicy(true, true).build());
+            .recoveryPolicy(true, true).build());
         preferenceSmokeTest(create("recovery", null)
-                .recoveryPolicy(new RecoveryPolicy.Default(true, true)).build());
+            .recoveryPolicy(new RecoveryPolicy.Default(true, true)).build());
     }
 
     @Test
-    public void testCustomProtocolVersion() throws Exception {
+    public void testCustomProtocolVersion() {
         preferenceSmokeTest(create("protocol", null)
-                .cryptoProtocolVersion(14221).build());
+            .cryptoProtocolVersion(14221).build());
     }
 
     void preferenceSmokeTest(SharedPreferences preferences) {
@@ -312,5 +313,84 @@ public abstract class ASecureSharedPreferencesTest {
 
         preferences.edit().remove("float").commit();
         assertEquals(-1, preferences.getFloat("float", -1), 0.00001);
+    }
+
+    @Test
+    public void testChangePassword() {
+        // open new shared pref and add some data
+        ArmadilloSharedPreferences pref = create("testChangePassword", "pw1".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build();
+        pref.edit().putString("k1", "string1").putInt("k2", 2).putBoolean("k3", true).commit();
+        pref.close();
+
+        // open again and check if can be used
+        pref = create("testChangePassword", "pw1".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build();
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertEquals(true, pref.getBoolean("k3", false));
+        pref.close();
+
+        // open with old pw and change to new one, all the values should be accessible
+        pref = create("testChangePassword", "pw1".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build();
+        pref.changePassword("pw2".toCharArray());
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertEquals(true, pref.getBoolean("k3", false));
+        pref.close();
+
+        // open with new pw, should be accessible
+        pref = create("testChangePassword", "pw2".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build();
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertEquals(true, pref.getBoolean("k3", false));
+        pref.close();
+
+        // open with old pw, should throw exception, since cannot decrypt
+        pref = create("testChangePassword", "pw1".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build();
+        try {
+            pref.getString("k1", null);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException e) {
+        }
+    }
+
+    @Test
+    public void testChangePasswordShouldNotBeAccessible() {
+        // open new shared pref and add some data
+        ArmadilloSharedPreferences pref = create("testChangePassword", "pw1".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build();
+        pref.edit().putString("k1", "string1").putInt("k2", 2).putBoolean("k3", true).commit();
+        pref.close();
+
+        // open again and check if can be used
+        pref = create("testChangePassword", "pw1".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build();
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertEquals(true, pref.getBoolean("k3", false));
+        pref.close();
+
+        // open with invald pw, should throw exception, since cannot decrypt
+        pref = create("testChangePassword", "pw2".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build();
+        try {
+            pref.getString("k1", null);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException e) {
+        }
+        try {
+            pref.getInt("k2", 0);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException e) {
+        }
+        try {
+            pref.getBoolean("k3", false);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException e) {
+        }
     }
 }

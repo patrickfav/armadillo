@@ -11,7 +11,7 @@ import at.favre.lib.armadillo.Armadillo;
 
 public class MainActivity extends AppCompatActivity {
 
-    private SharedPreferences encryptedPrefence;
+    private SharedPreferences encryptedPreferences;
 
     private EditText editTextKey;
     private EditText editTextValue;
@@ -21,8 +21,9 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        encryptedPrefence = Armadillo.create(this, "myPrefs")
+        encryptedPreferences = Armadillo.create(this, "myPrefs")
                 .encryptionFingerprint(this, "a secret")
+                .password("pass".toCharArray())
                 .build();
         editTextKey = findViewById(R.id.et_key);
         editTextValue = findViewById(R.id.et_value);
@@ -35,7 +36,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                String value = encryptedPrefence.getString(editTextKey.getText().toString(), null);
+                String value = encryptedPreferences.getString(editTextKey.getText().toString(), null);
 
                 if (value == null) {
                     Toast.makeText(MainActivity.this, "No value found for this key", Toast.LENGTH_SHORT).show();
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
 
-                encryptedPrefence.edit().putString(editTextKey.getText().toString(), editTextValue.getText().toString()).apply();
+                encryptedPreferences.edit().putString(editTextKey.getText().toString(), editTextValue.getText().toString()).apply();
                 Toast.makeText(MainActivity.this, "Saved.", Toast.LENGTH_SHORT).show();
             }
         });

@@ -22,8 +22,9 @@ android {
 }
 
 dependencies {
-    implementation 'at.favre.lib:armadillo:0.4.3'
+    implementation project(':armadillo')
     implementation "com.android.support:appcompat-v7:$rootProject.ext.dependencies.support"
+    implementation "com.facebook.stetho:stetho:$rootProject.ext.dependencies.stetho"
     testImplementation "junit:junit:$rootProject.ext.dependencies.junit"
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.ext.dependencies.espresso"

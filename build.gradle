@@ -45,6 +45,7 @@ ext {
     dependencies = [
             support     : "27.1.1",
             espresso    : "3.0.1",
-            junit       : "4.12"
+            junit       : "4.12",
+            stetho      : "1.5.0"
     ]
 }

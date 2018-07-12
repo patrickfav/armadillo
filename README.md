@@ -1,3 +1,9 @@
+
+![armadillo logo](doc/logo/logo_ldpi.png)
+
+
+
+
 # Armadillo - Encrypted Shared Preference
 
 A shared preference implementation for secret data providing confidentiality,
@@ -259,3 +265,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+

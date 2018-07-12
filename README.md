@@ -1,17 +1,5 @@
 
-
-<p align="center">
-
-<img src="doc/logo/logo_hdpi.png" alt="armadillo_logo" title="armadillo_logo" height="200"/>
-
-</p>
-
-<p align="center">
-<a href ="https://bintray.com/patrickfav/maven/armadillo/_latestVersion"><img src="https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg" alt="Download" title="Download" /></a>
-<a href ="https://travis-ci.org/patrickfav/armadillo"><img src="https://travis-ci.org/patrickfav/armadillo.svg?branch=master" alt="Build Status" title="Build Status" /></a>
-<a href ="https://www.javadoc.io/doc/at.favre.lib/armadillo"><img src="https://www.javadoc.io/badge/at.favre.lib/armadillo.svg" alt="Javadocs" title="Javadocs" /></a>
-<a href ="https://coveralls.io/github/patrickfav/armadillo?branch=master"><img src="https://coveralls.io/repos/github/patrickfav/armadillo/badge.svg?branch=master" alt="Coverage Status" title="Coverage Status" /></a>
-</p>
+![Armadillo Logo](doc/logo/logo_hdpi.png | width=200)
 
 # Armadillo - Encrypted Shared Preference
 
@@ -19,7 +7,10 @@ A shared preference implementation for secret data providing confidentiality,
 integrity and authenticity . Per default uses AES-GCM, BCrypt and HKDF as cryptographic
 primitives.
 
-
+[![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg) ](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
+[![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
+[![Javadocs](https://www.javadoc.io/badge/at.favre.lib/armadillo.svg)](https://www.javadoc.io/doc/at.favre.lib/armadillo)
+[![Coverage Status](https://coveralls.io/repos/github/patrickfav/armadillo/badge.svg?branch=master)](https://coveralls.io/github/patrickfav/armadillo?branch=master)
 
 ## Features
 
@@ -186,7 +177,7 @@ parts:
 ![screenshot key derivation](doc/key_derivation.png)
 
 * User password (optional): provided by the caller and stretched with e.g. Bcrypt
-* Encryption Fingerprint (see section below)
+* Encryption Fingerprint (see section above)
 * Entry Key: the hashed version of the key passed by the caller; this will bind the data to that specific entry key
 * Entry Salt: a random 16 byte value unique to that specific entry that will be created on every put operation (will also be used for the key stretching function)
 * Storage Salt: a random 32 byte value unique to that specific storage, created on first creation of the storage
@@ -271,3 +262,4 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+

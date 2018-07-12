@@ -1,5 +1,5 @@
 
-![Armadillo Logo](doc/logo/logo_hdpi.png | height=200)
+![Armadillo Logo](https://github.com/iqbalhood/armadillo/blob/master/doc/logo/logo_hdpi.png | height=200)
 
 # Armadillo - Encrypted Shared Preference
 

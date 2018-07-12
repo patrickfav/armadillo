@@ -1,5 +1,5 @@
 
-![Armadillo Logo](doc/logo/logo_hdpi.png | width=200)
+![Armadillo Logo](doc/logo/logo_hdpi.png)
 
 # Armadillo - Encrypted Shared Preference
 

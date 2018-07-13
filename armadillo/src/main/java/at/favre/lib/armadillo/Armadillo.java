@@ -280,7 +280,7 @@ public final class Armadillo {
          *
          * @return shared preference with given properties
          */
-        public SharedPreferences build() {
+        public ArmadilloSharedPreferences build() {
             if (fingerprint == null) {
                 throw new IllegalArgumentException("No encryption fingerprint is set - see encryptionFingerprint() methods");
             }

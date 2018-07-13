@@ -1,5 +1,9 @@
 # Releases
 
+## v0.6.0
+
+* add change password feature
+
 ## v0.5.0
 
 * [Security] a user provided password was NOT used for the creation of the secret key #11 (thx @davidmigloz)

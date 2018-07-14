@@ -216,7 +216,13 @@ public abstract class ASecureSharedPreferencesTest {
     @Test
     public void simpleStringGetWithBcryptPassword() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new BcryptKeyStretcher(8)).build());
+            .keyStretchingFunction(new FixedBcryptKeyStretcher(7)).build());
+    }
+
+    @Test
+    public void simpleStringGetWithBrokenBcryptPassword() {
+        preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
+            .keyStretchingFunction(new BrokenBcryptKeyStretcher(6)).build());
     }
 
     @Test

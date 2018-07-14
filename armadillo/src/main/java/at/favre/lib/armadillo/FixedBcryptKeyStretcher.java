@@ -1,12 +1,15 @@
 package at.favre.lib.armadillo;
 
 import android.os.StrictMode;
-import android.support.annotation.NonNull;
 
-import org.mindrot.jbcrypt.BCrypt;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
+import at.favre.lib.crypto.bcrypt.BCrypt;
 
 /**
  * Bcrypt is a password hashing function designed by Niels Provos and David Mazières, based on the Blowfish cipher,
@@ -14,11 +17,18 @@ import at.favre.lib.crypto.HKDF;
  * is an adaptive function: over time, the iteration count can be increased to make it slower, so it remains resistant
  * to brute-force search attacks even with increasing computation power.
  *
+ * This is the second implementation providing fixes for issues present in {@link BrokenBcryptKeyStretcher}.
+ * Note that this will not create compatible keys compared to the old broken implementation.
+ *
+ * What was fixed:
+ *  - possibility to use arbitrary password length (by extracting always 71 bytes)
+ *  - use of full 16 possible bytes of salt
+ *
  * @author Patrick Favre-Bulle
- * @since 19.12.2017
+ * @since 14.07.2017
  */
 
-final class BcryptKeyStretcher implements KeyStretchingFunction {
+final class FixedBcryptKeyStretcher implements KeyStretchingFunction {
     private static final int BCRYPT_MIN_ROUNDS = 8;
     private static final int BCRYPT_DEFAULT_ROUNDS = 12;
 
@@ -27,7 +37,7 @@ final class BcryptKeyStretcher implements KeyStretchingFunction {
     /**
      * Creates a new instance with default rounds parameter (see {@link #BCRYPT_DEFAULT_ROUNDS})
      */
-    BcryptKeyStretcher() {
+    public FixedBcryptKeyStretcher() {
         this(BCRYPT_DEFAULT_ROUNDS);
     }
 
@@ -35,16 +45,16 @@ final class BcryptKeyStretcher implements KeyStretchingFunction {
      * Creates a new instance with desired rounds.
      *
      * @param log2Rounds this is the log2(Iterations). e.g. 12 ==> 2^12 = 4,096 iterations, the higher, the slower
-     *                   cannot be smaller than 8
+     *                   cannot be smaller than 8 (this is a stricter requirement than the original)
      */
-    BcryptKeyStretcher(int log2Rounds) {
+    public FixedBcryptKeyStretcher(int log2Rounds) {
         this.iterations = Math.max(BCRYPT_MIN_ROUNDS, log2Rounds);
     }
 
     @Override
     public byte[] stretch(byte[] salt, char[] password, int outLengthByte) {
         try {
-            return HKDF.fromHmacSha256().expand(bcrypt(password, salt, iterations), "bcrypt".getBytes(), outLengthByte);
+            return HKDF.fromHmacSha256().expand(bcrypt(salt, password, iterations), "bcrypt".getBytes(), outLengthByte);
         } catch (Exception e) {
             throw new IllegalStateException("could not stretch with bcrypt", e);
         }
@@ -58,24 +68,23 @@ final class BcryptKeyStretcher implements KeyStretchingFunction {
      * @param logRounds log2(Iterations). e.g. 12 ==> 2^12 = 4,096 iterations
      * @return the Bcrypt hash of the password
      */
-    private static byte[] bcrypt(char[] password, byte[] salt, int logRounds) {
+    private static byte[] bcrypt(byte[] salt, char[] password, int logRounds) {
         StrictMode.noteSlowCall("bcrypt is a very expensive call and should not be done on the main thread");
-        return Bytes.from(BCrypt.hashpw(String.valueOf(password) + Bytes.wrap(salt).encodeHex(), generateSalt(salt, logRounds))).array();
+        byte[] passwordBytes = null;
+        try {
+            passwordBytes = charArrayToByteArray(password, StandardCharsets.UTF_8);
+            return BCrypt.withDefaults().hash(logRounds,
+                HKDF.fromHmacSha256().expand(salt, "bcrypt-salt".getBytes(), 16),
+                HKDF.fromHmacSha256().expand(passwordBytes, "bcrypt-pw".getBytes(), 71));
+        } finally {
+            Bytes.wrapNullSafe(passwordBytes).mutable().secureWipe();
+        }
     }
 
-    @NonNull
-    private static String generateSalt(byte[] salt, int logRounds) {
-        StringBuilder saltBuilder = new StringBuilder();
-        saltBuilder.append("$2a$");
-        if (logRounds < 10) {
-            saltBuilder.append("0");
-        }
-        if (logRounds > 30) {
-            throw new IllegalArgumentException("log_rounds exceeds maximum (30)");
-        }
-        saltBuilder.append(Integer.toString(logRounds));
-        saltBuilder.append("$");
-        saltBuilder.append(Bytes.wrap(HKDF.fromHmacSha256().expand(salt, "bcrypt".getBytes(), 16)).encodeHex());
-        return saltBuilder.toString();
+    private static byte[] charArrayToByteArray(char[] charArray, Charset charset) {
+        ByteBuffer bb = charset.encode(CharBuffer.wrap(charArray));
+        byte[] bytes = new byte[bb.remaining()];
+        bb.get(bytes);
+        return bytes;
     }
 }

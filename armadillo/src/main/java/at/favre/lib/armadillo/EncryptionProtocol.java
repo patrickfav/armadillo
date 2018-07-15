@@ -72,6 +72,15 @@ interface EncryptionProtocol {
     byte[] decrypt(@NonNull String contentKey, char[] password, byte[] encryptedContent) throws EncryptionProtocolException;
 
     /**
+     * Replaces the currently used {@link KeyStretchingFunction} to stretch a possible user password
+     *
+     * @param function to replace
+     */
+    void setKeyStretchingFunction(KeyStretchingFunction function);
+
+    KeyStretchingFunction getKeyStretchingFunction();
+
+    /**
      * Factory creating a new instance of {@link EncryptionProtocol}
      */
     interface Factory {

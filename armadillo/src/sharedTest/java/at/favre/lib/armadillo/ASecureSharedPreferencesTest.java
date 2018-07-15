@@ -408,4 +408,65 @@ public abstract class ASecureSharedPreferencesTest {
         } catch (SecureSharedPreferenceCryptoException ignored) {
         }
     }
+
+    @Test
+    public void testChangePasswordAndKeyStrechtingFunction() {
+        Set<String> testSet = new HashSet<String>();
+        testSet.add("t1");
+        testSet.add("t2");
+        testSet.add("t3");
+
+        // open new shared pref and add some data
+        ArmadilloSharedPreferences pref = create("testChangePassword", "pw1".toCharArray())
+                .keyStretchingFunction(new BrokenBcryptKeyStretcher(8)).build();
+        pref.edit().putString("k1", "string1").putInt("k2", 2).putStringSet("set", testSet)
+                .putBoolean("k3", true).commit();
+        pref.close();
+
+        // open again and check if can be used
+        pref = create("testChangePassword", "pw1".toCharArray())
+                .keyStretchingFunction(new BrokenBcryptKeyStretcher(8)).build();
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertEquals(true, pref.getBoolean("k3", false));
+        assertEquals(testSet, pref.getStringSet("set", null));
+        pref.close();
+
+        // open with old pw and old ksFn; change to new one, all the values should be accessible
+        pref = create("testChangePassword", "pw1".toCharArray())
+                .keyStretchingFunction(new BrokenBcryptKeyStretcher(8)).build();
+        pref.changePassword("pw2".toCharArray(), new FixedBcryptKeyStretcher(8));
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertEquals(true, pref.getBoolean("k3", false));
+        assertEquals(testSet, pref.getStringSet("set", null));
+        pref.close();
+
+        // open with new pw and new ksFn, should be accessible
+        pref = create("testChangePassword", "pw2".toCharArray())
+                .keyStretchingFunction(new FixedBcryptKeyStretcher(8)).build();
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertEquals(true, pref.getBoolean("k3", false));
+        assertEquals(testSet, pref.getStringSet("set", null));
+        pref.close();
+
+        // open with new pw and old ksFn, should throw exception, since cannot decrypt
+        pref = create("testChangePassword", "pw2".toCharArray())
+                .keyStretchingFunction(new BrokenBcryptKeyStretcher(8)).build();
+        try {
+            pref.getString("k1", null);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+
+        // open with old pw and old ksFn, should throw exception, since cannot decrypt
+        pref = create("testChangePassword", "pw1".toCharArray())
+                .keyStretchingFunction(new BrokenBcryptKeyStretcher(8)).build();
+        try {
+            pref.getString("k1", null);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+    }
 }

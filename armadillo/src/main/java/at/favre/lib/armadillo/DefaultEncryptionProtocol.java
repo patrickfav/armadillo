@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.text.Normalizer;
+import java.util.Objects;
 
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
@@ -38,7 +39,6 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     private final byte[] preferenceSalt;
     private final EncryptionFingerprint fingerprint;
-    private final KeyStretchingFunction keyStretchingFunction;
     private final AuthenticatedEncryption authenticatedEncryption;
     private final DataObfuscator.Factory dataObfuscatorFactory;
     private final StringMessageDigest stringMessageDigest;
@@ -46,6 +46,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final SecureRandom secureRandom;
     private final int keyLengthBit;
     private final int protocolVersion;
+    private KeyStretchingFunction keyStretchingFunction;
 
     private DefaultEncryptionProtocol(int protocolVersion, byte[] preferenceSalt, EncryptionFingerprint fingerprint,
                                       StringMessageDigest stringMessageDigest, AuthenticatedEncryption authenticatedEncryption,
@@ -157,6 +158,17 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             Bytes.wrap(key).mutable().secureWipe();
             Timber.v("decrypt took %d ms", System.currentTimeMillis() - start);
         }
+    }
+
+    @Override
+    public void setKeyStretchingFunction(KeyStretchingFunction function) {
+        Objects.requireNonNull(function);
+        keyStretchingFunction = function;
+    }
+
+    @Override
+    public KeyStretchingFunction getKeyStretchingFunction() {
+        return keyStretchingFunction;
     }
 
     private byte[] keyDerivationFunction(String contentKey, byte[] fingerprint, byte[] contentSalt, byte[] preferenceSalt, @Nullable char[] password) {

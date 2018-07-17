@@ -234,7 +234,7 @@ The `.aar` files can then be found in `/armadillo/build/outputs/aar` folder
 
 ## Libraries & Credits
 
-* [jBcrypt](https://github.com/jeremyh/jBCrypt)
+* [BCrypt](https://github.com/patrickfav/bcrypt)
 * [HKDF Standalone](https://github.com/patrickfav/hkdf)
 * [Bytes](https://github.com/patrickfav/bytes-java)
 * [Icon by Freepik](https://www.flaticon.com/free-icon/armadillo_371647#term=armadillo&page=1&position=4)

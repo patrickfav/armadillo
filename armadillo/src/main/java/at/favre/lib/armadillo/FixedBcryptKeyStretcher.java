@@ -73,9 +73,9 @@ final class FixedBcryptKeyStretcher implements KeyStretchingFunction {
         byte[] passwordBytes = null;
         try {
             passwordBytes = charArrayToByteArray(password, StandardCharsets.UTF_8);
-            return BCrypt.withDefaults().hash(logRounds,
+            return BCrypt.with(BCrypt.Version.VERSION_2A).hashRaw(logRounds,
                 HKDF.fromHmacSha256().expand(salt, "bcrypt-salt".getBytes(), 16),
-                HKDF.fromHmacSha256().expand(passwordBytes, "bcrypt-pw".getBytes(), 71));
+                    HKDF.fromHmacSha256().expand(passwordBytes, "bcrypt-pw".getBytes(), 71)).rawHash;
         } finally {
             Bytes.wrapNullSafe(passwordBytes).mutable().secureWipe();
         }

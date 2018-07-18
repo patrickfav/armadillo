@@ -41,7 +41,7 @@ public final class Armadillo {
         @AuthenticatedEncryption.KeyStrength
         private int keyStrength = AuthenticatedEncryption.STRENGTH_HIGH;
         private AuthenticatedEncryption authenticatedEncryption;
-        private KeyStretchingFunction keyStretchingFunction = new BcryptKeyStretcher();
+        private KeyStretchingFunction keyStretchingFunction = new FixedBcryptKeyStretcher();
         private DataObfuscator.Factory dataObfuscatorFactory = new HkdfXorObfuscator.Factory();
         private SecureRandom secureRandom = new SecureRandom();
         private RecoveryPolicy recoveryPolicy = new RecoveryPolicy.Default(true, false);
@@ -168,7 +168,7 @@ public final class Armadillo {
         }
 
         /**
-         * Set a different key derivation function for provided password. Per default {@link BcryptKeyStretcher}
+         * Set a different key derivation function for provided password. Per default {@link FixedBcryptKeyStretcher}
          * is used. There is also a implementation PBKDF2 (see {@link PBKDF2KeyStretcher}. If you want
          * to use a different function (e.g. scrypt) set the implementation here.
          * <p>

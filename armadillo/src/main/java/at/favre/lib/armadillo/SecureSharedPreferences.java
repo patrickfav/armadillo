@@ -48,7 +48,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, char[] password) {
         this(context.getSharedPreferences(encryptionProtocol.getStringMessageDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
-            encryptionProtocol, recoveryPolicy, password);
+                encryptionProtocol, recoveryPolicy, password);
     }
 
     public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory,
@@ -63,10 +63,10 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
 
     private void createProtocol() {
         encryptionProtocol = factory.create(
-            getPreferencesSalt(
-                factory.getStringMessageDigest(),
-                factory.createDataObfuscator(),
-                factory.getSecureRandom()));
+                getPreferencesSalt(
+                        factory.getStringMessageDigest(),
+                        factory.createDataObfuscator(),
+                        factory.getSecureRandom()));
     }
 
     private byte[] getPreferencesSalt(StringMessageDigest stringMessageDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
@@ -224,23 +224,35 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
     }
 
-    @SuppressLint("ApplySharedPref")
     @Override
     public void changePassword(char[] newPassword) {
+        changePassword(newPassword, null);
+    }
+
+    @SuppressLint("ApplySharedPref")
+    @Override
+    public void changePassword(char[] newPassword, @Nullable KeyStretchingFunction newKsFunction) {
         StrictMode.noteSlowCall("changing password should only be done in a background thread");
         SharedPreferences.Editor editor = this.edit();
+        KeyStretchingFunction currentFunction = encryptionProtocol.getKeyStretchingFunction();
+
         for (String keyHash : getAll().keySet()) {
-            if (!reencryptStringType(newPassword, (Editor) editor, keyHash)) {
-                reencryptStringSetType(newPassword, (Editor) editor, keyHash);
+            encryptionProtocol.setKeyStretchingFunction(currentFunction);
+            if (!reencryptStringType(newPassword, (Editor) editor, keyHash, newKsFunction)) {
+                reencryptStringSetType(newPassword, (Editor) editor, keyHash, newKsFunction);
             }
         }
         editor.commit();
+
+        if (newKsFunction != null) {
+            encryptionProtocol.setKeyStretchingFunction(newKsFunction);
+        }
 
         Arrays.fill(password, (char) 0);
         password = newPassword;
     }
 
-    private boolean reencryptStringType(char[] newPassword, Editor editor, String keyHash) {
+    private boolean reencryptStringType(char[] newPassword, Editor editor, String keyHash, @Nullable KeyStretchingFunction newKsFunction) {
         try {
             final String encryptedValue = sharedPreferences.getString(keyHash, null);
 
@@ -252,6 +264,11 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
             if (bytes == null) {
                 return true;
             }
+
+            if (newKsFunction != null) {
+                encryptionProtocol.setKeyStretchingFunction(newKsFunction);
+            }
+
             editor.putEncryptedBase64(keyHash, encryptToBase64(keyHash, newPassword, bytes));
             return true;
         } catch (ClassCastException e) {
@@ -259,7 +276,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         }
     }
 
-    private boolean reencryptStringSetType(char[] newPassword, Editor editor, String keyHash) {
+    private boolean reencryptStringSetType(char[] newPassword, Editor editor, String keyHash, @Nullable KeyStretchingFunction newKsFunction) {
         final Set<String> encryptedSet = sharedPreferences.getStringSet(keyHash, null);
         if (encryptedSet == null) {
             return false;
@@ -272,6 +289,10 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
                 continue;
             }
             decryptedSet.add(Bytes.from(bytes).encodeUtf8());
+        }
+
+        if (newKsFunction != null) {
+            encryptionProtocol.setKeyStretchingFunction(newKsFunction);
         }
 
         final Set<String> encryptedValues = new HashSet<>(decryptedSet.size());

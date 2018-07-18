@@ -27,10 +27,10 @@ public class ChangePasswordActivity extends AppCompatActivity {
     }
 
     public void onChangePasswordClicked(View view) {
-        if (binding.currentPassword.getText() == null || binding.currentPassword.length() == 0) {
+        if (binding.currentPassword.getText() == null) {
             binding.currentPasswordLayout.setError("Enter current password");
             return;
-        } else if (binding.newPassword.getText() == null || binding.newPassword.length() == 0) {
+        } else if (binding.newPassword.getText() == null) {
             binding.newPassword.setError("Enter new password");
             return;
         }

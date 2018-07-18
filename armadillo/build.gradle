@@ -56,6 +56,9 @@ dependencies {
 
     testImplementation 'org.mindrot:jbcrypt:0.4'
     testImplementation "junit:junit:$rootProject.ext.dependencies.junit"
+
+    androidTestImplementation 'org.bouncycastle:bcprov-jdk15on:1.60'
+    androidTestImplementation 'org.mindrot:jbcrypt:0.4'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation(group: 'com.android.support.test.espresso', name: 'espresso-core', version: rootProject.ext.dependencies.espresso, {
         exclude group: 'com.android.support', module: 'support-annotations'

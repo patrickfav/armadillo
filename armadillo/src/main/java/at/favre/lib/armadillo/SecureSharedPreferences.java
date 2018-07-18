@@ -305,7 +305,9 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
 
     @Override
     public void close() {
-        Arrays.fill(password, (char) 0);
+        if (password != null) {
+            Arrays.fill(password, (char) 0);
+        }
         preferenceRandomContentKey = null;
         encryptionProtocol = null;
     }

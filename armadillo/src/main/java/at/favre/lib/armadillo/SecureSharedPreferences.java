@@ -30,6 +30,7 @@ import timber.log.Timber;
  *
  * @author Patrick Favre-Bulle
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final class SecureSharedPreferences implements ArmadilloSharedPreferences {
 
     private static final String PREFERENCES_SALT_KEY = "at.favre.lib.securepref.KEY_RANDOM";
@@ -39,7 +40,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     private final EncryptionProtocol.Factory factory;
     private final RecoveryPolicy recoveryPolicy;
     private char[] password;
-    private String preferenceRandomContentKey;
+    private String prefSaltContentKey;
     private EncryptionProtocol encryptionProtocol;
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, char[] password) {
@@ -55,9 +56,9 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
                                    RecoveryPolicy recoveryPolicy, char[] password) {
         Timber.d("create new secure shared preferences");
         this.sharedPreferences = sharedPreferences;
+        this.factory = encryptionProtocolFactory;
         this.recoveryPolicy = recoveryPolicy;
         this.password = password;
-        this.factory = encryptionProtocolFactory;
         createProtocol();
     }
 
@@ -70,25 +71,25 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     }
 
     private byte[] getPreferencesSalt(StringMessageDigest stringMessageDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
-        preferenceRandomContentKey = stringMessageDigest.derive(PREFERENCES_SALT_KEY, "prefName");
-        String base64Random = sharedPreferences.getString(preferenceRandomContentKey, null);
-        byte[] outBytes;
-        if (base64Random == null) {
+        prefSaltContentKey = stringMessageDigest.derive(PREFERENCES_SALT_KEY, "prefName");
+        String prefSaltBase64 = sharedPreferences.getString(prefSaltContentKey, null);
+        byte[] prefSalt;
+        if (prefSaltBase64 == null) {
             Timber.v("create new preferences random salt");
-            byte[] rndBytes = Bytes.random(PREFERENCES_SALT_LENGTH_BYTES, secureRandom).array();
+            byte[] generatedPrefSalt = Bytes.random(PREFERENCES_SALT_LENGTH_BYTES, secureRandom).array();
             try {
-                outBytes = Bytes.from(rndBytes).array();
-                dataObfuscator.obfuscate(rndBytes);
-                sharedPreferences.edit().putString(preferenceRandomContentKey, Bytes.wrap(rndBytes).encodeBase64()).apply();
+                prefSalt = Bytes.from(generatedPrefSalt).array();
+                dataObfuscator.obfuscate(generatedPrefSalt);
+                sharedPreferences.edit().putString(prefSaltContentKey, Bytes.wrap(generatedPrefSalt).encodeBase64()).apply();
             } finally {
-                Bytes.wrapNullSafe(rndBytes).mutable().secureWipe();
+                Bytes.wrapNullSafe(generatedPrefSalt).mutable().secureWipe();
             }
         } else {
-            byte[] obfuscatedRandom = Bytes.parseBase64(base64Random).array();
-            dataObfuscator.deobfuscate(obfuscatedRandom);
-            outBytes = obfuscatedRandom;
+            byte[] obfuscatedPrefSalt = Bytes.parseBase64(prefSaltBase64).array();
+            dataObfuscator.deobfuscate(obfuscatedPrefSalt);
+            prefSalt = obfuscatedPrefSalt;
         }
-        return outBytes;
+        return prefSalt;
     }
 
     /**
@@ -102,7 +103,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         final Map<String, ?> encryptedMap = sharedPreferences.getAll();
         final Map<String, String> keyOnlyMap = new HashMap<>(encryptedMap.size());
         for (String key : encryptedMap.keySet()) {
-            if (!key.equals(preferenceRandomContentKey)) {
+            if (!key.equals(prefSaltContentKey)) {
                 keyOnlyMap.put(key, "");
             }
         }
@@ -252,6 +253,15 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         password = newPassword;
     }
 
+    /**
+     * Re-encrypts String stored with given key hash using the new provided password.
+     *
+     * @param newPassword   new password with whom re-encrypt the String.
+     * @param editor        {@link Editor}.
+     * @param keyHash       key hash of the String to re-encrypt.
+     * @param newKsFunction new key stretching function (or null to use the same one).
+     * @return returns true if the String was successfully re-encrypted.
+     */
     private boolean reencryptStringType(char[] newPassword, Editor editor, String keyHash, @Nullable KeyStretchingFunction newKsFunction) {
         try {
             final String encryptedValue = sharedPreferences.getString(keyHash, null);
@@ -276,6 +286,16 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         }
     }
 
+
+    /**
+     * Re-encrypts StringSet stored with given key hash using the new provided password.
+     *
+     * @param newPassword new password with whom re-encrypt the StringSet.
+     * @param editor      {@link Editor}.
+     * @param keyHash     key hash of the StringSet to re-encrypt.
+     * @param newKsFunction new key stretching function (or null to use the same one).
+     * @return returns true if the StringSet was successfully re-encrypted.
+     */
     private boolean reencryptStringSetType(char[] newPassword, Editor editor, String keyHash, @Nullable KeyStretchingFunction newKsFunction) {
         final Set<String> encryptedSet = sharedPreferences.getStringSet(keyHash, null);
         if (encryptedSet == null) {
@@ -308,7 +328,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         if (password != null) {
             Arrays.fill(password, (char) 0);
         }
-        preferenceRandomContentKey = null;
+        prefSaltContentKey = null;
         encryptionProtocol = null;
     }
 

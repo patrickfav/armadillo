@@ -37,7 +37,7 @@ public class BcryptMicroBenchmark {
         sleep(waitSec * 2);
 
         for (int cost : new int[]{6, 8, 9, 10, 11, 12, 14, 15}) {
-            int currentRounds = Math.min(250, rounds / (1 << cost));
+            int currentRounds = calculateRounds(rounds, cost);
             System.out.println("\n\nbenchmark with " + currentRounds + " rounds and cost-factor " + cost + "\n");
 
             for (AbstractBcrypt abstractBcrypt : contender) {
@@ -68,13 +68,17 @@ public class BcryptMicroBenchmark {
 
             sb.append("| ").append(String.format("%-12s", entry.getKey().getClass().getSimpleName())).append(" |");
             for (Map.Entry<Integer, Long> iEntry : entry.getValue().entrySet()) {
-                sb.append(String.format("  %-8s", Math.round(((double) iEntry.getValue() / (double) rounds) * 100.0) / 100.0)).append(" ms |");
+                sb.append(String.format("  %-8s", Math.round(((double) iEntry.getValue() / (double) calculateRounds(rounds, iEntry.getKey())) * 100.0) / 100.0)).append(" ms |");
             }
             sb.append("\n");
             count++;
         }
 
         System.out.println(sb.toString());
+    }
+
+    private int calculateRounds(int rounds, int cost) {
+        return Math.max(4, Math.min(250, rounds / (1 << cost)));
     }
 
     private void prepareMap(List<AbstractBcrypt> contender) {

@@ -39,7 +39,10 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     private final SharedPreferences sharedPreferences;
     private final EncryptionProtocol.Factory factory;
     private final RecoveryPolicy recoveryPolicy;
+
+    @Nullable
     private char[] password;
+
     private String prefSaltContentKey;
     private EncryptionProtocol encryptionProtocol;
 
@@ -226,14 +229,17 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     }
 
     @Override
-    public void changePassword(char[] newPassword) {
+    public void changePassword(@Nullable char[] newPassword) {
         changePassword(newPassword, null);
     }
 
     @SuppressLint("ApplySharedPref")
     @Override
-    public void changePassword(char[] newPassword, @Nullable KeyStretchingFunction newKsFunction) {
+    public void changePassword(@Nullable char[] newPassword, @Nullable KeyStretchingFunction newKsFunction) {
         StrictMode.noteSlowCall("changing password should only be done in a background thread");
+
+        newPassword = newPassword == null || newPassword.length == 0 ? null : newPassword;
+
         SharedPreferences.Editor editor = this.edit();
         KeyStretchingFunction currentFunction = encryptionProtocol.getKeyStretchingFunction();
 
@@ -249,7 +255,9 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
             encryptionProtocol.setKeyStretchingFunction(newKsFunction);
         }
 
-        Arrays.fill(password, (char) 0);
+        if (password != null) {
+            Arrays.fill(password, (char) 0);
+        }
         password = newPassword;
     }
 
@@ -262,7 +270,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
      * @param newKsFunction new key stretching function (or null to use the same one).
      * @return returns true if the String was successfully re-encrypted.
      */
-    private boolean reencryptStringType(char[] newPassword, Editor editor, String keyHash, @Nullable KeyStretchingFunction newKsFunction) {
+    private boolean reencryptStringType(@Nullable char[] newPassword, Editor editor, String keyHash, @Nullable KeyStretchingFunction newKsFunction) {
         try {
             final String encryptedValue = sharedPreferences.getString(keyHash, null);
 
@@ -290,9 +298,9 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     /**
      * Re-encrypts StringSet stored with given key hash using the new provided password.
      *
-     * @param newPassword new password with whom re-encrypt the StringSet.
-     * @param editor      {@link Editor}.
-     * @param keyHash     key hash of the StringSet to re-encrypt.
+     * @param newPassword   new password with whom re-encrypt the StringSet.
+     * @param editor        {@link Editor}.
+     * @param keyHash       key hash of the StringSet to re-encrypt.
      * @param newKsFunction new key stretching function (or null to use the same one).
      * @return returns true if the StringSet was successfully re-encrypted.
      */
@@ -451,7 +459,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     }
 
     @NonNull
-    private String encryptToBase64(String keyHash, char[] password, byte[] content) {
+    private String encryptToBase64(String keyHash, @Nullable char[] password, byte[] content) {
         try {
             return Bytes.wrap(encryptionProtocol.encrypt(keyHash, password, content)).encodeBase64();
         } catch (EncryptionProtocolException e) {

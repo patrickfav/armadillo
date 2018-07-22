@@ -28,7 +28,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
  * @since 14.07.2017
  */
 
-final class FixedBcryptKeyStretcher implements KeyStretchingFunction {
+final class ArmadilloBcryptKeyStretcher implements KeyStretchingFunction {
     private static final int BCRYPT_MIN_ROUNDS = 8;
     private static final int BCRYPT_DEFAULT_ROUNDS = 12;
 
@@ -37,7 +37,7 @@ final class FixedBcryptKeyStretcher implements KeyStretchingFunction {
     /**
      * Creates a new instance with default rounds parameter (see {@link #BCRYPT_DEFAULT_ROUNDS})
      */
-    public FixedBcryptKeyStretcher() {
+    public ArmadilloBcryptKeyStretcher() {
         this(BCRYPT_DEFAULT_ROUNDS);
     }
 
@@ -47,7 +47,7 @@ final class FixedBcryptKeyStretcher implements KeyStretchingFunction {
      * @param log2Rounds this is the log2(Iterations). e.g. 12 ==> 2^12 = 4,096 iterations, the higher, the slower
      *                   cannot be smaller than 8 (this is a stricter requirement than the original)
      */
-    public FixedBcryptKeyStretcher(int log2Rounds) {
+    public ArmadilloBcryptKeyStretcher(int log2Rounds) {
         this.iterations = Math.max(BCRYPT_MIN_ROUNDS, log2Rounds);
     }
 

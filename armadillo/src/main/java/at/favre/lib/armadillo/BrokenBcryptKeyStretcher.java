@@ -15,7 +15,7 @@ import at.favre.lib.crypto.bcrypt.BCryptFormatter;
 import at.favre.lib.crypto.bcrypt.Radix64Encoder;
 
 /**
- * DO NOT USE THIS, IT HAS SERIOUS SECURITY ISSUES, USE {@link FixedBcryptKeyStretcher} INSTEAD.
+ * DO NOT USE THIS, IT HAS SERIOUS SECURITY ISSUES, USE {@link ArmadilloBcryptKeyStretcher} INSTEAD.
  * <p>
  * This is a re-implementation of the old broken bcrypt key stretcher with the new at.favre.bcrypt lib.
  * <p>
@@ -23,13 +23,13 @@ import at.favre.lib.crypto.bcrypt.Radix64Encoder;
  * - only uses max 36 bytes entropy of the possible 72 bytes allowed by bcrypt
  * - only uses 11 byte entropy of the 16 byte possible salt
  * <p>
- * Note that the new {@link FixedBcryptKeyStretcher} will NOT generate the same stretched key with the
+ * Note that the new {@link ArmadilloBcryptKeyStretcher} will NOT generate the same stretched key with the
  * same input parameters, therefore it is not a simple drop-in replacement. Migration is required through
  * {@link ArmadilloSharedPreferences#changePassword(char[])}.
  *
  * @author Patrick Favre-Bulle
  * @since 19.12.2017
- * @deprecated use {@link FixedBcryptKeyStretcher} instead, this stretcher has security issues,
+ * @deprecated use {@link ArmadilloBcryptKeyStretcher} instead, this stretcher has security issues,
  * see https://github.com/patrickfav/armadillo/issues/16 - only use for migration
  */
 @SuppressWarnings("DeprecatedIsStillUsed")

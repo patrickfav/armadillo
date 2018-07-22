@@ -216,7 +216,7 @@ public abstract class ASecureSharedPreferencesTest {
     @Test
     public void simpleStringGetWithBcryptPassword() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new FixedBcryptKeyStretcher(7)).build());
+            .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(7)).build());
     }
 
     @Test
@@ -435,7 +435,7 @@ public abstract class ASecureSharedPreferencesTest {
         // open with old pw and old ksFn; change to new one, all the values should be accessible
         pref = create("testChangePassword", "pw1".toCharArray())
                 .keyStretchingFunction(new BrokenBcryptKeyStretcher(8)).build();
-        pref.changePassword("pw2".toCharArray(), new FixedBcryptKeyStretcher(8));
+        pref.changePassword("pw2".toCharArray(), new ArmadilloBcryptKeyStretcher(8));
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
         assertEquals(true, pref.getBoolean("k3", false));
@@ -444,7 +444,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         // open with new pw and new ksFn, should be accessible
         pref = create("testChangePassword", "pw2".toCharArray())
-                .keyStretchingFunction(new FixedBcryptKeyStretcher(8)).build();
+            .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(8)).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
         assertEquals(true, pref.getBoolean("k3", false));

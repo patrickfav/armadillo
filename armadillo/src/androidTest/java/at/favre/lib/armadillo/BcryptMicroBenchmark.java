@@ -1,6 +1,5 @@
 package at.favre.lib.armadillo;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -22,7 +21,6 @@ public class BcryptMicroBenchmark {
     private Map<AbstractBcrypt, Map<Integer, Long>> map;
 
     @Test
-    @Ignore
     public void benchmark() {
         List<AbstractBcrypt> contender = Arrays.asList(new FavreBcrypt(), new JBcrypt(), new BC());
         prepareMap(contender);

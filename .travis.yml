@@ -19,7 +19,7 @@ android:
 jobs:
   include:
   - stage: buildDefault
-    if: (type IN (push))
+    if: (type IN (pull_request))
     before_install:
       - openssl aes-256-cbc -K $encrypted_0a50a6dc4585_key -iv $encrypted_0a50a6dc4585_iv -in credentials.tar.enc -out credentials.tar -d
       - tar xvf credentials.tar
@@ -50,7 +50,7 @@ jobs:
           branch: master
           tags: true
   - stage: buildPullRequest
-    if: (type IN (pull_request))
+    if: (type IN (push))
     before_install:
       - mkdir "$ANDROID_HOME/licenses" || true
       - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e" > "$ANDROID_HOME/licenses/android-sdk-license"

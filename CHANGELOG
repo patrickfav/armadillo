@@ -3,8 +3,8 @@
 ## v0.6.0
 
 * [Security] fix bcrypt implementation #16, #8
-* add change password feature
-* add change key stretching feature
+* add change password feature #13, #22
+* add change key stretching feature #16
 
 ## v0.5.0
 

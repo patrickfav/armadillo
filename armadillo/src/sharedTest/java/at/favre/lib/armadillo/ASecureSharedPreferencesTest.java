@@ -323,94 +323,86 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void testChangePassword() {
-        Set<String> testSet = new HashSet<String>();
+        testChangePassword("testChangePassword", "pw1".toCharArray(), "pw2".toCharArray());
+    }
+
+    @Test
+    public void testChangePasswordFromNullPassword() {
+        testChangePassword("testChangePasswordFromNullPassword", null, "pw2".toCharArray());
+    }
+
+    @Test
+    public void testChangePasswordToNullPassword() {
+        testChangePassword("testChangePasswordToNullPassword", "pw1".toCharArray(), null);
+    }
+
+    @Test
+    public void testChangePasswordFromEmptyPassword() {
+        testChangePassword("testChangePasswordFromEmptyPassword", "".toCharArray(), "pw2".toCharArray());
+    }
+
+    @Test
+    public void testChangePasswordToEmptyPassword() {
+        testChangePassword("testChangePasswordToEmptyPassword", "pw1".toCharArray(), "".toCharArray());
+    }
+
+    private void testChangePassword(String name, char[] currentPassword, char[] newPassword) {
+        Set<String> testSet = new HashSet<>();
         testSet.add("t1");
         testSet.add("t2");
         testSet.add("t3");
 
         // open new shared pref and add some data
-        ArmadilloSharedPreferences pref = create("testChangePassword", "pw1".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build();
+        ArmadilloSharedPreferences pref = create(name, clonePassword(currentPassword))
+                .keyStretchingFunction(new FastKeyStretcher()).build();
         pref.edit().putString("k1", "string1").putInt("k2", 2).putStringSet("set", testSet)
-            .putBoolean("k3", true).commit();
+                .putBoolean("k3", true).commit();
         pref.close();
 
         // open again and check if can be used
-        pref = create("testChangePassword", "pw1".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build();
+        pref = create(name, clonePassword(currentPassword))
+                .keyStretchingFunction(new FastKeyStretcher()).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
-        assertEquals(true, pref.getBoolean("k3", false));
+        assertTrue(pref.getBoolean("k3", false));
         assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
         // open with old pw and change to new one, all the values should be accessible
-        pref = create("testChangePassword", "pw1".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build();
-        pref.changePassword("pw2".toCharArray());
+        pref = create(name, clonePassword(currentPassword))
+                .keyStretchingFunction(new FastKeyStretcher()).build();
+        pref.changePassword(clonePassword(newPassword));
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
-        assertEquals(true, pref.getBoolean("k3", false));
+        assertTrue(pref.getBoolean("k3", false));
         assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
         // open with new pw, should be accessible
-        pref = create("testChangePassword", "pw2".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build();
+        pref = create(name, clonePassword(newPassword))
+                .keyStretchingFunction(new FastKeyStretcher()).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
-        assertEquals(true, pref.getBoolean("k3", false));
+        assertTrue(pref.getBoolean("k3", false));
         assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
         // open with old pw, should throw exception, since cannot decrypt
-        pref = create("testChangePassword", "pw1".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build();
+        pref = create(name, clonePassword(currentPassword))
+                .keyStretchingFunction(new FastKeyStretcher()).build();
         try {
             pref.getString("k1", null);
             fail("should throw exception, since cannot decrypt");
         } catch (SecureSharedPreferenceCryptoException ignored) {
         }
     }
-
-    @Test
-    public void testChangePasswordShouldNotBeAccessible() {
-        // open new shared pref and add some data
-        ArmadilloSharedPreferences pref = create("testChangePassword", "pw1".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build();
-        pref.edit().putString("k1", "string1").putInt("k2", 2).putBoolean("k3", true).commit();
-        pref.close();
-
-        // open again and check if can be used
-        pref = create("testChangePassword", "pw1".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build();
-        assertEquals("string1", pref.getString("k1", null));
-        assertEquals(2, pref.getInt("k2", 0));
-        assertEquals(true, pref.getBoolean("k3", false));
-        pref.close();
-
-        // open with invald pw, should throw exception, since cannot decrypt
-        pref = create("testChangePassword", "pw2".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build();
-        try {
-            pref.getString("k1", null);
-            fail("should throw exception, since cannot decrypt");
-        } catch (SecureSharedPreferenceCryptoException ignored) {
-        }
-        try {
-            pref.getInt("k2", 0);
-            fail("should throw exception, since cannot decrypt");
-        } catch (SecureSharedPreferenceCryptoException ignored) {
-        }
-        try {
-            pref.getBoolean("k3", false);
-            fail("should throw exception, since cannot decrypt");
-        } catch (SecureSharedPreferenceCryptoException ignored) {
-        }
+    
+    private char[] clonePassword(char[] password) {
+        return password == null ? null : password.clone();
     }
 
     @Test
-    public void testChangePasswordAndKeyStrechtingFunction() {
+    public void testChangePasswordAndKeyStretchingFunction() {
         Set<String> testSet = new HashSet<String>();
         testSet.add("t1");
         testSet.add("t2");
@@ -428,7 +420,7 @@ public abstract class ASecureSharedPreferencesTest {
                 .keyStretchingFunction(new BrokenBcryptKeyStretcher(8)).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
-        assertEquals(true, pref.getBoolean("k3", false));
+        assertTrue(pref.getBoolean("k3", false));
         assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
@@ -438,7 +430,7 @@ public abstract class ASecureSharedPreferencesTest {
         pref.changePassword("pw2".toCharArray(), new ArmadilloBcryptKeyStretcher(8));
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
-        assertEquals(true, pref.getBoolean("k3", false));
+        assertTrue(pref.getBoolean("k3", false));
         assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
@@ -447,7 +439,7 @@ public abstract class ASecureSharedPreferencesTest {
             .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(8)).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
-        assertEquals(true, pref.getBoolean("k3", false));
+        assertTrue(pref.getBoolean("k3", false));
         assertEquals(testSet, pref.getStringSet("set", null));
         pref.close();
 
@@ -465,6 +457,42 @@ public abstract class ASecureSharedPreferencesTest {
                 .keyStretchingFunction(new BrokenBcryptKeyStretcher(8)).build();
         try {
             pref.getString("k1", null);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+    }
+
+    @Test
+    public void testInvalidPasswordShouldNotBeAccessible() {
+        // open new shared pref and add some data
+        ArmadilloSharedPreferences pref = create("testInvalidPassword", "pw1".toCharArray())
+                .keyStretchingFunction(new FastKeyStretcher()).build();
+        pref.edit().putString("k1", "string1").putInt("k2", 2).putBoolean("k3", true).commit();
+        pref.close();
+
+        // open again and check if can be used
+        pref = create("testInvalidPassword", "pw1".toCharArray())
+                .keyStretchingFunction(new FastKeyStretcher()).build();
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertTrue(pref.getBoolean("k3", false));
+        pref.close();
+
+        // open with invalid pw, should throw exception, since cannot decrypt
+        pref = create("testInvalidPassword", "pw2".toCharArray())
+                .keyStretchingFunction(new FastKeyStretcher()).build();
+        try {
+            pref.getString("k1", null);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+        try {
+            pref.getInt("k2", 0);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+        try {
+            pref.getBoolean("k3", false);
             fail("should throw exception, since cannot decrypt");
         } catch (SecureSharedPreferenceCryptoException ignored) {
         }

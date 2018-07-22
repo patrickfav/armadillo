@@ -15,7 +15,7 @@ import at.favre.lib.crypto.HKDF;
 public final class FastKeyStretcher implements KeyStretchingFunction {
     @Override
     public byte[] stretch(byte[] salt, char[] password, int outLengthByte) {
-        return HKDF.fromHmacSha256().extractAndExpand(salt, Bytes.from(String.valueOf(password), Normalizer.Form.NFKD).array()
-                , "FastKeyStretcher".getBytes(), outLengthByte);
+        return HKDF.fromHmacSha256().extractAndExpand(salt, Bytes.from(String.valueOf(password), Normalizer.Form.NFKD).array(),
+                "FastKeyStretcher".getBytes(), outLengthByte);
     }
 }

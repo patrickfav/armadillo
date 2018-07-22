@@ -12,6 +12,7 @@ import at.favre.lib.bytes.Bytes;
 
 /**
  * The main API of this library.
+ *
  * @since 26.12.2017
  */
 
@@ -231,12 +232,14 @@ public final class Armadillo {
          * The password is treated as weak and is therefore subject to be stretched by the provided key
          * derivation function with key stretching property (see {@link Builder#keyStretchingFunction(KeyStretchingFunction)}.
          * A side-effect is that putting or reading content is expensive and should not be done on the main thread.
+         * <p>
+         * A null password or zero length password will be treated as if no user-provided password was set.
          *
          * @param password provided by user
          * @return builder
          */
-        public Builder password(char[] password) {
-            this.password = password;
+        public Builder password(@Nullable char[] password) {
+            this.password = password == null || password.length == 0 ? null : password;
             return this;
         }
 

@@ -1,5 +1,7 @@
 package at.favre.lib.armadillo;
 
+import android.support.annotation.Nullable;
+
 /**
  * In cryptography, key stretching techniques are used to make a possibly weak key, typically a password or
  * passphrase, more secure against a brute-force attack by increasing the time it takes to test each possible key.
@@ -28,5 +30,5 @@ public interface KeyStretchingFunction {
      * @param outLengthByte required out length byte
      * @return byte array with length of outLengthByte
      */
-    byte[] stretch(byte[] salt, char[] password, int outLengthByte);
+    byte[] stretch(byte[] salt, @Nullable char[] password, int outLengthByte);
 }

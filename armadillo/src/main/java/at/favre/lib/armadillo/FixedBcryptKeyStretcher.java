@@ -1,6 +1,7 @@
 package at.favre.lib.armadillo;
 
 import android.os.StrictMode;
+import android.support.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
@@ -16,13 +17,13 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
  * and presented at USENIX in 1999. Besides incorporating a salt to protect against rainbow table attacks, bcrypt
  * is an adaptive function: over time, the iteration count can be increased to make it slower, so it remains resistant
  * to brute-force search attacks even with increasing computation power.
- *
+ * <p>
  * This is the second implementation providing fixes for issues present in {@link BrokenBcryptKeyStretcher}.
  * Note that this will not create compatible keys compared to the old broken implementation.
- *
+ * <p>
  * What was fixed:
- *  - possibility to use arbitrary password length (by extracting always 71 bytes)
- *  - use of full 16 possible bytes of salt
+ * - possibility to use arbitrary password length (by extracting always 71 bytes)
+ * - use of full 16 possible bytes of salt
  *
  * @author Patrick Favre-Bulle
  * @since 14.07.2017
@@ -68,13 +69,13 @@ final class FixedBcryptKeyStretcher implements KeyStretchingFunction {
      * @param logRounds log2(Iterations). e.g. 12 ==> 2^12 = 4,096 iterations
      * @return the Bcrypt hash of the password
      */
-    private static byte[] bcrypt(byte[] salt, char[] password, int logRounds) {
+    private static byte[] bcrypt(byte[] salt, @Nullable char[] password, int logRounds) {
         StrictMode.noteSlowCall("bcrypt is a very expensive call and should not be done on the main thread");
         byte[] passwordBytes = null;
         try {
             passwordBytes = charArrayToByteArray(password, StandardCharsets.UTF_8);
             return BCrypt.with(BCrypt.Version.VERSION_2A).hashRaw(logRounds,
-                HKDF.fromHmacSha256().expand(salt, "bcrypt-salt".getBytes(), 16),
+                    HKDF.fromHmacSha256().expand(salt, "bcrypt-salt".getBytes(), 16),
                     HKDF.fromHmacSha256().expand(passwordBytes, "bcrypt-pw".getBytes(), 71)).rawHash;
         } finally {
             Bytes.wrapNullSafe(passwordBytes).mutable().secureWipe();

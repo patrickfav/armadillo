@@ -75,7 +75,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     }
 
     @Override
-    public byte[] encrypt(@NonNull String contentKey, char[] password, byte[] rawContent) throws EncryptionProtocolException {
+    public byte[] encrypt(@NonNull String contentKey, @Nullable char[] password, byte[] rawContent) throws EncryptionProtocolException {
         long start = System.currentTimeMillis();
         byte[] fingerprintBytes = new byte[0];
         byte[] key = new byte[0];
@@ -122,7 +122,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     }
 
     @Override
-    public byte[] decrypt(@NonNull String contentKey, char[] password, byte[] encryptedContent) throws EncryptionProtocolException {
+    public byte[] decrypt(@NonNull String contentKey, @Nullable char[] password, byte[] encryptedContent) throws EncryptionProtocolException {
         long start = System.currentTimeMillis();
         byte[] fingerprintBytes = new byte[0];
         byte[] key = new byte[0];
@@ -161,7 +161,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     }
 
     @Override
-    public void setKeyStretchingFunction(KeyStretchingFunction function) {
+    public void setKeyStretchingFunction(@NonNull KeyStretchingFunction function) {
         Objects.requireNonNull(function);
         keyStretchingFunction = function;
     }

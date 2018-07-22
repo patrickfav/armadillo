@@ -1,6 +1,7 @@
 package at.favre.lib.armadillo;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.security.SecureRandom;
 
@@ -47,7 +48,7 @@ interface EncryptionProtocol {
      * @return encrypted data
      * @throws EncryptionProtocolException when encryption was not possible
      */
-    byte[] encrypt(@NonNull String contentKey, char[] password, byte[] rawContent) throws EncryptionProtocolException;
+    byte[] encrypt(@NonNull String contentKey, @Nullable char[] password, byte[] rawContent) throws EncryptionProtocolException;
 
     /**
      * Decrypts, de-obfuscates and optionally de-compresses given content.
@@ -69,15 +70,20 @@ interface EncryptionProtocol {
      * @return original data
      * @throws EncryptionProtocolException when encryption was not possible
      */
-    byte[] decrypt(@NonNull String contentKey, char[] password, byte[] encryptedContent) throws EncryptionProtocolException;
+    byte[] decrypt(@NonNull String contentKey, @Nullable char[] password, byte[] encryptedContent) throws EncryptionProtocolException;
 
     /**
      * Replaces the currently used {@link KeyStretchingFunction} to stretch a possible user password
      *
      * @param function to replace
      */
-    void setKeyStretchingFunction(KeyStretchingFunction function);
+    void setKeyStretchingFunction(@NonNull KeyStretchingFunction function);
 
+    /**
+     * Gets the currently used {@link KeyStretchingFunction} to stretch a possible user password.
+     *
+     * @return current {@link KeyStretchingFunction}.
+     */
     KeyStretchingFunction getKeyStretchingFunction();
 
     /**

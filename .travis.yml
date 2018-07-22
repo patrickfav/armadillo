@@ -16,11 +16,6 @@ android:
     - extra-google-m2repository
     - extra-android-m2repository
 
-before_install:
-  - mkdir "$ANDROID_HOME/licenses" || true
-  - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e" > "$ANDROID_HOME/licenses/android-sdk-license"
-  - echo -e "\n504667f4c0de7af1a06de9f4b1727b84351f2910" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-
 jobs:
   include:
   - stage: buildDefault
@@ -28,6 +23,9 @@ jobs:
     before_install:
       - openssl aes-256-cbc -K $encrypted_0a50a6dc4585_key -iv $encrypted_0a50a6dc4585_iv -in credentials.tar.enc -out credentials.tar -d
       - tar xvf credentials.tar
+      - mkdir "$ANDROID_HOME/licenses" || true
+      - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e" > "$ANDROID_HOME/licenses/android-sdk-license"
+      - echo -e "\n504667f4c0de7af1a06de9f4b1727b84351f2910" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
     script:
       - ./gradlew clean :armadillo:assemble --stacktrace
       - ./gradlew :armadillo:checkstyle lint --stacktrace
@@ -53,6 +51,10 @@ jobs:
           tags: true
   - stage: buildPullRequest
     if: (type IN (pull_request))
+    before_install:
+      - mkdir "$ANDROID_HOME/licenses" || true
+      - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e" > "$ANDROID_HOME/licenses/android-sdk-license"
+      - echo -e "\n504667f4c0de7af1a06de9f4b1727b84351f2910" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
     script:
       - ./gradlew clean :armadillo:assembleDebug --stacktrace
       - ./gradlew :armadillo:checkstyle lint --stacktrace

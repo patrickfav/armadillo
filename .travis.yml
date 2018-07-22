@@ -16,38 +16,49 @@ android:
     - extra-google-m2repository
     - extra-android-m2repository
 
-before_install:
-  - openssl aes-256-cbc -K $encrypted_0a50a6dc4585_key -iv $encrypted_0a50a6dc4585_iv -in credentials.tar.enc -out credentials.tar -d
-  - tar xvf credentials.tar
-  - mkdir "$ANDROID_HOME/licenses" || true
-  - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e" > "$ANDROID_HOME/licenses/android-sdk-license"
-  - echo -e "\n504667f4c0de7af1a06de9f4b1727b84351f2910" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
-
-script:
-  - ./gradlew clean :armadillo:assemble --stacktrace
-  - ./gradlew :armadillo:checkstyle lint --stacktrace
-  - ./gradlew :armadillo:testReleaseUnitTest --info
-
-after_success:
-  - ./gradlew :armadillo:jacocoTestReleaseUnitTestReport :armadillo:copyJacocoReport coveralls --info
-
-deploy:
-  - provider: script
-    script: ./gradlew install bintrayUpload --info
-    skip_cleanup: true
-    on:
-      branch: master
-      tags: true
-  - provider: releases
-    api_key:
-       secure: "lwb8DJFAgSZzlrQ+NjsLSQqMju9vt/k63DQ24GW5lPTi5ZUcharrf+VexZmnxkYlIrrfYCpimqXw6GeSpi3hsys5pTT+0J53FjGvraT8g4X21teLhWlVLBeh5pIVw3VGWOcut/nJRcD4POnXTJV6kK/78qvUpddzrqYz72S9jGRt0kxDCxjYfcYBcx1OiFogy++nA9CTkMJkUsFC3asWwBSiZK2rc3TG5NIdrrlT6F0fOWELYxc1HT3W2P1tGi2f/V4G0XRop2Qe+zWNdlggkkQzw2slKrWbmf+nPK/TMCJLgXw2Uaru+P/SHW3Amg+thAibSJQFPQ1oJmUU7MuuCBAeu+Wyv//S35BjKhmQ94C0e8bSCJajGzR6/LjtOGVsAaJWLhq0F5k7v/UeGFb8fYDFDlbelzcQf2Df0ujBagDIadFzf+MQFnoG/B94lkPA/PSa9DFqZEPf4z1uTIRL0HL5ALFxRxpCyKaydmBvV4I9hHFZ2but1Pzx07ziP0JbQK7U1XdmPUHSePe/iLKz1NaXSwAChtwqsKTzww7vOCdlgjlU4x7uphu7HWk1m35hxBR5l7wPSp+jSw7gsmXmQlqPBJeNgGzGfBmH849dcV+PeVwYHiDsNzyqaeNCEir8UQBEe2ufTB+Irt+QvNswb35VHwXz2IhcrhRUzRdEs8Y="
-    file_glob: true
-    file:
-     - 'armadillo/build/outputs/aar/*.aar'
-    skip_cleanup: true
-    on:
-      branch: master
-      tags: true
+jobs:
+  include:
+  - stage: buildDefault
+    if: (type IN (push))
+    before_install:
+      - openssl aes-256-cbc -K $encrypted_0a50a6dc4585_key -iv $encrypted_0a50a6dc4585_iv -in credentials.tar.enc -out credentials.tar -d
+      - tar xvf credentials.tar
+      - mkdir "$ANDROID_HOME/licenses" || true
+      - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e" > "$ANDROID_HOME/licenses/android-sdk-license"
+      - echo -e "\n504667f4c0de7af1a06de9f4b1727b84351f2910" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+    script:
+      - ./gradlew clean :armadillo:assemble --stacktrace
+      - ./gradlew :armadillo:checkstyle lint --stacktrace
+      - ./gradlew :armadillo:testReleaseUnitTest --info
+    after_success:
+      - ./gradlew :armadillo:jacocoTestReleaseUnitTestReport :armadillo:copyJacocoReport coveralls --info
+    deploy:
+      - provider: script
+        script: ./gradlew install bintrayUpload --info
+        skip_cleanup: true
+        on:
+          branch: master
+          tags: true
+      - provider: releases
+        api_key:
+           secure: "lwb8DJFAgSZzlrQ+NjsLSQqMju9vt/k63DQ24GW5lPTi5ZUcharrf+VexZmnxkYlIrrfYCpimqXw6GeSpi3hsys5pTT+0J53FjGvraT8g4X21teLhWlVLBeh5pIVw3VGWOcut/nJRcD4POnXTJV6kK/78qvUpddzrqYz72S9jGRt0kxDCxjYfcYBcx1OiFogy++nA9CTkMJkUsFC3asWwBSiZK2rc3TG5NIdrrlT6F0fOWELYxc1HT3W2P1tGi2f/V4G0XRop2Qe+zWNdlggkkQzw2slKrWbmf+nPK/TMCJLgXw2Uaru+P/SHW3Amg+thAibSJQFPQ1oJmUU7MuuCBAeu+Wyv//S35BjKhmQ94C0e8bSCJajGzR6/LjtOGVsAaJWLhq0F5k7v/UeGFb8fYDFDlbelzcQf2Df0ujBagDIadFzf+MQFnoG/B94lkPA/PSa9DFqZEPf4z1uTIRL0HL5ALFxRxpCyKaydmBvV4I9hHFZ2but1Pzx07ziP0JbQK7U1XdmPUHSePe/iLKz1NaXSwAChtwqsKTzww7vOCdlgjlU4x7uphu7HWk1m35hxBR5l7wPSp+jSw7gsmXmQlqPBJeNgGzGfBmH849dcV+PeVwYHiDsNzyqaeNCEir8UQBEe2ufTB+Irt+QvNswb35VHwXz2IhcrhRUzRdEs8Y="
+        file_glob: true
+        file:
+         - 'armadillo/build/outputs/aar/*.aar'
+        skip_cleanup: true
+        on:
+          branch: master
+          tags: true
+  - stage: buildPullRequest
+    if: (type IN (pull_request))
+    before_install:
+      - mkdir "$ANDROID_HOME/licenses" || true
+      - echo -e "\n8933bad161af4178b1185d1a37fbf41ea5269c55\nd56f5187479451eabf01fb78af6dfcb131a6481e" > "$ANDROID_HOME/licenses/android-sdk-license"
+      - echo -e "\n504667f4c0de7af1a06de9f4b1727b84351f2910" > "$ANDROID_HOME/licenses/android-sdk-preview-license"
+    script:
+      - ./gradlew clean :armadillo:assembleDebug --stacktrace
+      - ./gradlew :armadillo:checkstyle lint --stacktrace
+      - ./gradlew :armadillo:testDebugUnitTest --info
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock

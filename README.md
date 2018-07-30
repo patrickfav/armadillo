@@ -14,6 +14,7 @@ primitives.
 [![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
 [![Javadocs](https://www.javadoc.io/badge/at.favre.lib/armadillo.svg)](https://www.javadoc.io/doc/at.favre.lib/armadillo)
 [![Coverage Status](https://coveralls.io/repos/github/patrickfav/armadillo/badge.svg?branch=master)](https://coveralls.io/github/patrickfav/armadillo?branch=master)
+[![Maintainability](https://api.codeclimate.com/v1/badges/c3ac3cdd849ba47fd90a/maintainability)](https://codeclimate.com/github/patrickfav/armadillo/maintainability)
 
 ## Features
 

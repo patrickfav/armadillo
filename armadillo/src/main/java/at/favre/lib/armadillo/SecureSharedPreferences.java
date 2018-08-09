@@ -30,10 +30,11 @@ import timber.log.Timber;
  *
  * @author Patrick Favre-Bulle
  */
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
 public final class SecureSharedPreferences implements ArmadilloSharedPreferences {
 
     private static final String PREFERENCES_SALT_KEY = "at.favre.lib.securepref.KEY_RANDOM";
+    private static final String PASSWORD_VALIDATION_KEY = "at.favre.lib.securepref.PASSWORD_VALIDATION_KEY";
     private static final int PREFERENCES_SALT_LENGTH_BYTES = 32;
 
     private final SharedPreferences sharedPreferences;
@@ -42,35 +43,46 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
 
     @Nullable
     private char[] password;
+    private boolean supportVerifyPassword;
 
     private String prefSaltContentKey;
+    private byte[] preferencesSalt;
     private EncryptionProtocol encryptionProtocol;
 
-    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, char[] password) {
-        this(context, preferenceName, encryptionProtocol, new RecoveryPolicy.Default(false, true), password);
+    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, @Nullable char[] password, boolean supportVerifyPassword) {
+        this(context, preferenceName, encryptionProtocol, new RecoveryPolicy.Default(false, true), password, supportVerifyPassword);
     }
 
-    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, char[] password) {
+    public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, @Nullable char[] password, boolean supportVerifyPassword) {
         this(context.getSharedPreferences(encryptionProtocol.getStringMessageDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
-                encryptionProtocol, recoveryPolicy, password);
+                encryptionProtocol, recoveryPolicy, password, supportVerifyPassword);
     }
 
     public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory,
-                                   RecoveryPolicy recoveryPolicy, char[] password) {
+                                   RecoveryPolicy recoveryPolicy, @Nullable char[] password, boolean supportVerifyPassword) {
         Timber.d("create new secure shared preferences");
         this.sharedPreferences = sharedPreferences;
         this.factory = encryptionProtocolFactory;
         this.recoveryPolicy = recoveryPolicy;
         this.password = password;
-        createProtocol();
+        this.supportVerifyPassword = supportVerifyPassword;
+        init();
     }
 
-    private void createProtocol() {
-        encryptionProtocol = factory.create(
-                getPreferencesSalt(
-                        factory.getStringMessageDigest(),
-                        factory.createDataObfuscator(),
-                        factory.getSecureRandom()));
+    /**
+     * Initialises the secure shared preferences.
+     * It generates or retrieves the preferences salt, initialises the encryption protocol
+     * and stores a password verification value if needed.
+     */
+    private void init() {
+        this.preferencesSalt = getPreferencesSalt(
+                factory.getStringMessageDigest(),
+                factory.createDataObfuscator(),
+                factory.getSecureRandom());
+        this.encryptionProtocol = factory.create(preferencesSalt);
+        if (supportVerifyPassword && !hasValidationValue()) {
+            storePasswordValidationValue(preferencesSalt);
+        }
     }
 
     private byte[] getPreferencesSalt(StringMessageDigest stringMessageDigest, DataObfuscator dataObfuscator, SecureRandom secureRandom) {
@@ -93,6 +105,20 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
             prefSalt = obfuscatedPrefSalt;
         }
         return prefSalt;
+    }
+
+    /**
+     * Checks whether a validation value is already stored.
+     */
+    private boolean hasValidationValue() {
+        return contains(PASSWORD_VALIDATION_KEY);
+    }
+
+    /**
+     * Encrypts and stores a known value (preferencesSalt) to be able to verify the password in the future.
+     */
+    private void storePasswordValidationValue(byte[] passwordValidationValue) {
+        edit().putString(PASSWORD_VALIDATION_KEY, Bytes.wrap(passwordValidationValue).encodeBase64()).apply();
     }
 
     /**
@@ -233,6 +259,20 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         changePassword(newPassword, null);
     }
 
+    @Override
+    public boolean isValidPassword() {
+        StrictMode.noteSlowCall("checking password should only be done in a background thread");
+        if (!supportVerifyPassword) {
+            throw new UnsupportedOperationException("support verify password is not enabled");
+        }
+        try {
+            String storedValue = getString(PASSWORD_VALIDATION_KEY, null);
+            return storedValue != null && Arrays.equals(preferencesSalt, Bytes.parseBase64(storedValue).array());
+        } catch (SecureSharedPreferenceCryptoException e) {
+            return false;
+        }
+    }
+
     @SuppressLint("ApplySharedPref")
     @Override
     public void changePassword(@Nullable char[] newPassword, @Nullable KeyStretchingFunction newKsFunction) {
@@ -336,6 +376,11 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         if (password != null) {
             Arrays.fill(password, (char) 0);
         }
+        password = null;
+        if (preferencesSalt != null) {
+            Arrays.fill(preferencesSalt, (byte) 0);
+        }
+        preferencesSalt = null;
         prefSaltContentKey = null;
         encryptionProtocol = null;
     }
@@ -453,7 +498,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
 
         private void handlePossibleClear() {
             if (clear) {
-                createProtocol();
+                init();
             }
         }
     }

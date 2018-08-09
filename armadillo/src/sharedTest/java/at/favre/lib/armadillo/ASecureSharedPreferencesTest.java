@@ -24,6 +24,7 @@ import static org.junit.Assert.assertNull;
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
+@SuppressWarnings("deprecation")
 public abstract class ASecureSharedPreferencesTest {
     private static final String DEFAULT_PREF_NAME = "test-prefs";
     SharedPreferences preferences;
@@ -403,7 +404,7 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void testChangePasswordAndKeyStretchingFunction() {
-        Set<String> testSet = new HashSet<String>();
+        Set<String> testSet = new HashSet<>();
         testSet.add("t1");
         testSet.add("t2");
         testSet.add("t3");

@@ -7,7 +7,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.1.4'
+        classpath 'com.android.tools.build:gradle:3.2.0-rc02'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
         classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.2'
@@ -35,9 +35,9 @@ ext {
     versionNameApp = "v$versionNameLib"
     versionCode = getCiBuildNumber()
 
-    compileSdkVersion = 27
-    buildToolsVersion = "27.0.3"
-    targetSdkVersion = 27
+    compileSdkVersion = 28
+    buildToolsVersion = "28.0.2"
+    targetSdkVersion = 28
 
     minSdkVersion = 19
     javaVersion = JavaVersion.VERSION_1_8

@@ -26,7 +26,7 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void quickStartTest() throws Exception {
+    public void quickStartTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         SharedPreferences preferences = Armadillo.create(context, "myPrefs")
             .encryptionFingerprint(context)
@@ -37,13 +37,13 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void testWithDifferentKeyStrength() throws Exception {
+    public void testWithDifferentKeyStrength() {
         preferenceSmokeTest(create("fingerprint", null)
             .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_VERY_HIGH).build());
     }
 
     @Test
-    public void advancedTest() throws Exception {
+    public void advancedTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         String userId = "1234";
         SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")

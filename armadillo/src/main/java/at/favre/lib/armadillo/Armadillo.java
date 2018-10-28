@@ -2,6 +2,7 @@ package at.favre.lib.armadillo;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.support.annotation.Nullable;
 
 import java.security.Provider;
@@ -278,22 +279,36 @@ public final class Armadillo {
             return this;
         }
 
+        public ArmadilloSharedPreferences buildWithKitkatSupport() {
+            return build(true);
+        }
+
         /**
          * Build a {@link SharedPreferences} instance
          *
          * @return shared preference with given properties
          */
         public ArmadilloSharedPreferences build() {
+            return build(false);
+        }
+
+        public ArmadilloSharedPreferences build(boolean enableKitKatSupport) {
             if (fingerprint == null) {
                 throw new IllegalArgumentException("No encryption fingerprint is set - see encryptionFingerprint() methods");
             }
 
             if (authenticatedEncryption == null) {
-                authenticatedEncryption = new AesGcmEncryption(secureRandom, provider);
+                if(enableKitKatSupport && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    authenticatedEncryption = new AesCbcEncryption(secureRandom, provider);
+                    cryptoProtocolVersion = -19;
+                } else {
+                    authenticatedEncryption = new AesGcmEncryption(secureRandom, provider);
+                }
             }
 
-            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(cryptoProtocolVersion, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength,
-                keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
+            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(cryptoProtocolVersion,
+                    fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength,
+                    keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
 
             if (sharedPreferences != null) {
                 return new SecureSharedPreferences(sharedPreferences, factory, recoveryPolicy, password);

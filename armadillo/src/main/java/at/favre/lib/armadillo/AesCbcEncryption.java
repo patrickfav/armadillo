@@ -146,9 +146,6 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
 
             final Cipher cipherDec = getCipher();
             cipherDec.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new IvParameterSpec(iv));
-            if (associatedData != null) {
-                cipherDec.updateAAD(associatedData);
-            }
             return cipherDec.doFinal(encrypted);
         } catch (Exception e) {
             throw new AuthenticatedEncryptionException("could not decrypt", e);

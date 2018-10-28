@@ -15,6 +15,7 @@ import static at.favre.lib.securesharedpreferences.MainActivity.PREF_NAME;
 import static at.favre.lib.securesharedpreferences.MainActivity.SECRET;
 import static at.favre.lib.securesharedpreferences.Utils.showToast;
 
+// TODO do expensive calls in a background thread
 public class ChangePasswordActivity extends AppCompatActivity {
 
     private ActivityChangePasswordBinding binding;
@@ -43,7 +44,12 @@ public class ChangePasswordActivity extends AppCompatActivity {
         ArmadilloSharedPreferences armadillo = Armadillo.create(this, PREF_NAME)
                 .encryptionFingerprint(this, SECRET)
                 .password(currentPassword)
+                .supportVerifyPassword(true)
                 .build();
+        if(!armadillo.isValidPassword()) {
+            binding.currentPasswordLayout.setError("Incorrect password!");
+            return;
+        }
 
         // Get new pass
         char[] newPassword = new char[binding.newPassword.length()];
@@ -55,7 +61,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
             showToast(this, "Password successfully changed!");
             openMainActivity();
         } catch (SecureSharedPreferenceCryptoException ex) {
-            binding.currentPasswordLayout.setError("Incorrect password");
+            binding.currentPasswordLayout.setError("Incorrect password!");
         }
     }
 

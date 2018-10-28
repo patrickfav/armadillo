@@ -21,6 +21,7 @@ import at.favre.lib.bytes.Bytes;
 
 @SuppressWarnings("WeakerAccess")
 public final class Armadillo {
+
     public static final int CONTENT_KEY_OUT_BYTE_LENGTH = 20;
     public static final int DEFAULT_PROTOCOL_VERSION = 0;
     public static final int KITKAT_PROTOCOL_VERSION = -19;
@@ -49,6 +50,7 @@ public final class Armadillo {
         private SecureRandom secureRandom = new SecureRandom();
         private RecoveryPolicy recoveryPolicy = new RecoveryPolicy.Default(true, false);
         private char[] password;
+        private boolean supportVerifyPassword = false;
         private Provider provider;
         private boolean enableKitKatSupport = false;
 
@@ -158,7 +160,7 @@ public final class Armadillo {
          * <em>Note:</em> Usually there is no real advantage to set it to VERY HIGH as HIGH (128 bit key
          * length) is fully secure for the foreseeable future. VERY HIGH only adds more security margin
          * for possible quantum computer attacks (but if you are a user which is threatened by these
-         * kinds of attacks you probably require higher degrees af protection)
+         * kinds of attacks you probably require higher degrees af protection).
          *
          * @param keyStrength HIGH (default) or VERY HIGH
          * @return builder
@@ -255,19 +257,40 @@ public final class Armadillo {
         }
 
         /**
-         * Provide a user password used for all of entries of the {@link SharedPreferences}.
+         * Provide a user password used for encrypting all of values of the {@link SharedPreferences}.
          * <p>
          * The password is treated as weak and is therefore subject to be stretched by the provided key
          * derivation function with key stretching property (see {@link Builder#keyStretchingFunction(KeyStretchingFunction)}.
          * A side-effect is that putting or reading content is expensive and should not be done on the main thread.
          * <p>
          * A null password or zero length password will be treated as if no user-provided password was set.
+         * <p>
+         * If you want to be able to verify the password, set {@link Builder#supportVerifyPassword(boolean)}
+         * to true and use {@link ArmadilloSharedPreferences#isValidPassword()} to verify.
+         * By default, support verify password is disabled.
          *
          * @param password provided by user
          * @return builder
          */
         public Builder password(@Nullable char[] password) {
             this.password = password == null || password.length == 0 ? null : password;
+            return this;
+        }
+
+        /**
+         * Enabling support verify password allows you to use {@link ArmadilloSharedPreferences#isValidPassword()}
+         * to verify the validity of the user-provided password used to initialise Armadillo.
+         * In order to verify the password, a known value is stored encrypted with the password the
+         * first time that Armadillo is initialised. When {@link ArmadilloSharedPreferences#isValidPassword()}
+         * is called, it tries to decrypt this value and compares it to the original value. If the values
+         * match the validation succeeds, otherwise, it fails.
+         * By default, support verify password is disabled.
+         *
+         * @param supported true to supported password verification, false otherwise
+         * @return builder
+         */
+        public Builder supportVerifyPassword(boolean supported) {
+            this.supportVerifyPassword = supported;
             return this;
         }
 
@@ -400,9 +423,9 @@ public final class Armadillo {
             checkKitKatSupport(config.authenticatedEncryption);
 
             if (sharedPreferences != null) {
-                return new SecureSharedPreferences(sharedPreferences, factory, recoveryPolicy, password);
+                return new SecureSharedPreferences(sharedPreferences, factory, recoveryPolicy, password, supportVerifyPassword);
             } else {
-                return new SecureSharedPreferences(context, prefName, factory, recoveryPolicy, password);
+                return new SecureSharedPreferences(context, prefName, factory, recoveryPolicy, password, supportVerifyPassword);
             }
         }
 

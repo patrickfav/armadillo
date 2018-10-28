@@ -14,6 +14,7 @@ import at.favre.lib.securesharedpreferences.databinding.ActivityMainBinding;
 import static at.favre.lib.securesharedpreferences.Utils.hideKeyboard;
 import static at.favre.lib.securesharedpreferences.Utils.showToast;
 
+// TODO do expensive calls in a background thread
 public class MainActivity extends AppCompatActivity {
 
     public static final String PREF_NAME = "myPrefs";
@@ -30,14 +31,19 @@ public class MainActivity extends AppCompatActivity {
 
     public void onInitClicked(View view) {
         Armadillo.Builder builder = Armadillo.create(this, PREF_NAME)
-                .encryptionFingerprint(this, SECRET);
+                .encryptionFingerprint(this, SECRET)
+                .supportVerifyPassword(true);
         if (binding.password.getText() != null && binding.password.getText().length() > 0) {
             char[] password = new char[binding.password.length()];
             binding.password.getText().getChars(0, binding.password.length(), password, 0);
             builder.password(password);
         }
         encryptedPreferences = builder.build();
-        onArmadilloInitialised();
+        if(encryptedPreferences.isValidPassword()) {
+            onArmadilloInitialised();
+        } else {
+            onWrongPassword();
+        }
     }
 
     public void onGetClicked(View view) {
@@ -97,22 +103,34 @@ public class MainActivity extends AppCompatActivity {
 
     private void onArmadilloInitialised() {
         hideKeyboard(this);
+        binding.passwordLayout.setErrorEnabled(false);
         binding.btnInit.setEnabled(false);
         binding.key.setEnabled(true);
+        binding.key.requestFocus();
+        binding.key.setText("");
         binding.value.setEnabled(true);
+        binding.value.setText("");
         binding.btnGet.setEnabled(true);
         binding.btnSet.setEnabled(true);
         binding.btnClosePreferences.setEnabled(true);
         binding.btnChangePassword.setEnabled(true);
     }
 
+    private void onWrongPassword() {
+        onArmadilloClosed();
+        binding.passwordLayout.setError("Incorrect password!");
+    }
+
     private void onArmadilloClosed() {
         binding.btnInit.setEnabled(true);
         binding.key.setEnabled(false);
+        binding.key.setText("");
         binding.value.setEnabled(false);
+        binding.value.setText("");
         binding.btnGet.setEnabled(false);
         binding.btnSet.setEnabled(false);
         binding.btnClosePreferences.setEnabled(false);
         binding.btnChangePassword.setEnabled(false);
+        binding.password.requestFocus();
     }
 }

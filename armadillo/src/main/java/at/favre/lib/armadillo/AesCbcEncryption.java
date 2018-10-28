@@ -38,7 +38,7 @@ import at.favre.lib.crypto.HKDF;
  * @author Patrick Favre-Bulle
  * @since 27.10.2018
  */
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
 @Deprecated
 final class AesCbcEncryption implements AuthenticatedEncryption {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";

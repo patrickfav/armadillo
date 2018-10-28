@@ -371,6 +371,10 @@ public final class Armadillo {
             EncryptionProtocolConfig config = defaultConfig.build();
 
             if (enableKitKatSupport) {
+                if (config.authenticatedEncryption != null) {
+                    throw new IllegalStateException("enabling kitkat support will prevent using custom encryption implementation");
+                }
+
                 @SuppressWarnings("deprecation")
                 EncryptionProtocolConfig kitkatSupportConfig = EncryptionProtocolConfig.newBuilder(config)
                         .authenticatedEncryption(new AesCbcEncryption(secureRandom, provider))
@@ -393,10 +397,20 @@ public final class Armadillo {
             EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(config,
                     fingerprint, stringMessageDigest, secureRandom, additionalDecryptionConfigs);
 
+            checkKitKatSupport(config.authenticatedEncryption);
+
             if (sharedPreferences != null) {
                 return new SecureSharedPreferences(sharedPreferences, factory, recoveryPolicy, password);
             } else {
                 return new SecureSharedPreferences(context, prefName, factory, recoveryPolicy, password);
+            }
+        }
+
+        private void checkKitKatSupport(AuthenticatedEncryption authenticatedEncryption) {
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT &&
+                    authenticatedEncryption.getClass().equals(AesGcmEncryption.class)) {
+                throw new UnsupportedOperationException("aes gcm is not supported with KitKat, add support " +
+                        "manually with Armadillo.Builder.enableKitKatSupport()");
             }
         }
     }

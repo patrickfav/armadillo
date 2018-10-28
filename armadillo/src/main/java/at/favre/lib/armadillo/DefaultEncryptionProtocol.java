@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.text.Normalizer;
+import java.util.List;
 import java.util.Objects;
 
 import at.favre.lib.bytes.Bytes;
@@ -39,29 +40,23 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     private final byte[] preferenceSalt;
     private final EncryptionFingerprint fingerprint;
-    private final AuthenticatedEncryption authenticatedEncryption;
-    private final DataObfuscator.Factory dataObfuscatorFactory;
+    private EncryptionProtocolConfig defaultEncryptionProtocol;
+    private List<EncryptionProtocolConfig> supportedEncryptionProtocols;
+
     private final StringMessageDigest stringMessageDigest;
-    private final Compressor compressor;
     private final SecureRandom secureRandom;
     private final int keyLengthBit;
-    private final int protocolVersion;
-    private KeyStretchingFunction keyStretchingFunction;
 
-    private DefaultEncryptionProtocol(int protocolVersion, byte[] preferenceSalt, EncryptionFingerprint fingerprint,
-                                      StringMessageDigest stringMessageDigest, AuthenticatedEncryption authenticatedEncryption,
-                                      @AuthenticatedEncryption.KeyStrength int keyStrength, KeyStretchingFunction keyStretchingFunction,
-                                      DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom, Compressor compressor) {
-        this.protocolVersion = protocolVersion;
+    private DefaultEncryptionProtocol(EncryptionProtocolConfig defaultEncryptionProtocol, byte[] preferenceSalt,
+                                      EncryptionFingerprint fingerprint, StringMessageDigest stringMessageDigest,
+                                      SecureRandom secureRandom, List<EncryptionProtocolConfig> supportedEncryptionProtocols) {
+        this.defaultEncryptionProtocol = defaultEncryptionProtocol;
         this.preferenceSalt = preferenceSalt;
-        this.authenticatedEncryption = authenticatedEncryption;
-        this.keyStretchingFunction = keyStretchingFunction;
         this.fingerprint = fingerprint;
         this.stringMessageDigest = stringMessageDigest;
-        this.compressor = compressor;
-        this.keyLengthBit = authenticatedEncryption.byteSizeLength(keyStrength) * 8;
-        this.dataObfuscatorFactory = dataObfuscatorFactory;
+        this.keyLengthBit = defaultEncryptionProtocol.authenticatedEncryption.byteSizeLength(defaultEncryptionProtocol.keyStrength) * 8;
         this.secureRandom = secureRandom;
+        this.supportedEncryptionProtocols = supportedEncryptionProtocols;
     }
 
     @Override
@@ -85,9 +80,10 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
             fingerprintBytes = fingerprint.getBytes();
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
-            byte[] encrypted = authenticatedEncryption.encrypt(key, compressor.compress(rawContent), Bytes.from(protocolVersion).array());
+            byte[] encrypted = defaultEncryptionProtocol.authenticatedEncryption.encrypt(key,
+                    defaultEncryptionProtocol.compressor.compress(rawContent), Bytes.from(defaultEncryptionProtocol.protocolVersion).array());
 
-            DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
+            DataObfuscator obfuscator = defaultEncryptionProtocol.dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
             try {
                 obfuscator.obfuscate(encrypted);
             } finally {
@@ -108,7 +104,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         ByteBuffer buffer = ByteBuffer.allocate(PROTOCOL_VERSION_LENGTH_BYTES
                 + CONTENT_SALT_SIZE_LENGTH_BYTES + contentSalt.length
                 + ENCRYPTED_CONTENT_SIZE_LENGTH_BYTES + encrypted.length);
-        buffer.putInt(protocolVersion);
+        buffer.putInt(defaultEncryptionProtocol.protocolVersion);
         buffer.put((byte) contentSalt.length);
         buffer.put(contentSalt);
         buffer.putInt(encrypted.length);
@@ -131,9 +127,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             fingerprintBytes = fingerprint.getBytes();
 
             ByteBuffer buffer = ByteBuffer.wrap(encryptedContent);
-            if (buffer.getInt() != protocolVersion) {
-                throw new SecurityException("illegal protocol version");
-            }
+            EncryptionProtocolConfig currentConfig = getConfigForDecryption(buffer.getInt());
 
             byte[] contentSalt = new byte[buffer.get()];
             buffer.get(contentSalt);
@@ -141,7 +135,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             byte[] encrypted = new byte[buffer.getInt()];
             buffer.get(encrypted);
 
-            DataObfuscator obfuscator = dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
+            DataObfuscator obfuscator = currentConfig.dataObfuscatorFactory.create(Bytes.from(contentKey).append(fingerprintBytes).array());
             try {
                 obfuscator.deobfuscate(encrypted);
             } finally {
@@ -150,7 +144,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
             key = keyDerivationFunction(contentKey, fingerprintBytes, contentSalt, preferenceSalt, password);
 
-            return compressor.decompress(authenticatedEncryption.decrypt(key, encrypted, Bytes.from(protocolVersion).array()));
+            return currentConfig.compressor.decompress(currentConfig.authenticatedEncryption.decrypt(key, encrypted, Bytes.from(currentConfig.protocolVersion).array()));
         } catch (AuthenticatedEncryptionException e) {
             throw new EncryptionProtocolException(e);
         } finally {
@@ -160,22 +154,37 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         }
     }
 
+    @NonNull
+    private EncryptionProtocolConfig getConfigForDecryption(int protocolVersion) throws EncryptionProtocolException {
+        if (protocolVersion == defaultEncryptionProtocol.protocolVersion) {
+            return defaultEncryptionProtocol;
+        }
+        for (EncryptionProtocolConfig protocolConfig : supportedEncryptionProtocols) {
+            if (protocolVersion == protocolConfig.protocolVersion) {
+                return protocolConfig;
+            }
+        }
+
+        throw new EncryptionProtocolException("illegal protocol version (" + protocolVersion + ")");
+    }
+
     @Override
     public void setKeyStretchingFunction(@NonNull KeyStretchingFunction function) {
-        Objects.requireNonNull(function);
-        keyStretchingFunction = function;
+        defaultEncryptionProtocol = EncryptionProtocolConfig.newBuilder(defaultEncryptionProtocol)
+                .keyStretchingFunction(Objects.requireNonNull(function))
+                .build();
     }
 
     @Override
     public KeyStretchingFunction getKeyStretchingFunction() {
-        return keyStretchingFunction;
+        return defaultEncryptionProtocol.keyStretchingFunction;
     }
 
     private byte[] keyDerivationFunction(String contentKey, byte[] fingerprint, byte[] contentSalt, byte[] preferenceSalt, @Nullable char[] password) {
         Bytes ikm = Bytes.wrap(fingerprint).append(contentSalt).append(Bytes.from(contentKey, Normalizer.Form.NFKD));
 
         if (password != null) {
-            ikm = ikm.append(keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES));
+            ikm = ikm.append(defaultEncryptionProtocol.keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES));
         }
 
         return HKDF.fromHmacSha512().extractAndExpand(preferenceSalt, ikm.array(), "DefaultEncryptionProtocol".getBytes(), keyLengthBit / 8);
@@ -183,35 +192,26 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     public static final class Factory implements EncryptionProtocol.Factory {
 
-        private final int protocolVersion;
         private final EncryptionFingerprint fingerprint;
         private final StringMessageDigest stringMessageDigest;
-        private final AuthenticatedEncryption authenticatedEncryption;
-        @AuthenticatedEncryption.KeyStrength
-        private final int keyStrength;
-        private final KeyStretchingFunction keyStretchingFunction;
-        private final DataObfuscator.Factory dataObfuscatorFactory;
         private final SecureRandom secureRandom;
-        private final Compressor compressor;
+        private EncryptionProtocolConfig defaultEncryptionProtocol;
+        private final List<EncryptionProtocolConfig> supportedEncryptionConfigs;
 
-        Factory(int protocolVersion, EncryptionFingerprint fingerprint, StringMessageDigest stringMessageDigest,
-                AuthenticatedEncryption authenticatedEncryption, int keyStrength,
-                KeyStretchingFunction keyStretchingFunction, DataObfuscator.Factory dataObfuscatorFactory,
-                SecureRandom secureRandom, @Nullable Compressor compressor) {
-            this.protocolVersion = protocolVersion;
+        Factory(EncryptionProtocolConfig defaultEncryptionProtocol, EncryptionFingerprint fingerprint,
+                StringMessageDigest stringMessageDigest, SecureRandom secureRandom,
+                List<EncryptionProtocolConfig> supportedEncryptionConfigs) {
+            this.defaultEncryptionProtocol = defaultEncryptionProtocol;
             this.fingerprint = fingerprint;
             this.stringMessageDigest = stringMessageDigest;
-            this.authenticatedEncryption = authenticatedEncryption;
-            this.keyStrength = keyStrength;
-            this.keyStretchingFunction = keyStretchingFunction;
-            this.dataObfuscatorFactory = dataObfuscatorFactory;
             this.secureRandom = secureRandom;
-            this.compressor = compressor;
+            this.supportedEncryptionConfigs = supportedEncryptionConfigs;
         }
 
         @Override
         public EncryptionProtocol create(byte[] preferenceSalt) {
-            return new DefaultEncryptionProtocol(protocolVersion, preferenceSalt, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
+            return new DefaultEncryptionProtocol(defaultEncryptionProtocol, preferenceSalt, fingerprint,
+                    stringMessageDigest, secureRandom, supportedEncryptionConfigs);
         }
 
         @Override
@@ -221,7 +221,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
         @Override
         public DataObfuscator createDataObfuscator() {
-            return dataObfuscatorFactory.create(fingerprint.getBytes());
+            return defaultEncryptionProtocol.dataObfuscatorFactory.create(fingerprint.getBytes());
         }
 
         @Override

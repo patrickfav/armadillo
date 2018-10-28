@@ -18,12 +18,14 @@ import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Instrumented test, which will execute on an Android device.
  *
  * @see <a href="http://d.android.com/tools/testing">Testing documentation</a>
  */
+@SuppressWarnings("deprecation")
 public abstract class ASecureSharedPreferencesTest {
     private static final String DEFAULT_PREF_NAME = "test-prefs";
     SharedPreferences preferences;
@@ -44,6 +46,8 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     protected abstract Armadillo.Builder create(String name, char[] pw);
+
+    protected abstract boolean isKitKatOrBelow();
 
     @Test
     public void simpleMultipleStringGet() {
@@ -107,10 +111,10 @@ public abstract class ASecureSharedPreferencesTest {
     public void simpleGetBoolean() {
         preferences.edit().putBoolean("boolean", true).commit();
         assertTrue(preferences.contains("boolean"));
-        assertEquals(true, preferences.getBoolean("boolean", false));
+        assertTrue(preferences.getBoolean("boolean", false));
 
         preferences.edit().putBoolean("boolean2", false).commit();
-        assertEquals(false, preferences.getBoolean("boolean2", true));
+        assertFalse(preferences.getBoolean("boolean2", true));
     }
 
     @Test
@@ -278,6 +282,8 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void testSetEncryption() {
+        assumeFalse("test not supported on kitkat devices", isKitKatOrBelow());
+
         preferenceSmokeTest(create("enc", null)
             .symmetricEncryption(new AesGcmEncryption()).build());
     }
@@ -403,7 +409,7 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void testChangePasswordAndKeyStretchingFunction() {
-        Set<String> testSet = new HashSet<String>();
+        Set<String> testSet = new HashSet<>();
         testSet.add("t1");
         testSet.add("t2");
         testSet.add("t3");
@@ -493,6 +499,91 @@ public abstract class ASecureSharedPreferencesTest {
         }
         try {
             pref.getBoolean("k3", false);
+            fail("should throw exception, since cannot decrypt");
+        } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+    }
+
+    @Test
+    public void testUpgradeToNewerProtocolVersion() {
+        assumeFalse("test not supported on kitkat devices", isKitKatOrBelow());
+
+        // open new preference with old encryption config
+        ArmadilloSharedPreferences pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesCbcEncryption())
+                .cryptoProtocolVersion(-19).build();
+
+        // add some data
+        pref.edit().putString("k1", "string1").putInt("k2", 2).putBoolean("k3", true).commit();
+        pref.close();
+
+        // open again with encryption config
+        pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesCbcEncryption())
+                .cryptoProtocolVersion(-19).build();
+
+        // check data
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertTrue(pref.getBoolean("k3", false));
+        pref.close();
+
+        // open with new config and add old config as support config
+        pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesGcmEncryption())
+                .cryptoProtocolVersion(0)
+                .addAdditionalDecryptionProtocolConfig(EncryptionProtocolConfig
+                        .newDefaultConfig()
+                        .authenticatedEncryption(new AesCbcEncryption())
+                        .protocolVersion(-19)
+                        .build())
+                .build();
+
+        // check data
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertTrue(pref.getBoolean("k3", false));
+
+        // add some data
+        pref.edit().putString("j1", "string2").putInt("j2", 3).putBoolean("j3", false).commit();
+
+        pref.close();
+
+        // open again with new config and add old config as support config
+        pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesGcmEncryption())
+                .cryptoProtocolVersion(0)
+                .addAdditionalDecryptionProtocolConfig(EncryptionProtocolConfig
+                        .newDefaultConfig()
+                        .authenticatedEncryption(new AesCbcEncryption())
+                        .protocolVersion(-19)
+                        .build())
+                .build();
+
+        // check data
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertTrue(pref.getBoolean("k3", false));
+        assertEquals("string2", pref.getString("j1", null));
+        assertEquals(3, pref.getInt("j2", 0));
+        assertFalse(pref.getBoolean("j3", true));
+
+        pref.close();
+
+        // open again with new config and add old config as support config
+        pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesGcmEncryption())
+                .cryptoProtocolVersion(0)
+                .addAdditionalDecryptionProtocolConfig(EncryptionProtocolConfig
+                        .newDefaultConfig()
+                        .authenticatedEncryption(new AesCbcEncryption())
+                        .protocolVersion(-19)
+                        .build())
+                .clearAdditionalDecryptionProtocolConfigs()
+                .build();
+
+        try {
+            pref.getString("k1", null);
             fail("should throw exception, since cannot decrypt");
         } catch (SecureSharedPreferenceCryptoException ignored) {
         }

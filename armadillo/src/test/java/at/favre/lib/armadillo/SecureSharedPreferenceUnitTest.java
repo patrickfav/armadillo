@@ -20,6 +20,11 @@ public class SecureSharedPreferenceUnitTest extends ASecureSharedPreferencesTest
                 .password(pw);
     }
 
+    @Override
+    protected boolean isKitKatOrBelow() {
+        return false;
+    }
+
     private SharedPreferences getOrCreate(String name) {
         if (!prefMap.containsKey(name)) {
             prefMap.put(name, new MockSharedPref());
@@ -28,7 +33,7 @@ public class SecureSharedPreferenceUnitTest extends ASecureSharedPreferencesTest
     }
 
     @Test
-    public void testChangeListener() throws Exception {
+    public void testChangeListener() {
         AtomicBoolean b = new AtomicBoolean(false);
         SharedPreferences.OnSharedPreferenceChangeListener listener = (sharedPreferences, s) -> b.set(true);
         preferences.registerOnSharedPreferenceChangeListener(listener);

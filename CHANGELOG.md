@@ -1,6 +1,6 @@
 # Releases
 
-## v0.6.0 (WIP)
+## v0.6.0
 
 * [Security] Fix bcrypt implementation #16, #8
 * [Security] Add full Kitkat support #6, #31
@@ -8,6 +8,56 @@
 * Add change key stretching feature #16
 
 > [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.5.0...v0.6.0)
+
+### Breaking Change
+
+In the old bcrypt implementation the following issues were found (#16):
+
+ * only uses max 36 bytes entropy of the possible 72 bytes allowed by bcrypt
+ * only uses 11 byte entropy of the 16 byte possible salt
+
+These issue limit the security strength of the KDF severely
+and immediate update is recommended.
+
+The security fix unfortunately introduced some non-backwards compatible
+changes. Migration will **only** be needed if:
+
+* a user password was used previously
+* the default keyStretchingFunction() was used (ie. using the default config)
+
+Updating the library will instantly make your data incompatible in this case.
+ Please follow the migration steps below:
+
+#### Migration
+
+1. Set the old bcrypt key stretching function, renamed to `BrokenBcryptKeyStretcher`,
+so the lib will be again able to read the data:
+
+```java
+    SharedPreferences preferences = Armadillo.create(context, ...)
+                ...
+                .password(myPassword);
+                .keyStretchingFunction(new BrokenBcryptKeyStretcher()).build();
+```
+
+2. Use the change password feature to set the new fixed implementation. For
+this to work the user password is required. If you don't want the password
+to change use the same one:
+
+```java
+    preferences.changePassword(myPassword, new ArmadilloBcryptKeyStretcher());
+```
+
+And that's basically it. From now on you won't need to set the
+`keyStretchingFunction()` any more. Note, that changing the password, is
+a very slow process, because it involves, decrypting and re-encrypting all
+values in the preference store (it is transactional).
+
+I recommend setting a migration flag in a non-encrypted `SharedPreference`
+and migrate the next time the user has to enter the password (this process
+should be in background task anyway, so it should only take a bit longer
+to decrypt for the user)
+
 
 ## v0.5.0 (11/07/18) - Important Security Fix
 

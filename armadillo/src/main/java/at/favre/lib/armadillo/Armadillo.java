@@ -298,7 +298,7 @@ public final class Armadillo {
             }
 
             if (authenticatedEncryption == null) {
-                if(enableKitKatSupport && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                if (enableKitKatSupport && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
                     authenticatedEncryption = new AesCbcEncryption(secureRandom, provider);
                     cryptoProtocolVersion = -19;
                 } else {

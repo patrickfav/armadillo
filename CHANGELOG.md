@@ -3,6 +3,7 @@
 ## v0.6.0 (WIP)
 
 * [Security] Fix bcrypt implementation #16, #8
+* [Security] Add full Kitkat support #6, #31
 * Add change password feature #13, #22
 * Add change key stretching feature #16
 

@@ -2,8 +2,6 @@
 ![armadillo logo](doc/logo/logo_ldpi.png)
 
 
-
-
 # Armadillo - Encrypted Shared Preference
 
 A shared preference implementation for secret data providing confidentiality,
@@ -15,6 +13,10 @@ primitives.
 [![Javadocs](https://www.javadoc.io/badge/at.favre.lib/armadillo.svg)](https://www.javadoc.io/doc/at.favre.lib/armadillo)
 [![Coverage Status](https://coveralls.io/repos/github/patrickfav/armadillo/badge.svg?branch=master)](https://coveralls.io/github/patrickfav/armadillo?branch=master)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c3ac3cdd849ba47fd90a/maintainability)](https://codeclimate.com/github/patrickfav/armadillo/maintainability)
+
+**Important Notice:** If you migrate to v0.6.0 and use a user password and
+default key stretching function migration is needed due to a security issue.
+See [migration guide in the changelog for v0.6.0](https://github.com/patrickfav/armadillo/releases)
 
 ## Features
 
@@ -67,7 +69,7 @@ first put operation:
 <map>
     <!-- storage random salt -->
     <string name="39e3e4f83dda81c44f8a9063196b28b3d5091fca">4YefvCf1UJ+lVPUAEgmX9Ote9CIgWOINmXq/8s1QUNw=</string>
-     <!-- 'key1':'stringValue' -->
+)     <!-- 'key1':'stringValue' -->
     <string name="152b866fd2d63899678c21f247bb6df0d2e38072">AAAAABCk6riLYVyqozCrBfCzNLuaAAAALZfqipKoXeLtCOuzX2iPa4aYII8FlWVQxORICY5AikR3ISUv/BkUnDsTSeGxAg==</string>
 </map>
 

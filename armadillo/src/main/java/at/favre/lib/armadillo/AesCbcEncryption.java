@@ -88,6 +88,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
             byteBuffer.put((byte) mac.length);
             byteBuffer.put(mac);
             byteBuffer.put(encrypted);
+
             return byteBuffer.array();
         } catch (Exception e) {
             throw new AuthenticatedEncryptionException("could not encrypt", e);
@@ -135,6 +136,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
             int ivLength = byteBuffer.get();
             iv = new byte[ivLength];
             byteBuffer.get(iv);
+
             int macLength = byteBuffer.get();
             mac = new byte[macLength];
             byteBuffer.get(mac);
@@ -158,9 +160,8 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
 
     private void verifyMac(byte[] rawEncryptionKey, byte[] cipherText, byte[] mac, @Nullable byte[] associatedData) throws InvalidKeyException, NoSuchAlgorithmException {
         byte[] actualMac = macCipherText(rawEncryptionKey, cipherText, associatedData);
-        boolean isMacEqual = Bytes.wrap(mac).equalsConstantTime(actualMac);
 
-        if (!isMacEqual) {
+        if (!Bytes.wrap(mac).equalsConstantTime(actualMac)) {
             throw new SecurityException("encryption integrity exception: mac does not match");
         }
     }

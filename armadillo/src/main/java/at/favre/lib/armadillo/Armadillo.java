@@ -8,6 +8,7 @@ import android.support.annotation.Nullable;
 import java.security.Provider;
 import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -418,7 +419,7 @@ public final class Armadillo {
             }
 
             EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(config,
-                    fingerprint, stringMessageDigest, secureRandom, additionalDecryptionConfigs);
+                    fingerprint, stringMessageDigest, secureRandom, Collections.unmodifiableList(additionalDecryptionConfigs));
 
             checkKitKatSupport(config.authenticatedEncryption);
 

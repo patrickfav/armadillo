@@ -251,6 +251,8 @@ public abstract class ASecureSharedPreferencesTest {
             .contentKeyDigest(8).build());
         preferenceSmokeTest(create("contentDigest2", null)
             .contentKeyDigest(Bytes.random(16).array()).build());
+        preferenceSmokeTest(create("contentDigest3", null)
+            .contentKeyDigest((providedMessage, usageName) -> Bytes.from(providedMessage).append(usageName).encodeUtf8()).build());
     }
 
     @Test

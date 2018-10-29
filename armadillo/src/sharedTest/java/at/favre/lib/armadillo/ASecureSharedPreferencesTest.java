@@ -544,6 +544,9 @@ public abstract class ASecureSharedPreferencesTest {
         assertEquals(2, pref.getInt("k2", 0));
         assertTrue(pref.getBoolean("k3", false));
 
+        // overwrite old data
+        pref.edit().putInt("k2", 2).commit();
+
         // add some data
         pref.edit().putString("j1", "string2").putInt("j2", 3).putBoolean("j3", false).commit();
 
@@ -570,7 +573,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         pref.close();
 
-        // open again with new config and add old config as support config
+        // open again with new config WITHOUT old config as support config (removing in the builder)
         pref = create("testUpgradeToNewerProtocolVersion", null)
                 .symmetricEncryption(new AesGcmEncryption())
                 .cryptoProtocolVersion(0)
@@ -579,12 +582,15 @@ public abstract class ASecureSharedPreferencesTest {
                         .authenticatedEncryption(new AesCbcEncryption())
                         .protocolVersion(-19)
                         .build())
-                .clearAdditionalDecryptionProtocolConfigs()
+                .clearAdditionalDecryptionProtocolConfigs() // test remove support protocols in builder
                 .build();
+
+        // check overwritten data
+        assertEquals(2, pref.getInt("k2", 0));
 
         try {
             pref.getString("k1", null);
-            fail("should throw exception, since cannot decrypt");
+            fail("should throw exception, since should not be able to decrypt");
         } catch (SecureSharedPreferenceCryptoException ignored) {
         }
     }

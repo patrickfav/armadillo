@@ -54,9 +54,11 @@ SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
         .password("mySuperSecretPassword".toCharArray()) //use user based password
         .securityProvider(Security.getProvider("BC")) //use bouncy-castle security provider
         .keyStretchingFunction(new PBKDF2KeyStretcher()) //use PBKDF2 as user password kdf
-        .contentKeyDigest((providedMessage, usageName) -> sha256((usageName + providedMessage).getBytes(StandardCharsets.UTF_8))) //use sha256 as message digest
+        .contentKeyDigest(Bytes.from(getAndroidId(context)).array()) //use custom content key digest salt
         .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation
         .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
+        .supportVerifyPassword(true) //enables optional password validation support `.isValidPassword()`
+        .enableKitKatSupport(true) //enable optional kitkat support
         .build();
 ```
 

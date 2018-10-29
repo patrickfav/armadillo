@@ -76,7 +76,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
             secureRandom.nextBytes(iv);
 
             final Cipher cipherEnc = getCipher();
-            cipherEnc.init(Cipher.ENCRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new IvParameterSpec(iv));
+            cipherEnc.init(Cipher.ENCRYPT_MODE, createEncryptionKey(rawEncryptionKey), new IvParameterSpec(iv));
 
             encrypted = cipherEnc.doFinal(rawData);
 
@@ -99,7 +99,13 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
         }
     }
 
-    private byte[] macCipherText(byte[] rawEncryptionKey, byte[] cipherText, @Nullable byte[] associatedData) throws NoSuchAlgorithmException, InvalidKeyException {
+    @NonNull
+    private SecretKeySpec createEncryptionKey(byte[] rawEncryptionKey) {
+        return new SecretKeySpec(HKDF.fromHmacSha256().expand(rawEncryptionKey, Bytes.from("encKey").array(), rawEncryptionKey.length), "AES");
+    }
+
+    private byte[] macCipherText(byte[] rawEncryptionKey, byte[] cipherText, @Nullable byte[] associatedData)
+            throws NoSuchAlgorithmException, InvalidKeyException {
         SecretKey macKey = createMacKey(rawEncryptionKey);
 
         Mac hmac = Mac.getInstance(HMAC_ALGORITHM);
@@ -147,7 +153,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
             verifyMac(rawEncryptionKey, encrypted, mac, associatedData);
 
             final Cipher cipherDec = getCipher();
-            cipherDec.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new IvParameterSpec(iv));
+            cipherDec.init(Cipher.DECRYPT_MODE, createEncryptionKey(rawEncryptionKey), new IvParameterSpec(iv));
             return cipherDec.doFinal(encrypted);
         } catch (Exception e) {
             throw new AuthenticatedEncryptionException("could not decrypt", e);
@@ -158,7 +164,8 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
         }
     }
 
-    private void verifyMac(byte[] rawEncryptionKey, byte[] cipherText, byte[] mac, @Nullable byte[] associatedData) throws InvalidKeyException, NoSuchAlgorithmException {
+    private void verifyMac(byte[] rawEncryptionKey, byte[] cipherText, byte[] mac, @Nullable byte[] associatedData)
+            throws InvalidKeyException, NoSuchAlgorithmException {
         byte[] actualMac = macCipherText(rawEncryptionKey, cipherText, associatedData);
 
         if (!Bytes.wrap(mac).equalsConstantTime(actualMac)) {

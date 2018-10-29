@@ -2,6 +2,8 @@ package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
 
+import junit.framework.TestCase;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -498,6 +500,22 @@ public abstract class ASecureSharedPreferencesTest {
             pref.getBoolean("k3", false);
             fail("should throw exception, since cannot decrypt");
         } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+    }
+
+    @Test
+    public void testSameKeyDifferentTypeShouldOverwrite() {
+        //this is a similar behavior to normal shared preferences
+        SharedPreferences pref = create("testSameKeyDifferentTypeShouldOverwrite", null).build();
+        pref.edit().putInt("id", 1).commit();
+        pref.edit().putString("id", "testNotInt").commit();
+
+        TestCase.assertEquals("testNotInt", pref.getString("id", null));
+        try {
+            pref.getInt("id", -1);
+            TestCase.fail("string should be overwritten with int");
+        } catch (Exception ignored) {
+
         }
     }
 }

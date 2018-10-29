@@ -33,10 +33,10 @@ import at.favre.lib.crypto.HKDF;
  * j = mac bytes
  * z = content bytes (encrypted content, auth tag)
  *
- * @deprecated this is only meant for Kitkat backwards compatibly as this version and below does not
- * support AES-GCM.
  * @author Patrick Favre-Bulle
  * @since 27.10.2018
+ * @deprecated this is only meant for Kitkat backwards compatibly as this version and below does not
+ * support AES-GCM with JCA.
  */
 @SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
 @Deprecated
@@ -80,7 +80,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
 
             encrypted = cipherEnc.doFinal(rawData);
 
-            mac = macCipherText(rawEncryptionKey, encrypted, associatedData);
+            mac = macCipherText(rawEncryptionKey, encrypted, iv, associatedData);
 
             ByteBuffer byteBuffer = ByteBuffer.allocate(1 + iv.length + 1 + mac.length + encrypted.length);
             byteBuffer.put((byte) iv.length);
@@ -104,25 +104,21 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
         return new SecretKeySpec(HKDF.fromHmacSha256().expand(rawEncryptionKey, Bytes.from("encKey").array(), rawEncryptionKey.length), "AES");
     }
 
-    private byte[] macCipherText(byte[] rawEncryptionKey, byte[] cipherText, @Nullable byte[] associatedData)
+    private byte[] macCipherText(byte[] rawEncryptionKey, byte[] cipherText, byte[] iv, @Nullable byte[] associatedData)
             throws NoSuchAlgorithmException, InvalidKeyException {
         SecretKey macKey = createMacKey(rawEncryptionKey);
 
         Mac hmac = Mac.getInstance(HMAC_ALGORITHM);
         hmac.init(macKey);
 
-        Bytes cipherBytes = Bytes.wrap(cipherText);
-        try {
-            if (associatedData != null) {
-                cipherBytes = cipherBytes.append(Bytes.wrap(associatedData));
-            }
+        hmac.update(iv);
+        hmac.update(cipherText);
 
-            return hmac.doFinal(cipherBytes.array());
-        } finally {
-            if (associatedData != null) {
-                cipherBytes.mutable().secureWipe();
-            }
+        if (associatedData != null) {
+            hmac.update(associatedData);
         }
+
+        return hmac.doFinal();
     }
 
     @NonNull
@@ -150,7 +146,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
             encrypted = new byte[byteBuffer.remaining()];
             byteBuffer.get(encrypted);
 
-            verifyMac(rawEncryptionKey, encrypted, mac, associatedData);
+            verifyMac(rawEncryptionKey, encrypted, iv, mac, associatedData);
 
             final Cipher cipherDec = getCipher();
             cipherDec.init(Cipher.DECRYPT_MODE, createEncryptionKey(rawEncryptionKey), new IvParameterSpec(iv));
@@ -164,9 +160,9 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
         }
     }
 
-    private void verifyMac(byte[] rawEncryptionKey, byte[] cipherText, byte[] mac, @Nullable byte[] associatedData)
+    private void verifyMac(byte[] rawEncryptionKey, byte[] cipherText, byte[] iv, byte[] mac, @Nullable byte[] associatedData)
             throws InvalidKeyException, NoSuchAlgorithmException {
-        byte[] actualMac = macCipherText(rawEncryptionKey, cipherText, associatedData);
+        byte[] actualMac = macCipherText(rawEncryptionKey, cipherText, iv, associatedData);
 
         if (!Bytes.wrap(mac).equalsConstantTime(actualMac)) {
             throw new SecurityException("encryption integrity exception: mac does not match");

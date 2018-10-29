@@ -187,7 +187,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             ikm = ikm.append(defaultEncryptionProtocol.keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES));
         }
 
-        return HKDF.fromHmacSha512().extractAndExpand(preferenceSalt, ikm.array(), "DefaultEncryptionProtocol".getBytes(), keyLengthBit / 8);
+        return HKDF.fromHmacSha512().extractAndExpand(preferenceSalt, ikm.array(), Bytes.from("DefaultEncryptionProtocol").array(), keyLengthBit / 8);
     }
 
     public static final class Factory implements EncryptionProtocol.Factory {

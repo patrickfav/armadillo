@@ -92,7 +92,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
             Timber.v("create new preferences random salt");
             byte[] generatedPrefSalt = Bytes.random(PREFERENCES_SALT_LENGTH_BYTES, secureRandom).array();
             try {
-                prefSalt = Bytes.from(generatedPrefSalt).array();
+                prefSalt = Bytes.wrap(generatedPrefSalt).copy().array();
                 dataObfuscator.obfuscate(generatedPrefSalt);
                 sharedPreferences.edit().putString(prefSaltContentKey, Bytes.wrap(generatedPrefSalt).encodeBase64()).apply();
             } finally {

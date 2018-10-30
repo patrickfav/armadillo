@@ -181,7 +181,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     }
 
     private byte[] keyDerivationFunction(String contentKey, byte[] fingerprint, byte[] contentSalt, byte[] preferenceSalt, @Nullable char[] password) {
-        Bytes ikm = Bytes.wrap(fingerprint).append(contentSalt).append(Bytes.from(contentKey, Normalizer.Form.NFKD));
+        Bytes ikm = Bytes.from(fingerprint, contentSalt, Bytes.from(contentKey, Normalizer.Form.NFKD).array());
 
         if (password != null) {
             ikm = ikm.append(defaultEncryptionProtocol.keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES));

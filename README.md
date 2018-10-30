@@ -70,9 +70,9 @@ first put operation:
 <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
 <map>
     <!-- storage random salt -->
-    <string name="39e3e4f83dda81c44f8a9063196b28b3d5091fca">4YefvCf1UJ+lVPUAEgmX9Ote9CIgWOINmXq/8s1QUNw=</string>
-)     <!-- 'key1':'stringValue' -->
-    <string name="152b866fd2d63899678c21f247bb6df0d2e38072">AAAAABCk6riLYVyqozCrBfCzNLuaAAAALZfqipKoXeLtCOuzX2iPa4aYII8FlWVQxORICY5AikR3ISUv/BkUnDsTSeGxAg==</string>
+    <string name="585d6f0f415682ace841fb50d5980d60ed23a2ef">riIPjrL2WRfoh8QJXu7fWk4GGeAKlQoJl9ofABHZKlc=</string>
+     <!-- 'key1':'stringValue' -->
+    <string name="152b866fd2d63899678c21f247bb6df0d2e38072">AAAAABD/8an1zfovjJB/2MFOT9ncAAAAJaf+Z9xgzwXzp1BqTsVMnRZxR/HfRcO8lEhyKpL17QmZ5amwAYQ=</string>
 </map>
 
 ```
@@ -238,7 +238,7 @@ The resulting data will be encoded with [base64](https://en.wikipedia.org/wiki/B
 <?xml version='1.0' encoding='utf-8' standalone='yes' ?>
 <map>
     <string name="39e3e4f83dda81c44f8a9063196b28b3d5091fca">hwbchXlqDAQcig6q3UWxdbOb2wouDGGwjUGNIzREiy0=</string>
-    <string name="62ef41ac992322bdd669e96799c12a66a2cce111">IOIpvllJPY+aIwv+Z+w+SSJLxHD218vOUpd+e10eCczZURrNSN8h49V+Oy3thjEsbp/2zuqa6uNlGJ8tMpgk/uU0b+iLIciN+0EGYLKso6UYgbtgH/3n9GcQzqOvAIZvZeuurk4f9x9gL3fknHpFaXSIOYrSGZOjwD8WnOk1w2/tSufyZNSIdxUGvjniwpNaeawACi1EKitA4Oj+GRZRjW5NFY3jpYlzDPw=</string>
+    <string name="62ef41ac992322bdd669e96799c12a66a2cce111">AAAAABAAajtOaVCq5yqu1TPxgLu2AAAAqUTxgPcAM6lyNTGgy7ZAoCjqcCdtxT6T</string>
 </map>
 ```
 

@@ -7,7 +7,6 @@ import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -93,7 +92,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
             Timber.v("create new preferences random salt");
             byte[] generatedPrefSalt = Bytes.random(PREFERENCES_SALT_LENGTH_BYTES, secureRandom).array();
             try {
-                prefSalt = Bytes.from(generatedPrefSalt).array();
+                prefSalt = Bytes.wrap(generatedPrefSalt).copy().array();
                 dataObfuscator.obfuscate(generatedPrefSalt);
                 sharedPreferences.edit().putString(prefSaltContentKey, Bytes.wrap(generatedPrefSalt).encodeBase64()).apply();
             } finally {
@@ -457,7 +456,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         @Override
         public SharedPreferences.Editor putFloat(String key, float value) {
             final String keyHash = encryptionProtocol.deriveContentKey(key);
-            internalEditor.putString(keyHash, encryptToBase64(keyHash, password, ByteBuffer.allocate(4).putFloat(value).array()));
+            internalEditor.putString(keyHash, encryptToBase64(keyHash, password, Bytes.from(value).array()));
             return this;
         }
 

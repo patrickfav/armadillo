@@ -45,12 +45,12 @@ public final class EncryptionFingerprintFactory {
      * @return fingerprint
      */
     public static EncryptionFingerprint create(Context context, @Nullable String additionalData) {
-        return new EncryptionFingerprint.Default(Bytes.wrap(getApkSignatureHash(context))
-                .append(Bytes.from(getAndroidId(context)))
-                .append(Bytes.from(getApplicationPackage(context)))
-                .append(Bytes.from(getBuildDetails()))
-                .append(BuildConfig.STATIC_RANDOM)
-                .append(additionalData != null ? Bytes.from(additionalData) : Bytes.from("")).array());
+        return new EncryptionFingerprint.Default(Bytes.from(getApkSignatureHash(context),
+                Bytes.from(getAndroidId(context)).array(),
+                Bytes.from(getApplicationPackage(context)).array(),
+                Bytes.from(getBuildDetails()).array(),
+                BuildConfig.STATIC_RANDOM,
+                additionalData != null ? Bytes.from(additionalData).array() : Bytes.from("").array()).array());
     }
 
     /**

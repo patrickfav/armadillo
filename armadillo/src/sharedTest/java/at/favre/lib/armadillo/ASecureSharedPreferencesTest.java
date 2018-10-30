@@ -2,6 +2,8 @@ package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
 
+import junit.framework.TestCase;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -214,25 +216,25 @@ public abstract class ASecureSharedPreferencesTest {
     @Test
     public void simpleStringGetWithPkdf2Password() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
+                .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
     }
 
     @Test
     public void simpleStringGetWithBcryptPassword() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(7)).build());
+                .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(7)).build());
     }
 
     @Test
     public void simpleStringGetWithBrokenBcryptPassword() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new BrokenBcryptKeyStretcher(6)).build());
+                .keyStretchingFunction(new BrokenBcryptKeyStretcher(6)).build());
     }
 
     @Test
     public void simpleStringGetWithFastKDF() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build());
+                .keyStretchingFunction(new FastKeyStretcher()).build());
     }
 
     @Test
@@ -243,43 +245,43 @@ public abstract class ASecureSharedPreferencesTest {
     @Test
     public void testWithDifferentFingerprint() {
         preferenceSmokeTest(create("fingerprint", null)
-            .encryptionFingerprint(Bytes.random(16).array()).build());
+                .encryptionFingerprint(Bytes.random(16).array()).build());
         preferenceSmokeTest(create("fingerprint2", null)
-            .encryptionFingerprint(() -> new byte[16]).build());
+                .encryptionFingerprint(() -> new byte[16]).build());
     }
 
     @Test
     public void testWithDifferentContentDigest() {
         preferenceSmokeTest(create("contentDigest1", null)
-            .contentKeyDigest(8).build());
+                .contentKeyDigest(8).build());
         preferenceSmokeTest(create("contentDigest2", null)
-            .contentKeyDigest(Bytes.random(16).array()).build());
+                .contentKeyDigest(Bytes.random(16).array()).build());
         preferenceSmokeTest(create("contentDigest3", null)
-            .contentKeyDigest((providedMessage, usageName) -> Bytes.from(providedMessage).append(usageName).encodeUtf8()).build());
+                .contentKeyDigest((providedMessage, usageName) -> Bytes.from(providedMessage).append(usageName).encodeUtf8()).build());
     }
 
     @Test
     public void testWithSecureRandom() {
         preferenceSmokeTest(create("secureRandom", null)
-            .secureRandom(new SecureRandom()).build());
+                .secureRandom(new SecureRandom()).build());
     }
 
     @Test
     public void testEncryptionStrength() {
         preferenceSmokeTest(create("secureRandom", null)
-            .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
+                .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
     }
 
     @Test
     public void testProvider() {
         preferenceSmokeTest(create("provider", null)
-            .securityProvider(null).build());
+                .securityProvider(null).build());
     }
 
     @Test
     public void testWithNoObfuscation() {
         preferenceSmokeTest(create("obfuscate", null)
-            .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
+                .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
     }
 
     @Test
@@ -287,21 +289,21 @@ public abstract class ASecureSharedPreferencesTest {
         assumeFalse("test not supported on kitkat devices", isKitKatOrBelow());
 
         preferenceSmokeTest(create("enc", null)
-            .symmetricEncryption(new AesGcmEncryption()).build());
+                .symmetricEncryption(new AesGcmEncryption()).build());
     }
 
     @Test
     public void testRecoveryPolicy() {
         preferenceSmokeTest(create("recovery", null)
-            .recoveryPolicy(true, true).build());
+                .recoveryPolicy(true, true).build());
         preferenceSmokeTest(create("recovery", null)
-            .recoveryPolicy(new RecoveryPolicy.Default(true, true)).build());
+                .recoveryPolicy(new RecoveryPolicy.Default(true, true)).build());
     }
 
     @Test
     public void testCustomProtocolVersion() {
         preferenceSmokeTest(create("protocol", null)
-            .cryptoProtocolVersion(14221).build());
+                .cryptoProtocolVersion(14221).build());
     }
 
     void preferenceSmokeTest(SharedPreferences preferences) {
@@ -404,7 +406,7 @@ public abstract class ASecureSharedPreferencesTest {
         } catch (SecureSharedPreferenceCryptoException ignored) {
         }
     }
-    
+
     private char[] clonePassword(char[] password) {
         return password == null ? null : password.clone();
     }
@@ -444,7 +446,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         // open with new pw and new ksFn, should be accessible
         pref = create("testChangePassword", "pw2".toCharArray())
-            .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(8)).build();
+                .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(8)).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
         assertTrue(pref.getBoolean("k3", false));
@@ -594,6 +596,21 @@ public abstract class ASecureSharedPreferencesTest {
             pref.getString("k1", null);
             fail("should throw exception, since should not be able to decrypt");
         } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+    }
+
+    @Test
+    public void testSameKeyDifferentTypeShouldOverwrite() {
+        //this is a similar behavior to normal shared preferences
+        SharedPreferences pref = create("testSameKeyDifferentTypeShouldOverwrite", null).build();
+        pref.edit().putInt("id", 1).commit();
+        pref.edit().putString("id", "testNotInt").commit();
+
+        TestCase.assertEquals("testNotInt", pref.getString("id", null));
+        try {
+            pref.getInt("id", -1);
+            TestCase.fail("string should be overwritten with int");
+        } catch (Exception ignored) {
         }
     }
 }

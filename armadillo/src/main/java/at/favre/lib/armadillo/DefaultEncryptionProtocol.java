@@ -4,6 +4,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.text.Normalizer;
 import java.util.Objects;
@@ -106,8 +108,8 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     private byte[] encode(byte[] contentSalt, byte[] encrypted) {
         ByteBuffer buffer = ByteBuffer.allocate(PROTOCOL_VERSION_LENGTH_BYTES
-                + CONTENT_SALT_SIZE_LENGTH_BYTES + contentSalt.length
-                + ENCRYPTED_CONTENT_SIZE_LENGTH_BYTES + encrypted.length);
+            + CONTENT_SALT_SIZE_LENGTH_BYTES + contentSalt.length
+            + ENCRYPTED_CONTENT_SIZE_LENGTH_BYTES + encrypted.length);
         buffer.putInt(protocolVersion);
         buffer.put((byte) contentSalt.length);
         buffer.put(contentSalt);
@@ -171,6 +173,27 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         return keyStretchingFunction;
     }
 
+    @Nullable
+    @Override
+    public ByteArrayRuntimeObfuscator obfuscatePassword(@Nullable char[] password) {
+        return obfuscatePasswordInternal(password, secureRandom);
+    }
+
+    @Nullable
+    @Override
+    public char[] deobfuscatePassword(@Nullable ByteArrayRuntimeObfuscator obfuscated) {
+        if (obfuscated == null) return null;
+
+        CharBuffer charBuffer = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(obfuscated.getBytes()));
+
+        if (charBuffer.capacity() != charBuffer.limit()) {
+            char[] compacted = new char[charBuffer.remaining()];
+            charBuffer.get(compacted);
+            return compacted;
+        }
+        return charBuffer.array();
+    }
+
     private byte[] keyDerivationFunction(String contentKey, byte[] fingerprint, byte[] contentSalt, byte[] preferenceSalt, @Nullable char[] password) {
         Bytes ikm = Bytes.from(fingerprint, contentSalt, Bytes.from(contentKey, Normalizer.Form.NFKD).array());
 
@@ -195,7 +218,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         private final Compressor compressor;
 
         Factory(int protocolVersion, EncryptionFingerprint fingerprint, StringMessageDigest stringMessageDigest,
-                AuthenticatedEncryption authenticatedEncryption, int keyStrength,
+                AuthenticatedEncryption authenticatedEncryption, @AuthenticatedEncryption.KeyStrength int keyStrength,
                 KeyStretchingFunction keyStretchingFunction, DataObfuscator.Factory dataObfuscatorFactory,
                 SecureRandom secureRandom, @Nullable Compressor compressor) {
             this.protocolVersion = protocolVersion;
@@ -228,5 +251,16 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         public SecureRandom getSecureRandom() {
             return secureRandom;
         }
+
+        @Nullable
+        @Override
+        public ByteArrayRuntimeObfuscator obfuscatePassword(@Nullable char[] password) {
+            return obfuscatePasswordInternal(password, secureRandom);
+        }
+    }
+
+    private static ByteArrayRuntimeObfuscator obfuscatePasswordInternal(@Nullable char[] password, SecureRandom secureRandom) {
+        if (password == null) return null;
+        return new ByteArrayRuntimeObfuscator.Default(Bytes.from(password).array(), secureRandom);
     }
 }

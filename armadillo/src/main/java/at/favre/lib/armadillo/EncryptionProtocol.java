@@ -86,6 +86,12 @@ interface EncryptionProtocol {
      */
     KeyStretchingFunction getKeyStretchingFunction();
 
+    @Nullable
+    ByteArrayRuntimeObfuscator obfuscatePassword(@Nullable char[] password);
+
+    @Nullable
+    char[] deobfuscatePassword(@Nullable ByteArrayRuntimeObfuscator obfuscated);
+
     /**
      * Factory creating a new instance of {@link EncryptionProtocol}
      */
@@ -119,5 +125,8 @@ interface EncryptionProtocol {
          * @return random gen
          */
         SecureRandom getSecureRandom();
+
+        @Nullable
+        ByteArrayRuntimeObfuscator obfuscatePassword(@Nullable char[] password);
     }
 }

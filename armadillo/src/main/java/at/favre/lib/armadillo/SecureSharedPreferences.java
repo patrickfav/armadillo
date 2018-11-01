@@ -29,7 +29,7 @@ import timber.log.Timber;
  *
  * @author Patrick Favre-Bulle
  */
-@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
+@SuppressWarnings( {"unused", "WeakerAccess", "UnusedReturnValue"})
 public final class SecureSharedPreferences implements ArmadilloSharedPreferences {
 
     private static final String PREFERENCES_SALT_KEY = "at.favre.lib.securepref.KEY_RANDOM";
@@ -41,7 +41,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     private final RecoveryPolicy recoveryPolicy;
 
     @Nullable
-    private char[] password;
+    private ByteArrayRuntimeObfuscator password;
     private boolean supportVerifyPassword;
 
     private String prefSaltContentKey;
@@ -54,7 +54,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, @Nullable char[] password, boolean supportVerifyPassword) {
         this(context.getSharedPreferences(encryptionProtocol.getStringMessageDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
-                encryptionProtocol, recoveryPolicy, password, supportVerifyPassword);
+            encryptionProtocol, recoveryPolicy, password, supportVerifyPassword);
     }
 
     public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory,
@@ -63,7 +63,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         this.sharedPreferences = sharedPreferences;
         this.factory = encryptionProtocolFactory;
         this.recoveryPolicy = recoveryPolicy;
-        this.password = password;
+        this.password = factory.obfuscatePassword(password);
         this.supportVerifyPassword = supportVerifyPassword;
         init();
     }
@@ -75,9 +75,9 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
      */
     private void init() {
         this.preferencesSalt = getPreferencesSalt(
-                factory.getStringMessageDigest(),
-                factory.createDataObfuscator(),
-                factory.getSecureRandom());
+            factory.getStringMessageDigest(),
+            factory.createDataObfuscator(),
+            factory.getSecureRandom());
         this.encryptionProtocol = factory.create(preferencesSalt);
         if (supportVerifyPassword && !hasValidationValue()) {
             storePasswordValidationValue(preferencesSalt);
@@ -295,9 +295,9 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         }
 
         if (password != null) {
-            Arrays.fill(password, (char) 0);
+            password.wipe();
         }
-        password = newPassword;
+        password = encryptionProtocol.obfuscatePassword(newPassword);
     }
 
     /**
@@ -311,6 +311,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
      */
     private boolean reencryptStringType(@Nullable char[] newPassword, Editor editor, String keyHash, @Nullable KeyStretchingFunction newKsFunction) {
         try {
+            final ByteArrayRuntimeObfuscator pw = encryptionProtocol.obfuscatePassword(newPassword);
             final String encryptedValue = sharedPreferences.getString(keyHash, null);
 
             if (encryptedValue == null) {
@@ -326,13 +327,12 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
                 encryptionProtocol.setKeyStretchingFunction(newKsFunction);
             }
 
-            editor.putEncryptedBase64(keyHash, encryptToBase64(keyHash, newPassword, bytes));
+            editor.putEncryptedBase64(keyHash, encryptToBase64(keyHash, pw, bytes));
             return true;
         } catch (ClassCastException e) {
             return false;
         }
     }
-
 
     /**
      * Re-encrypts StringSet stored with given key hash using the new provided password.
@@ -344,6 +344,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
      * @return returns true if the StringSet was successfully re-encrypted.
      */
     private boolean reencryptStringSetType(char[] newPassword, Editor editor, String keyHash, @Nullable KeyStretchingFunction newKsFunction) {
+        final ByteArrayRuntimeObfuscator pw = encryptionProtocol.obfuscatePassword(newPassword);
         final Set<String> encryptedSet = sharedPreferences.getStringSet(keyHash, null);
         if (encryptedSet == null) {
             return false;
@@ -364,7 +365,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
 
         final Set<String> encryptedValues = new HashSet<>(decryptedSet.size());
         for (String value : decryptedSet) {
-            encryptedValues.add(encryptToBase64(keyHash, newPassword, Bytes.from(value).array()));
+            encryptedValues.add(encryptToBase64(keyHash, pw, Bytes.from(value).array()));
         }
         editor.putEncryptedStringSet(keyHash, encryptedValues);
         return true;
@@ -373,7 +374,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     @Override
     public void close() {
         if (password != null) {
-            Arrays.fill(password, (char) 0);
+            password.wipe();
         }
         password = null;
         if (preferencesSalt != null) {
@@ -503,18 +504,18 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     }
 
     @NonNull
-    private String encryptToBase64(String keyHash, @Nullable char[] password, byte[] content) {
+    private String encryptToBase64(String keyHash, @Nullable ByteArrayRuntimeObfuscator password, byte[] content) {
         try {
-            return Bytes.wrap(encryptionProtocol.encrypt(keyHash, password, content)).encodeBase64();
+            return Bytes.wrap(encryptionProtocol.encrypt(keyHash, encryptionProtocol.deobfuscatePassword(password), content)).encodeBase64();
         } catch (EncryptionProtocolException e) {
             throw new IllegalStateException(e);
         }
     }
 
     @Nullable
-    private byte[] decrypt(String keyHash, char[] password, @NonNull String base64Encrypted) {
+    private byte[] decrypt(String keyHash, @Nullable ByteArrayRuntimeObfuscator password, @NonNull String base64Encrypted) {
         try {
-            return encryptionProtocol.decrypt(keyHash, password, Bytes.parseBase64(base64Encrypted).array());
+            return encryptionProtocol.decrypt(keyHash, encryptionProtocol.deobfuscatePassword(password), Bytes.parseBase64(base64Encrypted).array());
         } catch (EncryptionProtocolException e) {
             if (recoveryPolicy.shouldRemoveBrokenContent()) {
                 sharedPreferences.edit().remove(keyHash).apply();
@@ -525,4 +526,5 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         }
         return null;
     }
+
 }

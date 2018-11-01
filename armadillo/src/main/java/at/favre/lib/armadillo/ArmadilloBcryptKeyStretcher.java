@@ -1,12 +1,6 @@
 package at.favre.lib.armadillo;
 
 import android.os.StrictMode;
-import android.support.annotation.Nullable;
-
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
@@ -69,23 +63,16 @@ final class ArmadilloBcryptKeyStretcher implements KeyStretchingFunction {
      * @param logRounds log2(Iterations). e.g. 12 ==> 2^12 = 4,096 iterations
      * @return the Bcrypt hash of the password
      */
-    private static byte[] bcrypt(byte[] salt, @Nullable char[] password, int logRounds) {
+    private static byte[] bcrypt(byte[] salt, char[] password, int logRounds) {
         StrictMode.noteSlowCall("bcrypt is a very expensive call and should not be done on the main thread");
-        byte[] passwordBytes = null;
+        Bytes passwordBytes = Bytes.empty();
         try {
-            passwordBytes = charArrayToByteArray(password, StandardCharsets.UTF_8);
+            passwordBytes = Bytes.from(password);
             return BCrypt.with(BCrypt.Version.VERSION_2A).hashRaw(logRounds,
                     HKDF.fromHmacSha256().expand(salt, "bcrypt-salt".getBytes(), 16),
-                    HKDF.fromHmacSha256().expand(passwordBytes, "bcrypt-pw".getBytes(), 71)).rawHash;
+                HKDF.fromHmacSha256().expand(passwordBytes.array(), "bcrypt-pw".getBytes(), 71)).rawHash;
         } finally {
-            Bytes.wrapNullSafe(passwordBytes).mutable().secureWipe();
+            passwordBytes.mutable().secureWipe();
         }
-    }
-
-    private static byte[] charArrayToByteArray(char[] charArray, Charset charset) {
-        ByteBuffer bb = charset.encode(CharBuffer.wrap(charArray));
-        byte[] bytes = new byte[bb.remaining()];
-        bb.get(bytes);
-        return bytes;
     }
 }

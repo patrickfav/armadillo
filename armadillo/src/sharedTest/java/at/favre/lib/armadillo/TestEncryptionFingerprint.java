@@ -3,11 +3,19 @@ package at.favre.lib.armadillo;
 import at.favre.lib.bytes.Bytes;
 
 public class TestEncryptionFingerprint implements EncryptionFingerprint {
-    private byte[] fp = Bytes.random(16).array();
+    private final byte[] fp;
+
+    public TestEncryptionFingerprint() {
+        this(Bytes.random(16).array());
+    }
+
+    public TestEncryptionFingerprint(byte[] fp) {
+        this.fp = fp;
+    }
 
     @Override
     public byte[] getBytes() {
-        return fp;
+        return Bytes.wrap(fp).copy().array();
     }
 
     @Override

@@ -28,30 +28,17 @@ public interface ByteArrayRuntimeObfuscator {
     void wipe();
 
     final class Default implements ByteArrayRuntimeObfuscator {
+
         private final byte[][] data;
 
         Default(byte[] array, SecureRandom secureRandom) {
-            int len = (int) (Math.abs(Bytes.random(8).toLong()) % 9) + 1;
-            this.data = new byte[len + 1][];
-            for (int i = 0; i < data.length - 1; i++) {
-                byte[] key = Bytes.random(array.length, secureRandom).array();
-                this.data[i] = key;
-                Bytes.wrap(array).mutable().xor(key);
-            }
-            this.data[data.length - 1] = array;
+            byte[] key = Bytes.random(array.length, secureRandom).array();
+            this.data = new byte[][] {key, Bytes.wrap(array).mutable().xor(key).array()};
         }
 
         @Override
         public byte[] getBytes() {
-            Bytes b = Bytes.empty();
-            for (int i = data.length - 1; i >= 0; i--) {
-                if (b.isEmpty()) {
-                    b = Bytes.wrap(data[i]).mutable();
-                    continue;
-                }
-                b.xor(data[i]);
-            }
-            return b.array();
+            return Bytes.wrap(data[0]).xor(data[1]).array();
         }
 
         @Override

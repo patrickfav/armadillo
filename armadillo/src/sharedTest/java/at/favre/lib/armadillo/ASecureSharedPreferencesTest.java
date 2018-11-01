@@ -250,7 +250,7 @@ public abstract class ASecureSharedPreferencesTest {
         preferenceSmokeTest(create("fingerprint", null)
             .encryptionFingerprint(Bytes.random(16).array()).build());
         preferenceSmokeTest(create("fingerprint2", null)
-            .encryptionFingerprint(new TestEncryptionFingerprint()).build());
+            .encryptionFingerprint(new TestEncryptionFingerprint(new byte[16])).build());
     }
 
     @Test

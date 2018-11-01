@@ -1,19 +1,16 @@
 package at.favre.lib.armadillo;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import java.security.SecureRandom;
+import java.util.Arrays;
 
 import at.favre.lib.bytes.Bytes;
 
 import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertFalse;
 
 public class ByteArrayObfuscatorTest {
-
-    @Before
-    public void setUp() {
-    }
 
     @Test
     public void obfuscateRandom() {
@@ -47,9 +44,18 @@ public class ByteArrayObfuscatorTest {
     private void testIntern(byte[] target) {
         System.out.println("original:   " + Bytes.wrap(target).encodeHex());
         ByteArrayRuntimeObfuscator obfuscator = new ByteArrayRuntimeObfuscator.Default(Bytes.wrap(target).copy().array(), new SecureRandom());
-        byte[] unobfuscated = obfuscator.getBytes();
+        byte[] unobfuscated = Bytes.wrap(obfuscator.getBytes()).copy().array();
+        byte[] unobfuscated2 = Bytes.wrap(obfuscator.getBytes()).copy().array();
         System.out.println("deobfuscated: " + Bytes.wrap(unobfuscated).encodeHex());
+        System.out.println("deobfuscated: " + Bytes.wrap(unobfuscated2).encodeHex());
 
         assertArrayEquals(target, unobfuscated);
+        assertArrayEquals(target, unobfuscated2);
+
+        obfuscator.wipe();
+
+        assertFalse(Arrays.equals(obfuscator.getBytes(), target));
+        assertFalse(Arrays.equals(obfuscator.getBytes(), unobfuscated));
+        assertFalse(Arrays.equals(obfuscator.getBytes(), unobfuscated2));
     }
 }

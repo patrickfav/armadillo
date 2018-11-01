@@ -44,13 +44,16 @@ public class ByteArrayObfuscatorTest {
     private void testIntern(byte[] target) {
         System.out.println("original:   " + Bytes.wrap(target).encodeHex());
         ByteArrayRuntimeObfuscator obfuscator = new ByteArrayRuntimeObfuscator.Default(Bytes.wrap(target).copy().array(), new SecureRandom());
+
         byte[] unobfuscated = Bytes.wrap(obfuscator.getBytes()).copy().array();
         byte[] unobfuscated2 = Bytes.wrap(obfuscator.getBytes()).copy().array();
+        byte[] unobfuscated3 = Bytes.wrap(obfuscator.getBytes()).copy().array();
+
         System.out.println("deobfuscated: " + Bytes.wrap(unobfuscated).encodeHex());
-        System.out.println("deobfuscated: " + Bytes.wrap(unobfuscated2).encodeHex());
 
         assertArrayEquals(target, unobfuscated);
-        assertArrayEquals(target, unobfuscated2);
+        assertArrayEquals(unobfuscated, unobfuscated2);
+        assertArrayEquals(unobfuscated2, unobfuscated3);
 
         obfuscator.wipe();
 

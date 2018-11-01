@@ -29,13 +29,19 @@ public interface ByteArrayRuntimeObfuscator {
 
     final class Default implements ByteArrayRuntimeObfuscator {
         private final byte[][] data;
+        private final SecureRandom secureRandom;
 
         Default(byte[] array, SecureRandom secureRandom) {
-            int len = (int) (Math.abs(Bytes.random(8).toLong()) % 9) + 1;
-            this.data = new byte[len + 1][];
-            Bytes copy = Bytes.from(array).mutable();
+            this.secureRandom = secureRandom;
+            int keyCount = (int) (Math.abs(Bytes.random(8).toLong()) % 9) + 1;
+            this.data = new byte[keyCount + 1][];
+            createAndEncrypt(secureRandom, Bytes.from(array), array.length);
+        }
+
+        private void createAndEncrypt(SecureRandom secureRandom, Bytes from, int length) {
+            Bytes copy = from.mutable();
             for (int i = 0; i < data.length - 1; i++) {
-                byte[] key = Bytes.random(array.length, secureRandom).array();
+                byte[] key = Bytes.random(length, secureRandom).array();
                 this.data[i] = key;
                 copy.xor(key);
             }
@@ -52,6 +58,9 @@ public interface ByteArrayRuntimeObfuscator {
                 }
                 b.xor(data[i]);
             }
+
+            createAndEncrypt(this.secureRandom, Bytes.from(b), b.length());
+
             return b.array();
         }
 

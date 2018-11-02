@@ -50,7 +50,7 @@ public final class EncryptionFingerprintFactory {
                 Bytes.from(getApplicationPackage(context)).array(),
                 Bytes.from(getBuildDetails()).array(),
                 BuildConfig.STATIC_RANDOM,
-                additionalData != null ? Bytes.from(additionalData).array() : Bytes.from("").array()).array());
+            additionalData != null ? Bytes.from(additionalData).array() : Bytes.empty().array()).array());
     }
 
     /**

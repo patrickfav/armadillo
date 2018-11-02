@@ -105,6 +105,11 @@ interface EncryptionProtocol {
     char[] deobfuscatePassword(@Nullable ByteArrayRuntimeObfuscator obfuscated);
 
     /**
+     * If enabled, wipes the internal derived password cache.
+     */
+    void wipeDerivedPasswordCache();
+
+    /**
      * Factory creating a new instance of {@link EncryptionProtocol}
      */
     interface Factory {

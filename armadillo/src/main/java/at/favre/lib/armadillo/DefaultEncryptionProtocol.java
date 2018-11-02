@@ -48,12 +48,14 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final SecureRandom secureRandom;
     private final int keyLengthBit;
     private final int protocolVersion;
+    private final DerivedPasswordCache derivedPasswordCache;
     private KeyStretchingFunction keyStretchingFunction;
 
     private DefaultEncryptionProtocol(int protocolVersion, byte[] preferenceSalt, EncryptionFingerprint fingerprint,
                                       StringMessageDigest stringMessageDigest, AuthenticatedEncryption authenticatedEncryption,
                                       @AuthenticatedEncryption.KeyStrength int keyStrength, KeyStretchingFunction keyStretchingFunction,
-                                      DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom, Compressor compressor) {
+                                      DataObfuscator.Factory dataObfuscatorFactory, SecureRandom secureRandom,
+                                      boolean enableDerivedPasswordCaching, Compressor compressor) {
         this.protocolVersion = protocolVersion;
         this.preferenceSalt = preferenceSalt;
         this.authenticatedEncryption = authenticatedEncryption;
@@ -64,6 +66,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         this.keyLengthBit = authenticatedEncryption.byteSizeLength(keyStrength) * 8;
         this.dataObfuscatorFactory = dataObfuscatorFactory;
         this.secureRandom = secureRandom;
+        this.derivedPasswordCache = new DerivedPasswordCache.Default(enableDerivedPasswordCaching, secureRandom);
     }
 
     @Override
@@ -164,8 +167,8 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     @Override
     public void setKeyStretchingFunction(@NonNull KeyStretchingFunction function) {
-        Objects.requireNonNull(function);
-        keyStretchingFunction = function;
+        keyStretchingFunction = Objects.requireNonNull(function);
+        derivedPasswordCache.wipe();
     }
 
     @Override
@@ -194,11 +197,21 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         return charBuffer.array();
     }
 
+    @Override
+    public void wipeDerivedPasswordCache() {
+        derivedPasswordCache.wipe();
+    }
+
     private byte[] keyDerivationFunction(String contentKey, byte[] fingerprint, byte[] contentSalt, byte[] preferenceSalt, @Nullable char[] password) {
         Bytes ikm = Bytes.from(fingerprint, contentSalt, Bytes.from(contentKey, Normalizer.Form.NFKD).array());
 
         if (password != null) {
-            ikm = ikm.append(keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES));
+            byte[] stretched;
+            if ((stretched = derivedPasswordCache.get(contentSalt, password)) == null) {
+                stretched = keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES);
+                derivedPasswordCache.put(contentSalt, password, stretched);
+            }
+            ikm = ikm.append(stretched);
         }
 
         return HKDF.fromHmacSha512().extractAndExpand(preferenceSalt, ikm.array(), "DefaultEncryptionProtocol".getBytes(), keyLengthBit / 8);
@@ -215,12 +228,13 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         private final KeyStretchingFunction keyStretchingFunction;
         private final DataObfuscator.Factory dataObfuscatorFactory;
         private final SecureRandom secureRandom;
+        private final boolean enableDerivedPasswordCaching;
         private final Compressor compressor;
 
         Factory(int protocolVersion, EncryptionFingerprint fingerprint, StringMessageDigest stringMessageDigest,
                 AuthenticatedEncryption authenticatedEncryption, @AuthenticatedEncryption.KeyStrength int keyStrength,
                 KeyStretchingFunction keyStretchingFunction, DataObfuscator.Factory dataObfuscatorFactory,
-                SecureRandom secureRandom, @Nullable Compressor compressor) {
+                SecureRandom secureRandom, boolean enableDerivedPasswordCaching, @Nullable Compressor compressor) {
             this.protocolVersion = protocolVersion;
             this.fingerprint = fingerprint;
             this.stringMessageDigest = stringMessageDigest;
@@ -229,12 +243,15 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
             this.keyStretchingFunction = keyStretchingFunction;
             this.dataObfuscatorFactory = dataObfuscatorFactory;
             this.secureRandom = secureRandom;
+            this.enableDerivedPasswordCaching = enableDerivedPasswordCaching;
             this.compressor = compressor;
         }
 
         @Override
         public EncryptionProtocol create(byte[] preferenceSalt) {
-            return new DefaultEncryptionProtocol(protocolVersion, preferenceSalt, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
+            return new DefaultEncryptionProtocol(protocolVersion, preferenceSalt, fingerprint, stringMessageDigest,
+                authenticatedEncryption, keyStrength, keyStretchingFunction, dataObfuscatorFactory,
+                secureRandom, enableDerivedPasswordCaching, compressor);
         }
 
         @Override

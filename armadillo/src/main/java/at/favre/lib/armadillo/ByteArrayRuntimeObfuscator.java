@@ -1,6 +1,7 @@
 package at.favre.lib.armadillo;
 
 import java.security.SecureRandom;
+import java.util.Objects;
 
 import at.favre.lib.bytes.Bytes;
 
@@ -32,7 +33,8 @@ public interface ByteArrayRuntimeObfuscator {
         private final SecureRandom secureRandom;
 
         Default(byte[] array, SecureRandom secureRandom) {
-            this.secureRandom = secureRandom;
+            Objects.requireNonNull(array);
+            this.secureRandom = Objects.requireNonNull(secureRandom);
             int keyCount = (int) (Math.abs(Bytes.random(8).toLong()) % 9) + 1;
             this.data = new byte[keyCount + 1][];
             createAndEncrypt(secureRandom, Bytes.from(array), array.length);

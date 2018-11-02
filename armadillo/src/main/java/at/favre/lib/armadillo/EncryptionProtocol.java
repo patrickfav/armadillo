@@ -86,9 +86,21 @@ interface EncryptionProtocol {
      */
     KeyStretchingFunction getKeyStretchingFunction();
 
+    /**
+     * Take raw char password and obfuscate (for use in-memory)
+     *
+     * @param password to obfuscate
+     * @return obfuscated password
+     */
     @Nullable
     ByteArrayRuntimeObfuscator obfuscatePassword(@Nullable char[] password);
 
+    /**
+     * Convert obfuscated obfuscated bytes to char array again
+     *
+     * @param obfuscated to deobfuscate
+     * @return char array
+     */
     @Nullable
     char[] deobfuscatePassword(@Nullable ByteArrayRuntimeObfuscator obfuscated);
 

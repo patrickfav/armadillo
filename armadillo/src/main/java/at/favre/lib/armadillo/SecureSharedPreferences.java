@@ -266,7 +266,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         }
         try {
             String storedValue = getString(PASSWORD_VALIDATION_KEY, null);
-            return storedValue != null && Arrays.equals(preferencesSalt, Bytes.parseBase64(storedValue).array());
+            return storedValue != null && Bytes.parseBase64(storedValue).equalsConstantTime(preferencesSalt);
         } catch (SecureSharedPreferenceCryptoException e) {
             return false;
         }

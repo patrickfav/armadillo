@@ -26,13 +26,12 @@ public final class HkdfXorObfuscator implements DataObfuscator {
     private final byte[] key;
 
     HkdfXorObfuscator(byte[] key) {
-        this.key = key;
+        this.key = Objects.requireNonNull(key);
     }
 
     @Override
     public void obfuscate(@NonNull byte[] original) {
         Objects.requireNonNull(original);
-        Objects.requireNonNull(this.key);
 
         byte[] okm = HKDF.fromHmacSha512().extract(new byte[64], key);
 

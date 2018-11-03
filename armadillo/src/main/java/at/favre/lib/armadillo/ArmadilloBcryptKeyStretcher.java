@@ -1,13 +1,13 @@
 package at.favre.lib.armadillo;
 
 import android.os.StrictMode;
-import android.support.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 
+import androidx.annotation.Nullable;
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
 import at.favre.lib.crypto.bcrypt.BCrypt;

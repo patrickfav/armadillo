@@ -1,7 +1,8 @@
 package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
-import android.support.annotation.Nullable;
+
+import androidx.annotation.Nullable;
 
 /**
  * Extending the {@link SharedPreferences} interface this exports additional APIs specific

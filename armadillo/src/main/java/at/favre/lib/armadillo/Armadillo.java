@@ -3,12 +3,12 @@ package at.favre.lib.armadillo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.provider.Settings;
-import android.support.annotation.Nullable;
 
 import java.security.Provider;
 import java.security.SecureRandom;
 import java.util.Objects;
 
+import androidx.annotation.Nullable;
 import at.favre.lib.bytes.Bytes;
 
 /**

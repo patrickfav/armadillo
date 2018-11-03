@@ -7,10 +7,10 @@ import android.content.pm.PackageManager;
 import android.content.pm.Signature;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 
+import androidx.annotation.Nullable;
 import at.favre.lib.bytes.Bytes;
 
 /**

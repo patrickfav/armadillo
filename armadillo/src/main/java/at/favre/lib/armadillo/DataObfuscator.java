@@ -1,6 +1,6 @@
 package at.favre.lib.armadillo;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Data obfuscation which obfuscates the given byte arrays.

@@ -1,11 +1,11 @@
 package at.favre.lib.securesharedpreferences;
 
 import android.content.Intent;
-import android.databinding.DataBindingUtil;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 import at.favre.lib.armadillo.Armadillo;
 import at.favre.lib.armadillo.ArmadilloSharedPreferences;
 import at.favre.lib.armadillo.SecureSharedPreferenceCryptoException;
@@ -46,7 +46,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 .password(currentPassword)
                 .supportVerifyPassword(true)
                 .build();
-        if(!armadillo.isValidPassword()) {
+        if (!armadillo.isValidPassword()) {
             binding.currentPasswordLayout.setError("Incorrect password!");
             return;
         }

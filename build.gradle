@@ -43,9 +43,10 @@ ext {
     javaVersion = JavaVersion.VERSION_1_8
 
     dependencies = [
-            support         : "28.0.0",
-            constraintLayout: "1.1.2",
-            espresso        : "3.0.2",
+            support         : "1.0.0",
+            constraintLayout: "2.0.0-alpha2",
+            espresso        : "3.1.0",
+            testrunner      : "1.1.0",
             junit           : "4.12",
             stetho          : "1.5.0"
     ]

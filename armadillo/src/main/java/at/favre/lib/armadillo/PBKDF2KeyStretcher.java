@@ -1,7 +1,6 @@
 package at.favre.lib.armadillo;
 
 import android.os.StrictMode;
-import android.support.annotation.Nullable;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
@@ -9,6 +8,8 @@ import java.security.spec.InvalidKeySpecException;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+
+import androidx.annotation.Nullable;
 
 /**
  * In cryptography, PBKDF2 (Password-Based Key Derivation Function 2) are key derivation

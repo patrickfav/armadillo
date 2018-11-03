@@ -1,10 +1,9 @@
 package at.favre.lib.armadillo;
 
-import android.support.annotation.NonNull;
-
 import java.nio.ByteBuffer;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
 

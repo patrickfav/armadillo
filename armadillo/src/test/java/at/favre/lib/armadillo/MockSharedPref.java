@@ -1,7 +1,6 @@
 package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
-import android.support.annotation.Nullable;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,6 +8,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import androidx.annotation.Nullable;
 
 public class MockSharedPref implements SharedPreferences {
     private final Map<String, Object> internalMap = new HashMap<>();

@@ -1,13 +1,12 @@
 package at.favre.lib.armadillo;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
 import java.text.Normalizer;
 import java.util.Objects;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
 import timber.log.Timber;

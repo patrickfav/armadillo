@@ -3,8 +3,6 @@ package at.favre.lib.armadillo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.provider.Settings;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,6 +11,8 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.Security;
 
+import androidx.test.InstrumentationRegistry;
+import androidx.test.runner.AndroidJUnit4;
 import at.favre.lib.bytes.Bytes;
 
 /**
@@ -29,7 +29,7 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void quickStartTest() throws Exception {
+    public void quickStartTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         SharedPreferences preferences = Armadillo.create(context, "myPrefs")
             .encryptionFingerprint(context)
@@ -40,13 +40,13 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
     }
 
     @Test
-    public void testWithDifferentKeyStrength() throws Exception {
+    public void testWithDifferentKeyStrength() {
         preferenceSmokeTest(create("fingerprint", null)
             .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_VERY_HIGH).build());
     }
 
     @Test
-    public void advancedTest() throws Exception {
+    public void advancedTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         String userId = "1234";
         SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")

@@ -3,6 +3,8 @@
 ## v0.6.0
 
 * [Security] Fix bcrypt implementation #16, #8
+* Improve derive user password memory protection #32
+* Add derived password cache to speed up consecutive .get() calls #32
 * Add change password feature #13, #22
 * Add change key stretching feature #16
 

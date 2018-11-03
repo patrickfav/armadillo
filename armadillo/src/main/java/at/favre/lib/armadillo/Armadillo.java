@@ -3,6 +3,7 @@ package at.favre.lib.armadillo;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
 
 import java.security.Provider;
@@ -30,14 +31,41 @@ public final class Armadillo {
     private Armadillo() {
     }
 
+    /**
+     * Create a new instance of the builder with a custom implementation of shared preference.
+     * If you want to omit the default behaviour how Armadillo sets up a {@link SharedPreferences}
+     * instance, use this create. This is also useful for testing purposes.
+     * <p>
+     * Note that this is a more advanced feature and usually you want
+     * the default implementation with {@link #create(Context, String)}.
+     *
+     * @param sharedPreferences to use as backing persistence layer
+     * @return builder
+     */
     public static Builder create(SharedPreferences sharedPreferences) {
         return new Builder(sharedPreferences);
     }
 
-    public static Builder create(Context context, String prefName) {
-        return new Builder(context, prefName);
+    /**
+     * Create a new builder for Armadillo. Will internally create a {@link SharedPreferences} from
+     * given context. Pass the preference name (think of database name), which is unique to your
+     * persistence layer (e.g. if you create with the same preference name you will get the old
+     * stored values).
+     * <p>
+     * This name will be used to derive the file name used to store the shared preference xml on disk
+     * (read: it will be hashed, not directly used).
+     *
+     * @param context        to get shared preference and other Android OS specific data
+     * @param preferenceName to identify the persistence store
+     * @return builder
+     */
+    public static Builder create(Context context, String preferenceName) {
+        return new Builder(context, preferenceName);
     }
 
+    /**
+     * Builder pattern for creating the configuration for an {@link ArmadilloSharedPreferences} instance
+     */
     public static final class Builder {
 
         private final SharedPreferences sharedPreferences;
@@ -69,14 +97,54 @@ public final class Armadillo {
             this.prefName = prefName;
         }
 
+        /**
+         * The encryption fingerprint is in important security measure. When no user password is
+         * provided, it is the most important source of entropy to derive the key for the encryption.
+         *
+         * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory}.
+         *
+         * @param context used to gather sources from the Android OS
+         * @return builder
+         */
         public Builder encryptionFingerprint(Context context) {
             return encryptionFingerprint(context, (String[]) null);
         }
 
+        /**
+         * The encryption fingerprint is in important security measure. When no user password is
+         * provided, it is the most important source of entropy to derive the key for the encryption.
+         *
+         * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory
+         * with addtional custom data. Setting this is <strong>highly recommended</strong> as it makes
+         * it more difficult for an attacker calculate the key the more random the input is.
+         *
+         * See the README.md for explainating on what to use as additionalData.
+         *
+         * @param context used to gather sources from the Android OS
+         * @param additionalData provided additional custom data
+         * @return builder
+         */
         public Builder encryptionFingerprint(Context context, byte[] additionalData) {
             return encryptionFingerprint(context, Bytes.wrap(additionalData).encodeBase64());
         }
 
+        /**
+         * The encryption fingerprint is in important security measure. When no user password is
+         * provided, it is the most important source of entropy to derive the key for the encryption.
+         *
+         * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory
+         * with addtional custom data. Setting this is <strong>highly recommended</strong> as it makes
+         * it more difficult for an attacker calculate the key the more random the input is.
+         *
+         * This is the same as {@link #encryptionFingerprint(Context, byte[])} but accepts strings
+         * instead of a byte array.
+         *
+         * See the README.md for explainating on what to use as additionalData.
+         *
+         * @param context used to gather sources from the Android OS
+         * @param additionalData provided additional custom data
+         * @return builder
+         */
         public Builder encryptionFingerprint(Context context, @Nullable String... additionalData) {
             Objects.requireNonNull(context);
 
@@ -91,12 +159,36 @@ public final class Armadillo {
             return this;
         }
 
+        /**
+         * The encryption fingerprint is in important security measure. When no user password is
+         * provided, it is the most important source of entropy to derive the key for the encryption.
+         *
+         * Provide a fully custom fingerprint implementation (or instance). Use this if you don't
+         * agree with the default implementation.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
+         *
+         * @param fingerprint fully custom instance
+         * @return builder
+         */
         public Builder encryptionFingerprint(EncryptionFingerprint fingerprint) {
             Objects.requireNonNull(fingerprint);
             this.fingerprint = fingerprint;
             return this;
         }
 
+        /**
+         * The encryption fingerprint is in important security measure. When no user password is
+         * provided, it is the most important source of entropy to derive the key for the encryption.
+         *
+         * Provide a fully custom fingerprint byte array. Use this if you don't
+         * agree with the default implementation.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
+         *
+         * @param fingerprint fully custom byte array containing the fingerprint
+         * @return builder
+         */
         public Builder encryptionFingerprint(byte[] fingerprint) {
             Objects.requireNonNull(fingerprint);
             this.fingerprint = new EncryptionFingerprint.Default(fingerprint);
@@ -104,14 +196,19 @@ public final class Armadillo {
         }
 
         /**
-         * Set the salt for the content key digest.
-         * Content key is the key used in e.g. {@link SharedPreferences#getInt(String, int)}.
-         * Salt should be 16 byte or longer.
+         * The content key digest is responsible for hashing the key in the key-value pair of
+         * a shared preference. E.g. if the key is "name" and the value "Bob", the key "name" will
+         * be hashed before it is persisted to disk.
          *
-         * <p>
-         * Only set if you know what you are doing.
+         * This method will alter the salt used for that hash. Setting this is highly recommended, since
+         * it will change the default hashes of the key (so that somebody else's "name" key, won't
+         * hash to the exact same output). Recommended value: use the AndroidID, as it will be different
+         * on every app install from SDK 26+. See {@link Settings.Secure#ANDROID_ID}.
          *
-         * @param salt to set
+         * Note that changing the salt will make old data inaccessible, since the key won't match
+         * anymore.
+         *
+         * @param salt to be used for content key hash (should be > 16 byte)
          * @return builder
          */
         public Builder contentKeyDigest(byte[] salt) {
@@ -119,14 +216,17 @@ public final class Armadillo {
         }
 
         /**
-         * The the out length of the key digest (the longer, the more storage is used during persistence)
-         * Content key is the key used in e.g. {@link SharedPreferences#getInt(String, int)}.
-         * Key out length should be 16 byte or longer.
+         * The content key digest is responsible for hashing the key in the key-value pair of
+         * a shared preference. E.g. if the key is "name" and the value "Bob", the key "name" will
+         * be hashed before it is persisted to disk.
          *
-         * <p>
-         * Only set if you know what you are doing.
+         * This is a more advanced setting. Per default a hash will be {@link #CONTENT_KEY_OUT_BYTE_LENGTH}
+         * bytes long. If you think that is too long (wasting space) or too small (not enough entropy)
+         * modify the length with this config.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
          *
-         * @param contentKeyOutLength to set
+         * @param contentKeyOutLength to be used for content key hash
          * @return builder
          */
         public Builder contentKeyDigest(int contentKeyOutLength) {
@@ -134,13 +234,15 @@ public final class Armadillo {
         }
 
         /**
-         * Set a custom implemention of {@link StringMessageDigest}
-         * Content key is the key used in e.g. {@link SharedPreferences#getInt(String, int)}.
+         * The content key digest is responsible for hashing the key in the key-value pair of
+         * a shared preference. E.g. if the key is "name" and the value "Bob", the key "name" will
+         * be hashed before it is persisted to disk.
          *
-         * <p>
-         * Only set if you know what you are doing.
+         * Use this to set a fully custom implementation of the digest.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
          *
-         * @param stringMessageDigest to set
+         * @param stringMessageDigest custom implementation
          * @return builder
          */
         public Builder contentKeyDigest(StringMessageDigest stringMessageDigest) {
@@ -175,8 +277,8 @@ public final class Armadillo {
          * Set the security provider for most cryptographic primitives (symmetric encryption,
          * pbkdf2, ...). Per default the default provider is used and this should be fine in most
          * cases.
-         * <p>
-         * Only set if you know what you are doing.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
          *
          * @param provider JCA provider
          * @return builder
@@ -190,8 +292,8 @@ public final class Armadillo {
          * Set your own implementation of {@link AuthenticatedEncryption}. Use this if setting
          * the security provider with {@link Armadillo.Builder#securityProvider(Provider)} is not enough
          * customization. With this a any symmetric encryption algorithm might be used.
-         * <p>
-         * Only set if you know what you are doing.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
          *
          * @param authenticatedEncryption to be used by the shared preferences
          * @return builder
@@ -219,8 +321,8 @@ public final class Armadillo {
         /**
          * Set your own data obfuscation implementation. Data obfuscation is used to disguise the
          * persistence data format. See {@link HkdfXorObfuscator} for the default obfuscation technique.
-         * <p>
-         * Only set if you know what you are doing.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
          *
          * @param dataObfuscatorFactory that creates a obfuscator with given key
          * @return builder
@@ -234,8 +336,8 @@ public final class Armadillo {
          * Provide your own {@link SecureRandom} implementation.
          * Per default a no-provider constructor is used for {@link SecureRandom} which
          * is the currently recommended way (https://tersesystems.com/blog/2015/12/17/the-right-way-to-use-securerandom/)
-         * <p>
-         * Only set if you know what you are doing.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
          *
          * @param secureRandom implementation
          * @return builder
@@ -301,6 +403,8 @@ public final class Armadillo {
          * version can be set, to be able to migrate the data.
          * <p>
          * The protocol version will be used as additional associated data with the authenticated encryption.
+         * <hr />
+         * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
          *
          * @param version to persist with the data
          * @return builder

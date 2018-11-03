@@ -23,7 +23,7 @@ final class HkdfMessageDigest implements StringMessageDigest {
      * @param outByteLength the byte length created by the derive function
      */
     HkdfMessageDigest(byte[] salt, int outByteLength) {
-        this.salt = salt;
+        this.salt = Objects.requireNonNull(salt);
         this.outLength = outByteLength;
     }
 

@@ -2,7 +2,6 @@ package at.favre.lib.armadillo;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -21,13 +20,10 @@ public final class GzipCompressor implements Compressor {
 
     @Override
     public byte[] decompress(byte[] compressed) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        GZIPInputStream gzipInputStream = null;
         byte[] returnBuffer;
-        try {
-            int len;
-            byte[] buffer = new byte[2048];
-            gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(compressed));
+        byte[] buffer = new byte[2048];
+        int len;
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); GZIPInputStream gzipInputStream = new GZIPInputStream(new ByteArrayInputStream(compressed))) {
 
             while ((len = gzipInputStream.read(buffer)) > 0) {
                 bos.write(buffer, 0, len);
@@ -40,28 +36,13 @@ public final class GzipCompressor implements Compressor {
             return returnBuffer;
         } catch (Exception e) {
             throw new IllegalStateException("could not decompress gzip", e);
-        } finally {
-            try {
-                bos.close();
-            } catch (IOException ignore) {
-            }
-
-            if (gzipInputStream != null) {
-                try {
-                    gzipInputStream.close();
-                } catch (IOException ignore) {
-                }
-            }
         }
     }
 
     @Override
     public byte[] compress(byte[] uncompressed) {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(uncompressed.length);
-        GZIPOutputStream gzipOutputStream = null;
         byte[] returnBuffer;
-        try {
-            gzipOutputStream = new GZIPOutputStream(bos);
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(uncompressed.length); GZIPOutputStream gzipOutputStream = new GZIPOutputStream(bos)) {
             gzipOutputStream.write(uncompressed);
             gzipOutputStream.close();
             returnBuffer = bos.toByteArray();
@@ -69,18 +50,6 @@ public final class GzipCompressor implements Compressor {
             return returnBuffer;
         } catch (Exception e) {
             throw new IllegalStateException("could not compress gzip", e);
-        } finally {
-            try {
-                bos.close();
-            } catch (IOException ignore) {
-            }
-
-            if (gzipOutputStream != null) {
-                try {
-                    gzipOutputStream.close();
-                } catch (IOException ignore) {
-                }
-            }
         }
     }
 }

@@ -29,7 +29,7 @@ import timber.log.Timber;
  *
  * @author Patrick Favre-Bulle
  */
-@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
+@SuppressWarnings( {"unused", "WeakerAccess", "UnusedReturnValue"})
 public final class SecureSharedPreferences implements ArmadilloSharedPreferences {
 
     private static final String PREFERENCES_SALT_KEY = "at.favre.lib.securepref.KEY_RANDOM";
@@ -49,12 +49,12 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     private EncryptionProtocol encryptionProtocol;
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, @Nullable char[] password, boolean supportVerifyPassword) {
-        this(context, preferenceName, encryptionProtocol, new RecoveryPolicy.Default(false, true), password, supportVerifyPassword);
+        this(context, preferenceName, encryptionProtocol, new SimpleRecoveryPolicy.Default(false, true), password, supportVerifyPassword);
     }
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, @Nullable char[] password, boolean supportVerifyPassword) {
         this(context.getSharedPreferences(encryptionProtocol.getStringMessageDigest().derive(preferenceName, "prefName"), Context.MODE_PRIVATE),
-                encryptionProtocol, recoveryPolicy, password, supportVerifyPassword);
+            encryptionProtocol, recoveryPolicy, password, supportVerifyPassword);
     }
 
     public SecureSharedPreferences(SharedPreferences sharedPreferences, EncryptionProtocol.Factory encryptionProtocolFactory,
@@ -75,9 +75,9 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
      */
     private void init() {
         this.preferencesSalt = getPreferencesSalt(
-                factory.getStringMessageDigest(),
-                factory.createDataObfuscator(),
-                factory.getSecureRandom());
+            factory.getStringMessageDigest(),
+            factory.createDataObfuscator(),
+            factory.getSecureRandom());
         this.encryptionProtocol = factory.create(preferencesSalt);
         if (supportVerifyPassword && !hasValidationValue()) {
             storePasswordValidationValue(preferencesSalt);
@@ -333,7 +333,6 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         }
     }
 
-
     /**
      * Re-encrypts StringSet stored with given key hash using the new provided password.
      *
@@ -516,12 +515,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         try {
             return encryptionProtocol.decrypt(keyHash, password, Bytes.parseBase64(base64Encrypted).array());
         } catch (EncryptionProtocolException e) {
-            if (recoveryPolicy.shouldRemoveBrokenContent()) {
-                sharedPreferences.edit().remove(keyHash).apply();
-            }
-            if (recoveryPolicy.shouldThrowRuntimeException()) {
-                throw new SecureSharedPreferenceCryptoException("could not decrypt " + keyHash, e);
-            }
+            recoveryPolicy.handleBrokenContent(e, keyHash, base64Encrypted, password != null, this);
         }
         return null;
     }

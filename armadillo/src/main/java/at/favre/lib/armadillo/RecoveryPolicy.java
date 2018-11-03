@@ -1,7 +1,12 @@
 package at.favre.lib.armadillo;
 
+import android.support.annotation.NonNull;
+
 /**
- * Defines how the storage should behave on errors
+ * Defines how the storage should behave on errors while decrypting.
+ * <p>
+ * For a simpler version check out {@link SimpleRecoveryPolicy}, this is for more advanced
+ * use cases.
  *
  * @author Patrick Favre-Bulle
  */
@@ -9,41 +14,16 @@ package at.favre.lib.armadillo;
 public interface RecoveryPolicy {
 
     /**
-     * If the content cannot be read (or written) defines if a runtime exception should be thrown (
-     * i.e. the calle has to handle the error)
+     * When a value cannot be decrypted, this method will be called
      *
-     * @return if exception should be thrown
+     * @param e                 thrown exception
+     * @param keyHash           hash of the key that was called
+     * @param base64Encrypted   encrypted data in base64 encoding
+     * @param userPasswordUsed  if a user password was used to decrypt the storage
+     * @param sharedPreferences currently used shared preference (be aware if you modify)
+     * @throws SecureSharedPreferenceCryptoException if you want to throw an exception, use or wrap in this typ
      */
-    boolean shouldThrowRuntimeException();
-
-    /**
-     * If the content should be automatically removed when it cannot be read.
-     *
-     * @return if content should be removed
-     */
-    boolean shouldRemoveBrokenContent();
-
-    /**
-     * Default implementation
-     */
-    final class Default implements RecoveryPolicy {
-        private final boolean throwRuntimeException;
-        private final boolean removeBrokenContent;
-
-        @SuppressWarnings("WeakerAccess")
-        public Default(boolean throwRuntimeException, boolean removeBrokenContent) {
-            this.throwRuntimeException = throwRuntimeException;
-            this.removeBrokenContent = removeBrokenContent;
-        }
-
-        @Override
-        public boolean shouldThrowRuntimeException() {
-            return throwRuntimeException;
-        }
-
-        @Override
-        public boolean shouldRemoveBrokenContent() {
-            return removeBrokenContent;
-        }
-    }
+    void handleBrokenContent(EncryptionProtocolException e, String keyHash, @NonNull String base64Encrypted,
+                             boolean userPasswordUsed, ArmadilloSharedPreferences sharedPreferences)
+        throws SecureSharedPreferenceCryptoException;
 }

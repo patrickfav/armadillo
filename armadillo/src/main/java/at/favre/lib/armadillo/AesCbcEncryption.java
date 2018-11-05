@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.SecureRandom;
 
@@ -35,8 +34,8 @@ import at.favre.lib.crypto.HKDF;
  *
  * @author Patrick Favre-Bulle
  * @since 27.10.2018
- * @deprecated this is only meant for Kitkat backwards compatibly as this version and below does not
- * support AES-GCM with JCA.
+ * @deprecated this is only meant for Kitkat backwards compatibility as this version and below does not
+ * support AES-GCM via JCA/JCE.
  */
 @SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
 @Deprecated
@@ -48,6 +47,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
     private final SecureRandom secureRandom;
     private final Provider provider;
     private Cipher cipher;
+    private Mac hmac;
 
     public AesCbcEncryption() {
         this(new SecureRandom(), null);
@@ -64,9 +64,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
 
     @Override
     public byte[] encrypt(byte[] rawEncryptionKey, byte[] rawData, @Nullable byte[] associatedData) throws AuthenticatedEncryptionException {
-        if (rawEncryptionKey.length < 16) {
-            throw new IllegalArgumentException("key length must be longer than 16 bytes");
-        }
+        checkAesKey(rawEncryptionKey);
 
         byte[] iv = null;
         byte[] encrypted = null;
@@ -77,7 +75,6 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
 
             final Cipher cipherEnc = getCipher();
             cipherEnc.init(Cipher.ENCRYPT_MODE, createEncryptionKey(rawEncryptionKey), new IvParameterSpec(iv));
-
             encrypted = cipherEnc.doFinal(rawData);
 
             mac = macCipherText(rawEncryptionKey, encrypted, iv, associatedData);
@@ -104,15 +101,18 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
         return new SecretKeySpec(HKDF.fromHmacSha256().expand(rawEncryptionKey, Bytes.from("encKey").array(), rawEncryptionKey.length), "AES");
     }
 
-    private byte[] macCipherText(byte[] rawEncryptionKey, byte[] cipherText, byte[] iv, @Nullable byte[] associatedData)
-            throws NoSuchAlgorithmException, InvalidKeyException {
+    private byte[] macCipherText(byte[] rawEncryptionKey, byte[] cipherText, byte[] iv, @Nullable byte[] associatedData) {
         SecretKey macKey = createMacKey(rawEncryptionKey);
 
-        Mac hmac = Mac.getInstance(HMAC_ALGORITHM);
-        hmac.init(macKey);
-
-        hmac.update(iv);
-        hmac.update(cipherText);
+        try {
+            createHmacInstance();
+            hmac.init(macKey);
+            hmac.update(iv);
+            hmac.update(cipherText);
+        } catch (InvalidKeyException e) {
+            // due to key generation in createMacKey(byte[]) this actually can not happen
+            throw new IllegalStateException("error during HMAC calculation");
+        }
 
         if (associatedData != null) {
             hmac.update(associatedData);
@@ -127,19 +127,32 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
         return new SecretKeySpec(derivedMacKey, HMAC_ALGORITHM);
     }
 
+    private synchronized Mac createHmacInstance() {
+        if (hmac == null) {
+            try {
+                hmac = Mac.getInstance(HMAC_ALGORITHM);
+            } catch (Exception e) {
+                throw new IllegalStateException("could not get cipher instance", e);
+            }
+        }
+        return hmac;
+    }
+
     @Override
     public byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData, @Nullable byte[] associatedData) throws AuthenticatedEncryptionException {
+        checkAesKey(rawEncryptionKey);
+
         byte[] iv = null;
         byte[] mac = null;
         byte[] encrypted = null;
         try {
             ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
 
-            int ivLength = byteBuffer.get();
+            int ivLength = (byteBuffer.get() & 0xFF);
             iv = new byte[ivLength];
             byteBuffer.get(iv);
 
-            int macLength = byteBuffer.get();
+            int macLength = (byteBuffer.get() & 0xFF);
             mac = new byte[macLength];
             byteBuffer.get(mac);
 
@@ -161,20 +174,28 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
     }
 
     private void verifyMac(byte[] rawEncryptionKey, byte[] cipherText, byte[] iv, byte[] mac, @Nullable byte[] associatedData)
-            throws InvalidKeyException, NoSuchAlgorithmException {
+            throws AuthenticatedEncryptionException {
         byte[] actualMac = macCipherText(rawEncryptionKey, cipherText, iv, associatedData);
 
         if (!Bytes.wrap(mac).equalsConstantTime(actualMac)) {
-            throw new SecurityException("encryption integrity exception: mac does not match");
+            throw new AuthenticatedEncryptionException("encryption integrity exception: mac does not match");
         }
     }
 
     @Override
     public int byteSizeLength(@KeyStrength int keyStrengthType) {
-        return keyStrengthType == STRENGTH_HIGH ? 16 : 32;
+        return ((keyStrengthType == STRENGTH_HIGH) ? 16 : 32);
     }
 
-    private Cipher getCipher() {
+    private void checkAesKey(byte[] rawAesKey) throws IllegalArgumentException {
+        int keyLen = rawAesKey.length;
+
+        if ((keyLen != 16) && (keyLen != 32)) {
+            throw new IllegalArgumentException("AES key length must be 16, 24, or 32 bytes");
+        }
+    }
+
+    private synchronized Cipher getCipher() {
         if (cipher == null) {
             try {
                 if (provider != null) {

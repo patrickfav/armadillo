@@ -58,6 +58,7 @@ SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
         .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation
         .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
         .supportVerifyPassword(true) //enables optional password validation support `.isValidPassword()`
+        .enableKitKatSupport(true) //enable optional kitkat support
         .build();
 ```
 
@@ -75,6 +76,28 @@ first put operation:
 </map>
 
 ```
+
+### KitKat Support
+
+Unfortunately [Android SDK 19 (KITKAT)](https://en.wikipedia.org/wiki/Android_KitKat) does not fully support AES GCM mode.
+Therefore a backwards compatible implementation of AES using [CBC](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation#Cipher_Block_Chaining_(CBC))
+with [Encrypt-then-MAC](https://en.wikipedia.org/wiki/Authenticated_encryption#Encrypt-then-MAC_(EtM))
+can be used to support this library on older devices. This should provide
+the same security strength as the GCM version, however the support must
+be enabled manually:
+
+
+```java
+SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
+        .enableKitKatSupport(true)
+        ...
+        .build();
+```
+
+In this mode, if on a KitKat device the backwards-compatible implementation is
+used, the default AES-GCM version otherwise. Upgrading to a newer OS version
+the content should still be decryptable, while newer content will then be
+encrypted with the AES-GCM version.
 
 ## Description
 

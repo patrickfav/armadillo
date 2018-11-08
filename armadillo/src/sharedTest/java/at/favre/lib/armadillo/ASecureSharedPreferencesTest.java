@@ -20,6 +20,7 @@ import static junit.framework.Assert.assertTrue;
 import static junit.framework.Assert.fail;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assume.assumeFalse;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -47,6 +48,8 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     protected abstract Armadillo.Builder create(String name, char[] pw);
+
+    protected abstract boolean isKitKatOrBelow();
 
     @Test
     public void simpleMultipleStringGet() {
@@ -110,10 +113,10 @@ public abstract class ASecureSharedPreferencesTest {
     public void simpleGetBoolean() {
         preferences.edit().putBoolean("boolean", true).commit();
         assertTrue(preferences.contains("boolean"));
-        assertEquals(true, preferences.getBoolean("boolean", false));
+        assertTrue(preferences.getBoolean("boolean", false));
 
         preferences.edit().putBoolean("boolean2", false).commit();
-        assertEquals(false, preferences.getBoolean("boolean2", true));
+        assertFalse(preferences.getBoolean("boolean2", true));
     }
 
     @Test
@@ -213,25 +216,25 @@ public abstract class ASecureSharedPreferencesTest {
     @Test
     public void simpleStringGetWithPkdf2Password() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
+                .keyStretchingFunction(new PBKDF2KeyStretcher(1000, null)).build());
     }
 
     @Test
     public void simpleStringGetWithBcryptPassword() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(7)).build());
+                .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(7)).build());
     }
 
     @Test
     public void simpleStringGetWithBrokenBcryptPassword() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new BrokenBcryptKeyStretcher(6)).build());
+                .keyStretchingFunction(new BrokenBcryptKeyStretcher(6)).build());
     }
 
     @Test
     public void simpleStringGetWithFastKDF() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
-            .keyStretchingFunction(new FastKeyStretcher()).build());
+                .keyStretchingFunction(new FastKeyStretcher()).build());
     }
 
     @Test
@@ -242,55 +245,57 @@ public abstract class ASecureSharedPreferencesTest {
     @Test
     public void testWithDifferentFingerprint() {
         preferenceSmokeTest(create("fingerprint", null)
-            .encryptionFingerprint(Bytes.random(16).array()).build());
+                .encryptionFingerprint(Bytes.random(16).array()).build());
         preferenceSmokeTest(create("fingerprint2", null)
-            .encryptionFingerprint(() -> new byte[16]).build());
+                .encryptionFingerprint(() -> new byte[16]).build());
     }
 
     @Test
     public void testWithDifferentContentDigest() {
         preferenceSmokeTest(create("contentDigest1", null)
-            .contentKeyDigest(8).build());
+                .contentKeyDigest(8).build());
         preferenceSmokeTest(create("contentDigest2", null)
-            .contentKeyDigest(Bytes.random(16).array()).build());
+                .contentKeyDigest(Bytes.random(16).array()).build());
         preferenceSmokeTest(create("contentDigest3", null)
-            .contentKeyDigest((providedMessage, usageName) -> Bytes.from(providedMessage).append(usageName).encodeUtf8()).build());
+                .contentKeyDigest((providedMessage, usageName) -> Bytes.from(providedMessage).append(usageName).encodeUtf8()).build());
     }
 
     @Test
     public void testWithSecureRandom() {
         preferenceSmokeTest(create("secureRandom", null)
-            .secureRandom(new SecureRandom()).build());
+                .secureRandom(new SecureRandom()).build());
     }
 
     @Test
     public void testEncryptionStrength() {
         preferenceSmokeTest(create("secureRandom", null)
-            .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
+                .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_HIGH).build());
     }
 
     @Test
     public void testProvider() {
         preferenceSmokeTest(create("provider", null)
-            .securityProvider(null).build());
+                .securityProvider(null).build());
     }
 
     @Test
     public void testWithNoObfuscation() {
         preferenceSmokeTest(create("obfuscate", null)
-            .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
+                .dataObfuscatorFactory(new NoObfuscator.Factory()).build());
     }
 
     @Test
     public void testSetEncryption() {
+        assumeFalse("test not supported on kitkat devices", isKitKatOrBelow());
+
         preferenceSmokeTest(create("enc", null)
-            .symmetricEncryption(new AesGcmEncryption()).build());
+                .symmetricEncryption(new AesGcmEncryption()).build());
     }
 
     @Test
     public void testRecoveryPolicy() {
         preferenceSmokeTest(create("recovery", null)
-            .recoveryPolicy(true, true).build());
+                .recoveryPolicy(true, true).build());
         preferenceSmokeTest(create("recovery", null)
             .recoveryPolicy(new SimpleRecoveryPolicy.Default(true, true)).build());
         preferenceSmokeTest(create("recovery", null)
@@ -300,7 +305,7 @@ public abstract class ASecureSharedPreferencesTest {
     @Test
     public void testCustomProtocolVersion() {
         preferenceSmokeTest(create("protocol", null)
-            .cryptoProtocolVersion(14221).build());
+                .cryptoProtocolVersion(14221).build());
     }
 
     void preferenceSmokeTest(SharedPreferences preferences) {
@@ -443,7 +448,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         // open with new pw and new ksFn, should be accessible
         pref = create("testChangePassword", "pw2".toCharArray())
-            .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(8)).build();
+                .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(8)).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
         assertTrue(pref.getBoolean("k3", false));
@@ -506,6 +511,97 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
+    public void testUpgradeToNewerProtocolVersion() {
+        assumeFalse("test not supported on kitkat devices", isKitKatOrBelow());
+
+        // open new preference with old encryption config
+        ArmadilloSharedPreferences pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesCbcEncryption())
+                .cryptoProtocolVersion(-19).build();
+
+        // add some data
+        pref.edit().putString("k1", "string1").putInt("k2", 2).putBoolean("k3", true).commit();
+        pref.close();
+
+        // open again with encryption config
+        pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesCbcEncryption())
+                .cryptoProtocolVersion(-19).build();
+
+        // check data
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertTrue(pref.getBoolean("k3", false));
+        pref.close();
+
+        // open with new config and add old config as support config
+        pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesGcmEncryption())
+                .cryptoProtocolVersion(0)
+                .addAdditionalDecryptionProtocolConfig(EncryptionProtocolConfig
+                        .newDefaultConfig()
+                        .authenticatedEncryption(new AesCbcEncryption())
+                        .protocolVersion(-19)
+                        .build())
+                .build();
+
+        // check data
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertTrue(pref.getBoolean("k3", false));
+
+        // overwrite old data
+        pref.edit().putInt("k2", 2).commit();
+
+        // add some data
+        pref.edit().putString("j1", "string2").putInt("j2", 3).putBoolean("j3", false).commit();
+
+        pref.close();
+
+        // open again with new config and add old config as support config
+        pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesGcmEncryption())
+                .cryptoProtocolVersion(0)
+                .addAdditionalDecryptionProtocolConfig(EncryptionProtocolConfig
+                        .newDefaultConfig()
+                        .authenticatedEncryption(new AesCbcEncryption())
+                        .protocolVersion(-19)
+                        .build())
+                .build();
+
+        // check data
+        assertEquals("string1", pref.getString("k1", null));
+        assertEquals(2, pref.getInt("k2", 0));
+        assertTrue(pref.getBoolean("k3", false));
+        assertEquals("string2", pref.getString("j1", null));
+        assertEquals(3, pref.getInt("j2", 0));
+        assertFalse(pref.getBoolean("j3", true));
+
+        pref.close();
+
+        // open again with new config WITHOUT old config as support config (removing in the builder)
+        pref = create("testUpgradeToNewerProtocolVersion", null)
+                .symmetricEncryption(new AesGcmEncryption())
+                .cryptoProtocolVersion(0)
+                .addAdditionalDecryptionProtocolConfig(EncryptionProtocolConfig
+                        .newDefaultConfig()
+                        .authenticatedEncryption(new AesCbcEncryption())
+                        .protocolVersion(-19)
+                        .build())
+                .clearAdditionalDecryptionProtocolConfigs() // test remove support protocols in builder
+                .build();
+
+        // check overwritten data
+        assertEquals(2, pref.getInt("k2", 0));
+
+        try {
+            pref.getString("k1", null);
+            fail("should throw exception, since should not be able to decrypt");
+        } catch (SecureSharedPreferenceCryptoException ignored) {
+        }
+    }
+
+    @Test
     public void testSameKeyDifferentTypeShouldOverwrite() {
         //this is a similar behavior to normal shared preferences
         SharedPreferences pref = create("testSameKeyDifferentTypeShouldOverwrite", null).build();
@@ -517,7 +613,6 @@ public abstract class ASecureSharedPreferencesTest {
             pref.getInt("id", -1);
             TestCase.fail("string should be overwritten with int");
         } catch (Exception ignored) {
-
         }
     }
 }

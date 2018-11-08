@@ -2,11 +2,15 @@ package at.favre.lib.armadillo;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.provider.Settings;
 import android.support.annotation.Nullable;
 
 import java.security.Provider;
 import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 
 import at.favre.lib.bytes.Bytes;
@@ -21,6 +25,8 @@ import at.favre.lib.bytes.Bytes;
 public final class Armadillo {
 
     public static final int CONTENT_KEY_OUT_BYTE_LENGTH = 20;
+    public static final int DEFAULT_PROTOCOL_VERSION = 0;
+    public static final int KITKAT_PROTOCOL_VERSION = -19;
 
     private Armadillo() {
     }
@@ -68,18 +74,14 @@ public final class Armadillo {
 
         private EncryptionFingerprint fingerprint;
         private StringMessageDigest stringMessageDigest = new HkdfMessageDigest(BuildConfig.PREF_SALT, CONTENT_KEY_OUT_BYTE_LENGTH);
-        @AuthenticatedEncryption.KeyStrength
-        private int keyStrength = AuthenticatedEncryption.STRENGTH_HIGH;
-        private AuthenticatedEncryption authenticatedEncryption;
-        private KeyStretchingFunction keyStretchingFunction = new ArmadilloBcryptKeyStretcher();
-        private DataObfuscator.Factory dataObfuscatorFactory = new HkdfXorObfuscator.Factory();
+        private EncryptionProtocolConfig.Builder defaultConfig = EncryptionProtocolConfig.newDefaultConfig();
+        private List<EncryptionProtocolConfig> additionalDecryptionConfigs = new ArrayList<>(2);
         private SecureRandom secureRandom = new SecureRandom();
         private RecoveryPolicy recoveryPolicy = new SimpleRecoveryPolicy.Default(true, false);
         private char[] password;
         private boolean supportVerifyPassword = false;
         private Provider provider;
-        private int cryptoProtocolVersion = 0;
-        private Compressor compressor = new DisabledCompressor();
+        private boolean enableKitKatSupport = false;
 
         private Builder(SharedPreferences sharedPreferences) {
             this(sharedPreferences, null, null);
@@ -206,7 +208,7 @@ public final class Armadillo {
          * Note that changing the salt will make old data inaccessible, since the key won't match
          * anymore.
          *
-         * @param salt to be used for content key hash
+         * @param salt to be used for content key hash (should be > 16 byte)
          * @return builder
          */
         public Builder contentKeyDigest(byte[] salt) {
@@ -244,8 +246,7 @@ public final class Armadillo {
          * @return builder
          */
         public Builder contentKeyDigest(StringMessageDigest stringMessageDigest) {
-            Objects.requireNonNull(stringMessageDigest);
-            this.stringMessageDigest = stringMessageDigest;
+            this.stringMessageDigest = Objects.requireNonNull(stringMessageDigest);
             return this;
         }
 
@@ -262,14 +263,13 @@ public final class Armadillo {
          * <em>Note:</em> Usually there is no real advantage to set it to VERY HIGH as HIGH (128 bit key
          * length) is fully secure for the foreseeable future. VERY HIGH only adds more security margin
          * for possible quantum computer attacks (but if you are a user which is threatened by these
-         * kinds of attacks you wouldn't use this lib anyway).
+         * kinds of attacks you probably require higher degrees af protection).
          *
          * @param keyStrength HIGH (default) or VERY HIGH
          * @return builder
          */
         public Builder encryptionKeyStrength(@AuthenticatedEncryption.KeyStrength int keyStrength) {
-            Objects.requireNonNull(keyStrength);
-            this.keyStrength = keyStrength;
+            defaultConfig.keyStrength(keyStrength);
             return this;
         }
 
@@ -299,8 +299,7 @@ public final class Armadillo {
          * @return builder
          */
         public Builder symmetricEncryption(AuthenticatedEncryption authenticatedEncryption) {
-            Objects.requireNonNull(authenticatedEncryption);
-            this.authenticatedEncryption = authenticatedEncryption;
+            defaultConfig.authenticatedEncryption(Objects.requireNonNull(authenticatedEncryption));
             return this;
         }
 
@@ -315,8 +314,7 @@ public final class Armadillo {
          * @return builder
          */
         public Builder keyStretchingFunction(KeyStretchingFunction keyStretchingFunction) {
-            Objects.requireNonNull(keyStretchingFunction);
-            this.keyStretchingFunction = keyStretchingFunction;
+            defaultConfig.keyStretchingFunction(Objects.requireNonNull(keyStretchingFunction));
             return this;
         }
 
@@ -330,8 +328,7 @@ public final class Armadillo {
          * @return builder
          */
         public Builder dataObfuscatorFactory(DataObfuscator.Factory dataObfuscatorFactory) {
-            Objects.requireNonNull(dataObfuscatorFactory);
-            this.dataObfuscatorFactory = dataObfuscatorFactory;
+            defaultConfig.dataObfuscatorFactory(Objects.requireNonNull(dataObfuscatorFactory));
             return this;
         }
 
@@ -426,7 +423,7 @@ public final class Armadillo {
          * @return builder
          */
         public Builder cryptoProtocolVersion(int version) {
-            this.cryptoProtocolVersion = version;
+            defaultConfig.protocolVersion(version);
             return this;
         }
 
@@ -443,10 +440,62 @@ public final class Armadillo {
         /**
          * Compresses the content with given compressor before encrypting and writing it to shared preference.
          *
+         * @param compressor to set
          * @return builder
          */
         public Builder compress(Compressor compressor) {
-            this.compressor = compressor;
+            defaultConfig.compressor(compressor);
+            return this;
+        }
+
+        /**
+         * Add new {@link EncryptionProtocolConfig} to be added to the supported decryption-config
+         * list. That means, if you have encrypted data with an older encryption config you may add
+         * it here to be able to <strong>decrypt</strong> it again. These configs are however never
+         * used for <strong>encryption</strong>.
+         * <p>
+         * To match configs {@link EncryptionProtocolConfig#protocolVersion} is used, therefore if
+         * you add a config here it must match the persisted protocolVersion (Armadillo default is
+         * {@link #DEFAULT_PROTOCOL_VERSION})
+         * <p>
+         * This may be used for migration of encryption protocols.
+         *
+         * @param config to be added to the list
+         * @return builder
+         */
+        public Builder addAdditionalDecryptionProtocolConfig(EncryptionProtocolConfig config) {
+            additionalDecryptionConfigs.add(config);
+            return this;
+        }
+
+        /**
+         * Clear additionalDecryptionConfigs list.
+         * See also {@link #addAdditionalDecryptionProtocolConfig(EncryptionProtocolConfig)}.
+         *
+         * @return builder
+         */
+        public Builder clearAdditionalDecryptionProtocolConfigs() {
+            additionalDecryptionConfigs.clear();
+            return this;
+        }
+
+        /**
+         * Manually enable kitkatSupport. Unfortunately Android SDK 19 (KITKAT) does not fully
+         * support AES GCM mode. Therefore a backwards compatible implementation of AES
+         * (see {@link AesCbcEncryption}) which uses CBC + Encrypt-then-mac which should have
+         * a similar security strength.
+         * <p>
+         * The backwards compatible implementation will <strong>only</strong> be used if
+         * {@link Build.VERSION#SDK_INT} is lower or equal to 19, the default version otherwise.
+         * Additionally this implementation will be added to the additionalDecryptionConfigs so you
+         * can still decrypt the old content after upgrading to lollipop and above (uses protocol-version
+         * {@link Armadillo#KITKAT_PROTOCOL_VERSION} to mark.
+         *
+         * @param enable kitkat support
+         * @return builder
+         */
+        public Builder enableKitKatSupport(boolean enable) {
+            enableKitKatSupport = enable;
             return this;
         }
 
@@ -460,17 +509,49 @@ public final class Armadillo {
                 throw new IllegalArgumentException("No encryption fingerprint is set - see encryptionFingerprint() methods");
             }
 
-            if (authenticatedEncryption == null) {
-                authenticatedEncryption = new AesGcmEncryption(secureRandom, provider);
+            EncryptionProtocolConfig config = defaultConfig.build();
+
+            if (enableKitKatSupport) {
+                if (config.authenticatedEncryption != null) {
+                    throw new IllegalStateException("enabling kitkat support will prevent using custom encryption implementation");
+                }
+
+                @SuppressWarnings("deprecation")
+                EncryptionProtocolConfig kitkatSupportConfig = EncryptionProtocolConfig.newBuilder(config)
+                        .authenticatedEncryption(new AesCbcEncryption(secureRandom, provider))
+                        .protocolVersion(KITKAT_PROTOCOL_VERSION)
+                        .build();
+
+                additionalDecryptionConfigs.add(kitkatSupportConfig);
+
+                // set current encryption config to kitkat support if on kitkat device
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                    config = kitkatSupportConfig;
+                }
             }
 
-            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(cryptoProtocolVersion, fingerprint, stringMessageDigest, authenticatedEncryption, keyStrength,
-                keyStretchingFunction, dataObfuscatorFactory, secureRandom, compressor);
+            if (config.authenticatedEncryption == null) {
+                config = EncryptionProtocolConfig.newBuilder(config)
+                        .authenticatedEncryption(new AesGcmEncryption(secureRandom, provider)).build();
+            }
+
+            EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(config,
+                    fingerprint, stringMessageDigest, secureRandom, Collections.unmodifiableList(additionalDecryptionConfigs));
+
+            checkKitKatSupport(config.authenticatedEncryption);
 
             if (sharedPreferences != null) {
                 return new SecureSharedPreferences(sharedPreferences, factory, recoveryPolicy, password, supportVerifyPassword);
             } else {
                 return new SecureSharedPreferences(context, prefName, factory, recoveryPolicy, password, supportVerifyPassword);
+            }
+        }
+
+        private void checkKitKatSupport(AuthenticatedEncryption authenticatedEncryption) {
+            if (Build.VERSION.SDK_INT == Build.VERSION_CODES.KITKAT &&
+                    authenticatedEncryption.getClass().equals(AesGcmEncryption.class)) {
+                throw new UnsupportedOperationException("aes gcm is not supported with KitKat, add support " +
+                        "manually with Armadillo.Builder.enableKitKatSupport()");
             }
         }
     }

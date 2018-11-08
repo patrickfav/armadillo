@@ -1,5 +1,9 @@
 # Releases
 
+## v0.7.0
+
+> [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.6.0...v0.7.0)
+
 ## v0.6.0
 
 * [Security] Fix bcrypt implementation #16, #8

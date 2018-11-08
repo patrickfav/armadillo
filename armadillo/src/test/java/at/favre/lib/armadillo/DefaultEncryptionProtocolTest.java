@@ -5,6 +5,7 @@ import android.support.annotation.NonNull;
 import org.junit.Test;
 
 import java.security.SecureRandom;
+import java.util.Collections;
 
 import at.favre.lib.bytes.Bytes;
 
@@ -33,24 +34,24 @@ public class DefaultEncryptionProtocolTest {
     @Test
     public void testAgainstHardcodedValuesToSpotMigrationIssues() throws Exception {
         testDecrypt("969f3276e85b74af6154ce6ddf912c334cf311b3",
-            "122919b282023568695c04a863f32e3f",
-            null,
-            "0000000010ddd75ec912994a21bfe6e85e7264f77e0000002d7e9beac3c605c0fbecf5c4b3e119b35b40469683e0ca82285d51799926788630cdfe5d7ca27e77bddd4d8260b1");
+                "122919b282023568695c04a863f32e3f",
+                null,
+                "0000000010ddd75ec912994a21bfe6e85e7264f77e0000002d7e9beac3c605c0fbecf5c4b3e119b35b40469683e0ca82285d51799926788630cdfe5d7ca27e77bddd4d8260b1");
 
         testDecrypt("969f3276e85b74af6154ce6ddf912c334cf311b3",
-            "122919b282023568695c04a863f32e3f",
-            "1234",
-            "000000001034ccac29ba0ad1ed80475d991dce29ee0000002d7e1c39db5d17df6f84ebe6805115125e702b2ae6fe0ba49a16e8281fb08e0733e53310ed677814965491ffeb9c");
+                "122919b282023568695c04a863f32e3f",
+                "1234",
+                "000000001034ccac29ba0ad1ed80475d991dce29ee0000002d7e1c39db5d17df6f84ebe6805115125e702b2ae6fe0ba49a16e8281fb08e0733e53310ed677814965491ffeb9c");
 
         testDecrypt("969f3276e85b74af6154ce6ddf912c334cf311b3",
-            "122919b282023568695c04a863f32e3f",
-            "1234",
-            "0000000010e96ba92b343976ee8858f1d6143a42cc0000002d7e9d7318b1a420dd090ac5bd7d65ddc9e3e3c8f87547719b5ac20c6f03501235ad03909b4fdcd7864aae018e4a");
+                "122919b282023568695c04a863f32e3f",
+                "1234",
+                "0000000010e96ba92b343976ee8858f1d6143a42cc0000002d7e9d7318b1a420dd090ac5bd7d65ddc9e3e3c8f87547719b5ac20c6f03501235ad03909b4fdcd7864aae018e4a");
 
         testDecrypt("df60a9c11db3fd443cd89def85d8ff046683ae27",
-            "b94325505418d8cf56fdca8c3e096a5f813a9ad84937ed99e28bce0a3f259bee83834e0bee24705720da13",
-            "乨ØǲǲɻaД\u058DAא\u08A1A2",
-            "0000000010b6b7daf84c988d3dc5034a52cddd91c50000004833aacb15329f192ff4542c5d010fcd1fc747306757d69b2869641c827115a4cd274b55b4f6c08277ef8cd565abc515a9bc03cf6c2b960588079ced91106dad418af12a16bd7069e8");
+                "b94325505418d8cf56fdca8c3e096a5f813a9ad84937ed99e28bce0a3f259bee83834e0bee24705720da13",
+                "乨ØǲǲɻaД\u058DAא\u08A1A2",
+                "0000000010b6b7daf84c988d3dc5034a52cddd91c50000004833aacb15329f192ff4542c5d010fcd1fc747306757d69b2869641c827115a4cd274b55b4f6c08277ef8cd565abc515a9bc03cf6c2b960588079ced91106dad418af12a16bd7069e8");
     }
 
     private void testDecrypt(String contentKey, String contentHex, String pw, String refContent) throws Exception {
@@ -104,8 +105,15 @@ public class DefaultEncryptionProtocolTest {
 
     private EncryptionProtocol.Factory createDefaultProtocolFactory(EncryptionFingerprint fingerprint) {
         return new DefaultEncryptionProtocol
-            .Factory(0, fingerprint, new HkdfMessageDigest(new byte[16], 20), new AesGcmEncryption(),
-            AuthenticatedEncryption.STRENGTH_HIGH, new ArmadilloBcryptKeyStretcher(4), new HkdfXorObfuscator.Factory(),
-            new SecureRandom(), false, new DisabledCompressor());
+                .Factory(EncryptionProtocolConfig.newBuilder()
+                .protocolVersion(0)
+                .keyStrength(AuthenticatedEncryption.STRENGTH_HIGH)
+                .authenticatedEncryption(new AesGcmEncryption())
+                .compressor(new DisabledCompressor())
+                .dataObfuscatorFactory(new HkdfXorObfuscator.Factory())
+                .keyStretchingFunction(new ArmadilloBcryptKeyStretcher(4))
+                .build(),
+                fingerprint, new HkdfMessageDigest(new byte[16], 20), new SecureRandom(),
+                false, Collections.emptyList());
     }
 }

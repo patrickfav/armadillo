@@ -2,6 +2,7 @@ package at.favre.lib.armadillo;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
@@ -13,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.security.Security;
 
+import static junit.framework.TestCase.assertEquals;
 import at.favre.lib.bytes.Bytes;
 
 /**
@@ -24,43 +26,53 @@ import at.favre.lib.bytes.Bytes;
 public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
     protected Armadillo.Builder create(String name, char[] pw) {
         return Armadillo.create(InstrumentationRegistry.getTargetContext(), name)
-            .encryptionFingerprint(InstrumentationRegistry.getTargetContext())
-            .password(pw);
+                .encryptionFingerprint(InstrumentationRegistry.getTargetContext())
+                .enableKitKatSupport(isKitKatOrBelow())
+                .password(pw);
+    }
+
+    @Override
+    protected boolean isKitKatOrBelow() {
+        return Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP;
     }
 
     @Test
-    public void quickStartTest() throws Exception {
+    public void quickStartTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         SharedPreferences preferences = Armadillo.create(context, "myPrefs")
-            .encryptionFingerprint(context)
-            .build();
+                .encryptionFingerprint(context)
+                .enableKitKatSupport(isKitKatOrBelow()).build();
 
         preferences.edit().putString("key1", "string").apply();
         String s = preferences.getString("key1", null);
+
+        assertEquals("string", s);
     }
 
     @Test
-    public void testWithDifferentKeyStrength() throws Exception {
+    public void testWithDifferentKeyStrength() {
         preferenceSmokeTest(create("fingerprint", null)
-            .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_VERY_HIGH).build());
+                .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_VERY_HIGH).build());
     }
 
     @Test
-    public void advancedTest() throws Exception {
+    public void advancedTest() {
         Context context = InstrumentationRegistry.getTargetContext();
         String userId = "1234";
         SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
             .password("mySuperSecretPassword".toCharArray()) //use user based password
-            .securityProvider(Security.getProvider("BC")) //use bouncy-castle security provider
             .keyStretchingFunction(new PBKDF2KeyStretcher()) //use PBKDF2 as user password kdf
             .contentKeyDigest(Bytes.from(getAndroidId(context)).array()) //use custom content key digest salt
             .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation
             .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
             .supportVerifyPassword(true) //enables optional password validation support `.isValidPassword()`
+            .enableKitKatSupport(true) //enable optional kitkat support
             .build();
 
         preferences.edit().putString("key1", "string").apply();
         String s = preferences.getString("key1", null);
+
+        assertEquals("string", s);
     }
 
     private String getAndroidId(Context context) {

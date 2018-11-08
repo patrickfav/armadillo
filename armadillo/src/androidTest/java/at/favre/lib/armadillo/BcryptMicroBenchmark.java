@@ -1,5 +1,6 @@
 package at.favre.lib.armadillo;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.nio.charset.StandardCharsets;
@@ -15,6 +16,7 @@ import java.util.concurrent.TimeUnit;
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 
+@Ignore
 public class BcryptMicroBenchmark {
 
     private final Random rnd = new Random();

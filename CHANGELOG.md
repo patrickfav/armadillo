@@ -1,10 +1,16 @@
 # Releases
 
+## v0.7.0
+
+* Improve derive user password memory protection #32
+* Add derived password cache to speed up consecutive .get() calls #32
+
+> [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.6.0...v0.7.0)
+
 ## v0.6.0
 
 * [Security] Fix bcrypt implementation #16, #8
-* Improve derive user password memory protection #32
-* Add derived password cache to speed up consecutive .get() calls #32
+* [Security] Add full Kitkat support #6, #31
 * Add change password feature #13, #22
 * Add change key stretching feature #16
 

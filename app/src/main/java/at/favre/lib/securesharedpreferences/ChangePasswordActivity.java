@@ -46,7 +46,7 @@ public class ChangePasswordActivity extends AppCompatActivity {
                 .password(currentPassword)
                 .supportVerifyPassword(true)
                 .build();
-        if(!armadillo.isValidPassword()) {
+        if (!armadillo.isValidPassword()) {
             binding.currentPasswordLayout.setError("Incorrect password!");
             return;
         }

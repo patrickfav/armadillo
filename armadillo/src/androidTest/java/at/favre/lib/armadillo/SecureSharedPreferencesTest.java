@@ -12,10 +12,10 @@ import org.junit.runner.RunWith;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.security.Security;
+
+import at.favre.lib.bytes.Bytes;
 
 import static junit.framework.TestCase.assertEquals;
-import at.favre.lib.bytes.Bytes;
 
 /**
  * Instrumented test, which will execute on an Android device.

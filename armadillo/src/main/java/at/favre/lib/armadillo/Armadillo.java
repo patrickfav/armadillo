@@ -77,7 +77,7 @@ public final class Armadillo {
         private EncryptionProtocolConfig.Builder defaultConfig = EncryptionProtocolConfig.newDefaultConfig();
         private List<EncryptionProtocolConfig> additionalDecryptionConfigs = new ArrayList<>(2);
         private SecureRandom secureRandom = new SecureRandom();
-        private RecoveryPolicy recoveryPolicy = new RecoveryPolicy.Default(true, false);
+        private RecoveryPolicy recoveryPolicy = new SimpleRecoveryPolicy.Default(true, false);
         private char[] password;
         private boolean supportVerifyPassword = false;
         private Provider provider;
@@ -100,7 +100,7 @@ public final class Armadillo {
         /**
          * The encryption fingerprint is in important security measure. When no user password is
          * provided, it is the most important source of entropy to derive the key for the encryption.
-         *
+         * <p>
          * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory}.
          *
          * @param context used to gather sources from the Android OS
@@ -113,14 +113,14 @@ public final class Armadillo {
         /**
          * The encryption fingerprint is in important security measure. When no user password is
          * provided, it is the most important source of entropy to derive the key for the encryption.
-         *
+         * <p>
          * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory
          * with addtional custom data. Setting this is <strong>highly recommended</strong> as it makes
          * it more difficult for an attacker calculate the key the more random the input is.
-         *
+         * <p>
          * See the README.md for explainating on what to use as additionalData.
          *
-         * @param context used to gather sources from the Android OS
+         * @param context        used to gather sources from the Android OS
          * @param additionalData provided additional custom data
          * @return builder
          */
@@ -131,17 +131,17 @@ public final class Armadillo {
         /**
          * The encryption fingerprint is in important security measure. When no user password is
          * provided, it is the most important source of entropy to derive the key for the encryption.
-         *
+         * <p>
          * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory
          * with addtional custom data. Setting this is <strong>highly recommended</strong> as it makes
          * it more difficult for an attacker calculate the key the more random the input is.
-         *
+         * <p>
          * This is the same as {@link #encryptionFingerprint(Context, byte[])} but accepts strings
          * instead of a byte array.
-         *
+         * <p>
          * See the README.md for explainating on what to use as additionalData.
          *
-         * @param context used to gather sources from the Android OS
+         * @param context        used to gather sources from the Android OS
          * @param additionalData provided additional custom data
          * @return builder
          */
@@ -162,7 +162,7 @@ public final class Armadillo {
         /**
          * The encryption fingerprint is in important security measure. When no user password is
          * provided, it is the most important source of entropy to derive the key for the encryption.
-         *
+         * <p>
          * Provide a fully custom fingerprint implementation (or instance). Use this if you don't
          * agree with the default implementation.
          * <hr />
@@ -180,7 +180,7 @@ public final class Armadillo {
         /**
          * The encryption fingerprint is in important security measure. When no user password is
          * provided, it is the most important source of entropy to derive the key for the encryption.
-         *
+         * <p>
          * Provide a fully custom fingerprint byte array. Use this if you don't
          * agree with the default implementation.
          * <hr />
@@ -199,12 +199,12 @@ public final class Armadillo {
          * The content key digest is responsible for hashing the key in the key-value pair of
          * a shared preference. E.g. if the key is "name" and the value "Bob", the key "name" will
          * be hashed before it is persisted to disk.
-         *
+         * <p>
          * This method will alter the salt used for that hash. Setting this is highly recommended, since
          * it will change the default hashes of the key (so that somebody else's "name" key, won't
          * hash to the exact same output). Recommended value: use the AndroidID, as it will be different
          * on every app install from SDK 26+. See {@link Settings.Secure#ANDROID_ID}.
-         *
+         * <p>
          * Note that changing the salt will make old data inaccessible, since the key won't match
          * anymore.
          *
@@ -219,7 +219,7 @@ public final class Armadillo {
          * The content key digest is responsible for hashing the key in the key-value pair of
          * a shared preference. E.g. if the key is "name" and the value "Bob", the key "name" will
          * be hashed before it is persisted to disk.
-         *
+         * <p>
          * This is a more advanced setting. Per default a hash will be {@link #CONTENT_KEY_OUT_BYTE_LENGTH}
          * bytes long. If you think that is too long (wasting space) or too small (not enough entropy)
          * modify the length with this config.
@@ -237,7 +237,7 @@ public final class Armadillo {
          * The content key digest is responsible for hashing the key in the key-value pair of
          * a shared preference. E.g. if the key is "name" and the value "Bob", the key "name" will
          * be hashed before it is persisted to disk.
-         *
+         * <p>
          * Use this to set a fully custom implementation of the digest.
          * <hr />
          * <strong>Note:</strong> <em>Only set if you know what you are doing.</em>
@@ -348,14 +348,27 @@ public final class Armadillo {
             return this;
         }
 
+        /**
+         * The recovery policy defines how to behave when a value cannot be decrypted.
+         *
+         * @param throwRuntimeException if a exception will be thrown (out of the '.get*()' method)
+         * @param removeBrokenContent   if the content should be automatically be removed
+         * @return builder
+         */
         public Builder recoveryPolicy(boolean throwRuntimeException, boolean removeBrokenContent) {
-            this.recoveryPolicy = new RecoveryPolicy.Default(throwRuntimeException, removeBrokenContent);
+            this.recoveryPolicy = new SimpleRecoveryPolicy.Default(throwRuntimeException, removeBrokenContent);
             return this;
         }
 
+        /**
+         * The recovery policy defines how to behave when a value cannot be decrypted. Use this
+         * if you want a more fine-grained strategy. This is not meant for migration however.
+         *
+         * @param recoveryPolicy a custom implementation
+         * @return builder
+         */
         public Builder recoveryPolicy(RecoveryPolicy recoveryPolicy) {
-            Objects.requireNonNull(recoveryPolicy);
-            this.recoveryPolicy = recoveryPolicy;
+            this.recoveryPolicy = Objects.requireNonNull(recoveryPolicy);
             return this;
         }
 

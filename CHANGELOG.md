@@ -2,7 +2,26 @@
 
 ## v0.7.0
 
+* Improve RecoveryPolicy #35
+
 > [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.6.0...v0.7.0)
+
+### Breaking Change: RecoveryPolicy Interface
+
+The `RecoveryPolicy` interface changed to include a more flexible handle method.
+If you used the old one just change:
+
+```java
+new RecoveryPolicy.Default(true, false);
+```
+
+to
+
+```java
+new SimpleRecoveryPolicy.Default(true, false);
+```
+
+What was `RecoveryPolicy` is now `SimpleRecoveryPolicy`.
 
 ## v0.6.0
 
@@ -13,7 +32,7 @@
 
 > [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.5.0...v0.6.0)
 
-### Breaking Change
+### Breaking Change: Bcrypt Implementation
 
 In the old bcrypt implementation the following issues were found (#16):
 
@@ -61,7 +80,6 @@ I recommend setting a migration flag in a non-encrypted `SharedPreference`
 and migrate the next time the user has to enter the password (this process
 should be in background task anyway, so it should only take a bit longer
 to decrypt for the user)
-
 
 ## v0.5.0 (11/07/18) - Important Security Fix
 

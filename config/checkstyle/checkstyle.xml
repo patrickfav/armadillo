@@ -33,6 +33,7 @@
 
     <module name="TreeWalker">
         <module name="SuppressionCommentFilter" /> <!-- use //CHECKSTYLE:OFF (...) //CHECKSTYLE:ON to disable checkstyle: http://checkstyle.sourceforge.net/config_filters.html#SuppressionCommentFilter -->
+        <module name="SuppressWarningsHolder" />
 
         <!-- Annotations -->
         <module name="MissingDeprecated"> <!-- if @deprecated and javadoc is there, must be explained in javadoc: http://checkstyle.sourceforge.net/config_annotation.html#MissingDeprecated -->

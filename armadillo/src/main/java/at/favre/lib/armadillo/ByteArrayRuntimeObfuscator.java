@@ -72,5 +72,12 @@ public interface ByteArrayRuntimeObfuscator {
                 Bytes.wrap(arr).mutable().secureWipe();
             }
         }
+
+        @SuppressWarnings("checkstyle:nofinalizercheck")
+        @Override
+        protected void finalize() throws Throwable {
+            wipe();
+            super.finalize();
+        }
     }
 }

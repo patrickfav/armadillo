@@ -49,7 +49,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     private EncryptionProtocol encryptionProtocol;
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, @Nullable char[] password, boolean supportVerifyPassword) {
-        this(context, preferenceName, encryptionProtocol, new RecoveryPolicy.Default(false, true), password, supportVerifyPassword);
+        this(context, preferenceName, encryptionProtocol, new SimpleRecoveryPolicy.Default(false, true), password, supportVerifyPassword);
     }
 
     public SecureSharedPreferences(Context context, String preferenceName, EncryptionProtocol.Factory encryptionProtocol, RecoveryPolicy recoveryPolicy, @Nullable char[] password, boolean supportVerifyPassword) {
@@ -517,12 +517,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         try {
             return encryptionProtocol.decrypt(keyHash, encryptionProtocol.deobfuscatePassword(password), Bytes.parseBase64(base64Encrypted).array());
         } catch (EncryptionProtocolException e) {
-            if (recoveryPolicy.shouldRemoveBrokenContent()) {
-                sharedPreferences.edit().remove(keyHash).apply();
-            }
-            if (recoveryPolicy.shouldThrowRuntimeException()) {
-                throw new SecureSharedPreferenceCryptoException("could not decrypt " + keyHash, e);
-            }
+            recoveryPolicy.handleBrokenContent(e, keyHash, base64Encrypted, password != null, this);
         }
         return null;
     }

@@ -77,7 +77,7 @@ public final class Armadillo {
         private EncryptionProtocolConfig.Builder defaultConfig = EncryptionProtocolConfig.newDefaultConfig();
         private List<EncryptionProtocolConfig> additionalDecryptionConfigs = new ArrayList<>(2);
         private SecureRandom secureRandom = new SecureRandom();
-        private RecoveryPolicy recoveryPolicy = new RecoveryPolicy.Default(true, false);
+        private RecoveryPolicy recoveryPolicy = new SimpleRecoveryPolicy.Default(true, false);
         private char[] password;
         private boolean supportVerifyPassword = false;
         private Provider provider;
@@ -349,14 +349,27 @@ public final class Armadillo {
             return this;
         }
 
+        /**
+         * The recovery policy defines how to behave when a value cannot be decrypted.
+         *
+         * @param throwRuntimeException if a exception will be thrown (out of the '.get*()' method)
+         * @param removeBrokenContent   if the content should be automatically be removed
+         * @return builder
+         */
         public Builder recoveryPolicy(boolean throwRuntimeException, boolean removeBrokenContent) {
-            this.recoveryPolicy = new RecoveryPolicy.Default(throwRuntimeException, removeBrokenContent);
+            this.recoveryPolicy = new SimpleRecoveryPolicy.Default(throwRuntimeException, removeBrokenContent);
             return this;
         }
 
+        /**
+         * The recovery policy defines how to behave when a value cannot be decrypted. Use this
+         * if you want a more fine-grained strategy. This is not meant for migration however.
+         *
+         * @param recoveryPolicy a custom implementation
+         * @return builder
+         */
         public Builder recoveryPolicy(RecoveryPolicy recoveryPolicy) {
-            Objects.requireNonNull(recoveryPolicy);
-            this.recoveryPolicy = recoveryPolicy;
+            this.recoveryPolicy = Objects.requireNonNull(recoveryPolicy);
             return this;
         }
 

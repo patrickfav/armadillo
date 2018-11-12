@@ -303,7 +303,9 @@ public abstract class ASecureSharedPreferencesTest {
         preferenceSmokeTest(create("recovery", null)
                 .recoveryPolicy(true, true).build());
         preferenceSmokeTest(create("recovery", null)
-                .recoveryPolicy(new RecoveryPolicy.Default(true, true)).build());
+            .recoveryPolicy(new SimpleRecoveryPolicy.Default(true, true)).build());
+        preferenceSmokeTest(create("recovery", null)
+            .recoveryPolicy((e, keyHash, base64Encrypted, pwUsed, sharedPreferences) -> System.out.println(e + " " + keyHash + " " + base64Encrypted + " " + pwUsed)).build());
     }
 
     @Test

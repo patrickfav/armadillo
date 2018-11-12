@@ -275,7 +275,8 @@ The `.aar` files can then be found in `/armadillo/build/outputs/aar` folder
 
 ## Further Reading
 
-* [Security Best Practices: Symmetric Encryption with AES in Java and Android](https://proandroiddev.com/security-best-practices-symmetric-encryption-with-aes-in-java-7616beaaade9)
+* [Security Best Practices: Symmetric Encryption with AES-GCM in Java and Android](https://proandroiddev.com/security-best-practices-symmetric-encryption-with-aes-in-java-7616beaaade9)
+* [Security Best Practices: Symmetric Encryption with AES-CBC in Java and Android](https://proandroiddev.com/security-best-practices-symmetric-encryption-with-aes-in-java-and-android-part-2-b3b80e99ad36)
 
 # License
 

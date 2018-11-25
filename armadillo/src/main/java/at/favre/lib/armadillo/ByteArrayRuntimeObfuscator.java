@@ -73,7 +73,6 @@ public interface ByteArrayRuntimeObfuscator {
             }
         }
 
-        @SuppressWarnings("checkstyle:nofinalizercheck")
         @Override
         protected void finalize() throws Throwable {
             wipe();

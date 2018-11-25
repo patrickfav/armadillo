@@ -86,7 +86,6 @@
         <module name="DefaultComesLast" /> <!-- in switch case default must be the last elem: http://checkstyle.sourceforge.net/config_coding.html#DefaultComesLast -->
         <module name="EmptyStatement" /> <!-- basically an empty semicolon: http://checkstyle.sourceforge.net/config_coding.html#EmptyStatement -->
         <module name="EqualsHashCode" /> <!-- if you implement equals, you must implement hashcode and vice versa: http://checkstyle.sourceforge.net/config_coding.html#EqualsHashCode -->
-        <module name="NoFinalizer" /> <!-- Verifies there are no finalize() methods defined in a class: http://checkstyle.sourceforge.net/config_coding.html#NoFinalizer -->
         <module name="FallThrough" /> <!-- switch fallthrough with statement not allowed http://checkstyle.sourceforge.net/config_coding.html#FallThrough -->
         <module name="IllegalInstantiation" /> <!-- Must not use const of certain types (Activity, Fragment): http://checkstyle.sourceforge.net/config_coding.html#IllegalInstantiation -->
 

@@ -40,7 +40,7 @@ public interface DerivedPasswordCache {
     /**
      * Standard implementation of {@link DerivedPasswordCache}
      */
-    class Default implements DerivedPasswordCache {
+    final class Default implements DerivedPasswordCache {
 
         private final boolean enabled;
         private final SecureRandom secureRandom;

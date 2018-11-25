@@ -232,6 +232,12 @@ public abstract class ASecureSharedPreferencesTest {
     }
 
     @Test
+    public void simpleStringGetWithUnicodePw() {
+        preferenceSmokeTest(create("withPw", "ö案äü_ß²áèµÿA2ĳʥ".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher()).build());
+    }
+
+    @Test
     public void simpleStringGetWithFastKDF() {
         preferenceSmokeTest(create("withPw", "superSecret".toCharArray())
                 .keyStretchingFunction(new FastKeyStretcher()).build());
@@ -247,7 +253,7 @@ public abstract class ASecureSharedPreferencesTest {
         preferenceSmokeTest(create("fingerprint", null)
                 .encryptionFingerprint(Bytes.random(16).array()).build());
         preferenceSmokeTest(create("fingerprint2", null)
-                .encryptionFingerprint(() -> new byte[16]).build());
+            .encryptionFingerprint(new TestEncryptionFingerprint(new byte[16])).build());
     }
 
     @Test
@@ -335,30 +341,35 @@ public abstract class ASecureSharedPreferencesTest {
 
     @Test
     public void testChangePassword() {
-        testChangePassword("testChangePassword", "pw1".toCharArray(), "pw2".toCharArray());
+        testChangePassword("testChangePassword", "pw1".toCharArray(), "pw2".toCharArray(), false);
+    }
+
+    @Test
+    public void testChangePasswordWithEnabledDerivedPwCache() {
+        testChangePassword("testChangePassword", "pw1".toCharArray(), "pw2".toCharArray(), true);
     }
 
     @Test
     public void testChangePasswordFromNullPassword() {
-        testChangePassword("testChangePasswordFromNullPassword", null, "pw2".toCharArray());
+        testChangePassword("testChangePasswordFromNullPassword", null, "pw2".toCharArray(), false);
     }
 
     @Test
     public void testChangePasswordToNullPassword() {
-        testChangePassword("testChangePasswordToNullPassword", "pw1".toCharArray(), null);
+        testChangePassword("testChangePasswordToNullPassword", "pw1".toCharArray(), null, false);
     }
 
     @Test
     public void testChangePasswordFromEmptyPassword() {
-        testChangePassword("testChangePasswordFromEmptyPassword", "".toCharArray(), "pw2".toCharArray());
+        testChangePassword("testChangePasswordFromEmptyPassword", "".toCharArray(), "pw2".toCharArray(), false);
     }
 
     @Test
     public void testChangePasswordToEmptyPassword() {
-        testChangePassword("testChangePasswordToEmptyPassword", "pw1".toCharArray(), "".toCharArray());
+        testChangePassword("testChangePasswordToEmptyPassword", "pw1".toCharArray(), "".toCharArray(), false);
     }
 
-    private void testChangePassword(String name, char[] currentPassword, char[] newPassword) {
+    private void testChangePassword(String name, char[] currentPassword, char[] newPassword, boolean enableCache) {
         Set<String> testSet = new HashSet<>();
         testSet.add("t1");
         testSet.add("t2");
@@ -366,6 +377,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         // open new shared pref and add some data
         ArmadilloSharedPreferences pref = create(name, clonePassword(currentPassword))
+            .enableDerivedPasswordCache(enableCache)
             .keyStretchingFunction(new FastKeyStretcher()).build();
         pref.edit().putString("k1", "string1").putInt("k2", 2).putStringSet("set", testSet)
             .putBoolean("k3", true).commit();
@@ -373,6 +385,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         // open again and check if can be used
         pref = create(name, clonePassword(currentPassword))
+            .enableDerivedPasswordCache(enableCache)
             .keyStretchingFunction(new FastKeyStretcher()).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
@@ -382,6 +395,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         // open with old pw and change to new one, all the values should be accessible
         pref = create(name, clonePassword(currentPassword))
+            .enableDerivedPasswordCache(enableCache)
             .keyStretchingFunction(new FastKeyStretcher()).build();
         pref.changePassword(clonePassword(newPassword));
         assertEquals("string1", pref.getString("k1", null));
@@ -392,6 +406,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         // open with new pw, should be accessible
         pref = create(name, clonePassword(newPassword))
+            .enableDerivedPasswordCache(enableCache)
             .keyStretchingFunction(new FastKeyStretcher()).build();
         assertEquals("string1", pref.getString("k1", null));
         assertEquals(2, pref.getInt("k2", 0));
@@ -401,6 +416,7 @@ public abstract class ASecureSharedPreferencesTest {
 
         // open with old pw, should throw exception, since cannot decrypt
         pref = create(name, clonePassword(currentPassword))
+            .enableDerivedPasswordCache(enableCache)
             .keyStretchingFunction(new FastKeyStretcher()).build();
         try {
             pref.getString("k1", null);

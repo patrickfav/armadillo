@@ -2,6 +2,8 @@
 
 ## v0.7.0
 
+* Improve derive user password memory protection #32
+* Add derived password cache to speed up consecutive .get() calls #32
 * Improve RecoveryPolicy #35
 
 > [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.6.0...v0.7.0)

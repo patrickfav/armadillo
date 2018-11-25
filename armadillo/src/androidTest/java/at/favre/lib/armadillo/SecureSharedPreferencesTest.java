@@ -12,10 +12,10 @@ import org.junit.runner.RunWith;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
-import java.security.Security;
+
+import at.favre.lib.bytes.Bytes;
 
 import static junit.framework.TestCase.assertEquals;
-import at.favre.lib.bytes.Bytes;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -61,7 +61,6 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
         String userId = "1234";
         SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
             .password("mySuperSecretPassword".toCharArray()) //use user based password
-            .securityProvider(Security.getProvider("BC")) //use bouncy-castle security provider
             .keyStretchingFunction(new PBKDF2KeyStretcher()) //use PBKDF2 as user password kdf
             .contentKeyDigest(Bytes.from(getAndroidId(context)).array()) //use custom content key digest salt
             .secureRandom(new SecureRandom()) //provide your own secure random for salt/iv generation

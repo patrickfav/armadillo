@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity {
             builder.password(password);
         }
         encryptedPreferences = builder.build();
-        if(encryptedPreferences.isValidPassword()) {
+        if (encryptedPreferences.isValidPassword()) {
             onArmadilloInitialised();
         } else {
             onWrongPassword();

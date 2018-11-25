@@ -4,6 +4,8 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.text.Normalizer;
 import java.util.List;
@@ -46,16 +48,19 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
     private final StringMessageDigest stringMessageDigest;
     private final SecureRandom secureRandom;
     private final int keyLengthBit;
+    private final DerivedPasswordCache derivedPasswordCache;
 
     private DefaultEncryptionProtocol(EncryptionProtocolConfig defaultConfig, byte[] preferenceSalt,
                                       EncryptionFingerprint fingerprint, StringMessageDigest stringMessageDigest,
-                                      SecureRandom secureRandom, List<EncryptionProtocolConfig> additionalDecryptionConfigs) {
+                                      SecureRandom secureRandom, boolean enableDerivedPasswordCaching,
+                                      List<EncryptionProtocolConfig> additionalDecryptionConfigs) {
         this.defaultConfig = defaultConfig;
         this.preferenceSalt = preferenceSalt;
         this.fingerprint = fingerprint;
         this.stringMessageDigest = stringMessageDigest;
         this.keyLengthBit = defaultConfig.authenticatedEncryption.byteSizeLength(defaultConfig.keyStrength) * 8;
         this.secureRandom = secureRandom;
+        this.derivedPasswordCache = new DerivedPasswordCache.Default(enableDerivedPasswordCaching, secureRandom);
         this.additionalDecryptionConfigs = additionalDecryptionConfigs;
     }
 
@@ -173,6 +178,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         defaultConfig = EncryptionProtocolConfig.newBuilder(defaultConfig)
                 .keyStretchingFunction(Objects.requireNonNull(function))
                 .build();
+        derivedPasswordCache.wipe();
     }
 
     @Override
@@ -180,11 +186,42 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         return defaultConfig.keyStretchingFunction;
     }
 
+    @Nullable
+    @Override
+    public ByteArrayRuntimeObfuscator obfuscatePassword(@Nullable char[] password) {
+        return obfuscatePasswordInternal(password, secureRandom);
+    }
+
+    @Nullable
+    @Override
+    public char[] deobfuscatePassword(@Nullable ByteArrayRuntimeObfuscator obfuscated) {
+        if (obfuscated == null) return null;
+
+        CharBuffer charBuffer = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(obfuscated.getBytes()));
+
+        if (charBuffer.capacity() != charBuffer.limit()) {
+            char[] compacted = new char[charBuffer.remaining()];
+            charBuffer.get(compacted);
+            return compacted;
+        }
+        return charBuffer.array();
+    }
+
+    @Override
+    public void wipeDerivedPasswordCache() {
+        derivedPasswordCache.wipe();
+    }
+
     private byte[] keyDerivationFunction(String contentKey, byte[] fingerprint, byte[] contentSalt, byte[] preferenceSalt, @Nullable char[] password) {
         Bytes ikm = Bytes.from(fingerprint, contentSalt, Bytes.from(contentKey, Normalizer.Form.NFKD).array());
 
         if (password != null) {
-            ikm = ikm.append(defaultConfig.keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES));
+            byte[] stretched;
+            if ((stretched = derivedPasswordCache.get(contentSalt, password)) == null) {
+                stretched = defaultConfig.keyStretchingFunction.stretch(contentSalt, password, STRETCHED_PASSWORD_LENGTH_BYTES);
+                derivedPasswordCache.put(contentSalt, password, stretched);
+            }
+            ikm = ikm.append(stretched);
         }
 
         return HKDF.fromHmacSha512().extractAndExpand(preferenceSalt, ikm.array(), Bytes.from("DefaultEncryptionProtocol").array(), keyLengthBit / 8);
@@ -195,23 +232,26 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         private final EncryptionFingerprint fingerprint;
         private final StringMessageDigest stringMessageDigest;
         private final SecureRandom secureRandom;
+        private final boolean enableDerivedPasswordCaching;
         private EncryptionProtocolConfig defaultConfig;
         private final List<EncryptionProtocolConfig> additionalDecryptionConfigs;
 
         Factory(EncryptionProtocolConfig defaultConfig, EncryptionFingerprint fingerprint,
                 StringMessageDigest stringMessageDigest, SecureRandom secureRandom,
+                boolean enableDerivedPasswordCaching,
                 List<EncryptionProtocolConfig> additionalDecryptionConfigs) {
             this.defaultConfig = defaultConfig;
             this.fingerprint = fingerprint;
             this.stringMessageDigest = stringMessageDigest;
             this.secureRandom = secureRandom;
+            this.enableDerivedPasswordCaching = enableDerivedPasswordCaching;
             this.additionalDecryptionConfigs = additionalDecryptionConfigs;
         }
 
         @Override
         public EncryptionProtocol create(byte[] preferenceSalt) {
             return new DefaultEncryptionProtocol(defaultConfig, preferenceSalt, fingerprint,
-                    stringMessageDigest, secureRandom, additionalDecryptionConfigs);
+                    stringMessageDigest, secureRandom, enableDerivedPasswordCaching, additionalDecryptionConfigs);
         }
 
         @Override
@@ -228,5 +268,16 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         public SecureRandom getSecureRandom() {
             return secureRandom;
         }
+
+        @Nullable
+        @Override
+        public ByteArrayRuntimeObfuscator obfuscatePassword(@Nullable char[] password) {
+            return obfuscatePasswordInternal(password, secureRandom);
+        }
+    }
+
+    private static ByteArrayRuntimeObfuscator obfuscatePasswordInternal(@Nullable char[] password, SecureRandom secureRandom) {
+        if (password == null) return null;
+        return new ByteArrayRuntimeObfuscator.Default(Bytes.from(password).array(), secureRandom);
     }
 }

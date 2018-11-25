@@ -23,7 +23,13 @@ import java.security.SecureRandom;
  */
 
 public interface EncryptionFingerprint {
+
     byte[] getBytes();
+
+    /**
+     * Wipe and overwrite the internal byte arrays
+     */
+    void wipe();
 
     /**
      * Default implementation of a {@link EncryptionFingerprint} with simple internal in-memory
@@ -40,6 +46,11 @@ public interface EncryptionFingerprint {
         @Override
         public byte[] getBytes() {
             return holder.getBytes();
+        }
+
+        @Override
+        public void wipe() {
+            holder.wipe();
         }
     }
 }

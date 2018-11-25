@@ -81,6 +81,7 @@ public final class Armadillo {
         private char[] password;
         private boolean supportVerifyPassword = false;
         private Provider provider;
+        private boolean enableDerivedPasswordCache = false;
         private boolean enableKitKatSupport = false;
 
         private Builder(SharedPreferences sharedPreferences) {
@@ -428,6 +429,35 @@ public final class Armadillo {
         }
 
         /**
+         * Per default every put and get operation, when using a user provided password, requires the
+         * full expensive key derivation function (KDF) to derive the key. This can add up to multiple
+         * seconds if you get/put multiple values consecutively. Default is false.
+         * <p>
+         * To make get* calls faster, you can enable this cache, which caches the <em>derived</em>
+         * password. This will not speed up put* operations since every time a new salt will be created
+         * making it impossible to cache. The disadvantage is that the derived password stays in cache
+         * , therefor in memory for way longer, making it easier to read when the device is used with
+         * instrumentation tool like FRIDA (this is a more specific attack, since when the attacker has
+         * full access to the device, there is not much you can do).
+         * <p>
+         *
+         * <strong>Summary</strong>
+         * <ul>
+         * <li>Improves performance of consecutive get calls when using expensive key stretching function and user password</li>
+         * <li>Slightly reduces security strenght, since the stretched bytes are kept in memory for longer</li>
+         * </ul>
+         * <p>
+         * See {@link DerivedPasswordCache} for details of the implementation.
+         *
+         * @param enable caching
+         * @return builder
+         */
+        public Builder enableDerivedPasswordCache(boolean enable) {
+            enableDerivedPasswordCache = enable;
+            return this;
+        }
+
+        /**
          * Compresses the content with Gzip before encrypting and writing it to shared preference. This only makes
          * sense if bigger structural data is persisted like long xml or json.
          *
@@ -536,7 +566,7 @@ public final class Armadillo {
             }
 
             EncryptionProtocol.Factory factory = new DefaultEncryptionProtocol.Factory(config,
-                    fingerprint, stringMessageDigest, secureRandom, Collections.unmodifiableList(additionalDecryptionConfigs));
+                    fingerprint, stringMessageDigest, secureRandom, enableDerivedPasswordCache, Collections.unmodifiableList(additionalDecryptionConfigs));
 
             checkKitKatSupport(config.authenticatedEncryption);
 

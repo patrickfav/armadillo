@@ -1,20 +1,17 @@
 apply from: "$rootDir/gradle/common-build.gradle"
 
 buildscript {
-
     repositories {
         google()
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.2.1'
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.0'
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.8.2'
-        classpath 'com.dicedmelon.gradle:jacoco-android:0.1.3'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
+        apply from: 'dependencies.gradle'
+        classpath gradleDependencies.gradleAndroid
+        classpath gradleDependencies.gradleAndroidMaven
+        classpath gradleDependencies.gradleBintray
+        classpath gradleDependencies.gradleCoverrals
+        classpath gradleDependencies.gradleJacoco
     }
 }
 
@@ -30,23 +27,16 @@ task clean(type: Delete) {
 }
 
 ext {
-
     versionNameLib = "0.7.0"
     versionNameApp = "v$versionNameLib"
     versionCode = getCiBuildNumber()
 
-    compileSdkVersion = 28
-    buildToolsVersion = "28.0.3"
-    targetSdkVersion = 28
-
-    minSdkVersion = 19
-    javaVersion = JavaVersion.VERSION_1_8
-
-    dependencies = [
-            support         : "28.0.0",
-            constraintLayout: "1.1.2",
-            espresso        : "3.0.2",
-            junit           : "4.12",
-            stetho          : "1.5.0"
+    androidConfig = [
+            buildToolsVersion        : "28.0.3", // https://developer.android.com/studio/releases/build-tools
+            minSdkVersion            : 19,
+            targetSdkVersion         : 28,
+            compileSdkVersion        : 28,
+            testInstrumentationRunner: "androidx.test.runner.AndroidJUnitRunner",
+            javaVersion              : JavaVersion.VERSION_1_8
     ]
 }

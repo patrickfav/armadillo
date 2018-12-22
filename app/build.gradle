@@ -1,41 +1,45 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion rootProject.ext.compileSdkVersion
-    buildToolsVersion rootProject.ext.buildToolsVersion
+
+    compileOptions {
+        sourceCompatibility androidConfig.javaVersion
+        targetCompatibility androidConfig.javaVersion
+    }
+
+    compileSdkVersion androidConfig.compileSdkVersion
+    buildToolsVersion androidConfig.buildToolsVersion
 
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode rootProject.ext.versionCode
-        versionName rootProject.ext.versionNameApp
-
         applicationId "at.favre.lib.securesharedpreferences"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        minSdkVersion androidConfig.minSdkVersion
+        targetSdkVersion androidConfig.targetSdkVersion
+        versionCode versionCode
+        versionName versionNameApp
+        testInstrumentationRunner androidConfig.testInstrumentationRunner
     }
+
     dataBinding {
         enabled = true
     }
+
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig debug.signingConfig // TODO create release key keystore
         }
-    }
-    compileOptions {
-        sourceCompatibility rootProject.ext.javaVersion
-        targetCompatibility rootProject.ext.javaVersion
     }
 }
 
 dependencies {
     implementation project(':armadillo')
-    implementation "com.android.support:appcompat-v7:$rootProject.ext.dependencies.support"
-    implementation "com.android.support:design:$rootProject.ext.dependencies.support"
-    implementation "com.android.support:cardview-v7:$rootProject.ext.dependencies.support"
-    implementation "com.android.support.constraint:constraint-layout:$rootProject.ext.dependencies.constraintLayout"
-    implementation "com.facebook.stetho:stetho:$rootProject.ext.dependencies.stetho"
-    testImplementation "junit:junit:$rootProject.ext.dependencies.junit"
-    androidTestImplementation 'com.android.support.test:runner:1.0.2'
-    androidTestImplementation "com.android.support.test.espresso:espresso-core:$rootProject.ext.dependencies.espresso"
+    implementation appDependencies.appCompat
+    implementation appDependencies.constraintLayout
+    implementation appDependencies.cardView
+    implementation appDependencies.materialComponents
+    implementation appDependencies.stetho
+    testImplementation testDependencies.junit
+    testImplementation testDependencies.testRunner
+    testImplementation testDependencies.espresso
 }

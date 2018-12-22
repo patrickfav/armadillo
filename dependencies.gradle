@@ -1,0 +1,94 @@
+ext {
+
+    //----------------------------------------------------------------------------------------------
+    // Gradle Dependencies
+    //----------------------------------------------------------------------------------------------
+
+    // Gradle Android Plugin : https://developer.android.com/studio/releases/gradle-plugin.html#updating-plugin
+    gradleAndroid = '3.4.0-alpha08'
+    // Gradle Android Maven Plugin : https://github.com/dcendents/android-maven-gradle-plugin
+    gradleAndroidMaven = '2.1'
+    // Gradle Bintray Plugin : https://github.com/bintray/gradle-bintray-plugin
+    gradleBintray = '1.8.4'
+    // Gradle Coveralls Plugin : https://github.com/kt3k/coveralls-gradle-plugin
+    gradleCoverrals = '2.8.2'
+    // Gradle JaCoCo Plugin : https://github.com/arturdm/jacoco-android-gradle-plugin
+    gradleJacoco = '0.1.3'
+
+    gradleDependencies = [
+            gradleAndroid     : "com.android.tools.build:gradle:${gradleAndroid}",
+            gradleAndroidMaven: "com.github.dcendents:android-maven-gradle-plugin:${gradleAndroidMaven}",
+            gradleBintray     : "com.jfrog.bintray.gradle:gradle-bintray-plugin:${gradleBintray}",
+            gradleCoverrals   : "org.kt3k.gradle.plugin:coveralls-gradle-plugin:${gradleCoverrals}",
+            gradleJacoco      : "com.dicedmelon.gradle:jacoco-android:${gradleJacoco}",
+    ]
+
+    //----------------------------------------------------------------------------------------------
+    // Lib Dependencies
+    //----------------------------------------------------------------------------------------------
+
+    // HKDF : https://github.com/patrickfav/hkdf
+    hkdf = '1.0.0'
+    // Bytes Utility Library : https://github.com/patrickfav/bytes-java
+    bytesUtils = '0.8.0'
+    // Bcrypt : https://github.com/patrickfav/bcrypt
+    bcrypt = '0.5.0'
+    // Timber : https://github.com/JakeWharton/timber
+    timber = '4.7.1'
+    // Android annotations : https://mvnrepository.com/artifact/androidx.annotation/annotation?repo=google
+    annotation = '1.0.0'
+
+    libDependencies = [
+            hkdf      : "at.favre.lib:hkdf:${hkdf}",
+            bytesUtils: "at.favre.lib:bytes:${bytesUtils}",
+            bcrypt    : "at.favre.lib:bcrypt:${bcrypt}",
+            timber    : "com.jakewharton.timber:timber:${timber}",
+            annotation: "androidx.annotation:annotation:${annotation}",
+    ]
+
+    //----------------------------------------------------------------------------------------------
+    // App Dependencies
+    //----------------------------------------------------------------------------------------------
+
+    // AppCompat : https://mvnrepository.com/artifact/androidx.appcompat/appcompat?repo=google
+    appCompat = '1.0.0'
+    // Constraint Layout : https://mvnrepository.com/artifact/androidx.constraintlayout/constraintlayout?repo=google
+    constraintLayout = '1.1.3'
+    // CardView : https://mvnrepository.com/artifact/androidx.cardview/cardview?repo=google
+    cardView = '1.0.0'
+    // Material Components : https://mvnrepository.com/artifact/com.google.android.material/material?repo=google
+    materialComponents = '1.0.0'
+    // Stetho : https://github.com/facebook/stetho
+    stetho = '1.5.0'
+
+    appDependencies = [
+            appCompat         : "androidx.appcompat:appcompat:${appCompat}",
+            constraintLayout  : "androidx.constraintlayout:constraintlayout:${constraintLayout}",
+            cardView          : "androidx.cardview:cardview:${cardView}",
+            materialComponents: "com.google.android.material:material:${materialComponents}",
+            stetho            : "com.facebook.stetho:stetho:${stetho}",
+    ]
+
+    //----------------------------------------------------------------------------------------------
+    // Test Dependencies
+    //----------------------------------------------------------------------------------------------
+
+    // JUnit (unit testing framework) : http://junit.org/junit4/
+    junit = '4.12'
+    // Test Runner : https://mvnrepository.com/artifact/androidx.test/runner?repo=google
+    testRunner = '1.1.0'
+    // Espresso : https://mvnrepository.com/artifact/androidx.test.espresso/espresso-core?repo=google
+    espresso = '3.1.0'
+    // jBCrypt : https://github.com/jeremyh/jBCrypt
+    jBCrypt = '0.4'
+    // Bouncy Castle : https://www.bouncycastle.org/latest_releases.html
+    bouncyCastle = '1.60'
+
+    testDependencies = [
+            junit       : "junit:junit:${junit}",
+            testRunner  : "androidx.test:runner:${testRunner}",
+            espresso    : "androidx.test.espresso:espresso-core:${espresso}",
+            jBCrypt     : "org.mindrot:jbcrypt:${jBCrypt}",
+            bouncyCastle: "org.bouncycastle:bcprov-jdk15on:${bouncyCastle}",
+    ]
+}

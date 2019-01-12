@@ -127,7 +127,7 @@ implementation. SDK 19 seems to be a good compromise where most of the older
 Various security frameworks exists in Java: [BouncyCastle](https://www.bouncycastle.org/),
 [Conscrypt](https://github.com/google/conscrypt), [Facebook Conceal](https://github.com/facebook/conceal).
 The problem is that these libraries are usually huge and require manual
-updates to have all the latents security fixes.
+updates to have all the latest security fixes.
 This library however depends on the default JCA provider (although the developer may choose a
 different one). This puts trust in the device and it's implementation, while
 expecting frequent security patches. Usually the default provider since KitKat is

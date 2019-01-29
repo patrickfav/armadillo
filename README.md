@@ -40,7 +40,7 @@ A very minimal example
         .encryptionFingerprint(context)
         .build();
 
-    preferences.edit().putString("key1", "stringValue").apply();
+    preferences.edit().putString("key1", "stringValue").commit();
     String s = preferences.getString("key1", null);
 ```
 

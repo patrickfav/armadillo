@@ -40,7 +40,7 @@ public interface ByteArrayRuntimeObfuscator {
             createAndEncrypt(secureRandom, Bytes.from(array), array.length);
         }
 
-        private void createAndEncrypt(SecureRandom secureRandom, Bytes from, int length) {
+        private synchronized void createAndEncrypt(SecureRandom secureRandom, Bytes from, int length) {
             Bytes copy = from.mutable();
             for (int i = 0; i < data.length - 1; i++) {
                 byte[] key = Bytes.random(length, secureRandom).array();
@@ -51,7 +51,7 @@ public interface ByteArrayRuntimeObfuscator {
         }
 
         @Override
-        public byte[] getBytes() {
+        public synchronized byte[] getBytes() {
             Bytes b = Bytes.empty();
             for (int i = data.length - 1; i >= 0; i--) {
                 if (b.isEmpty()) {

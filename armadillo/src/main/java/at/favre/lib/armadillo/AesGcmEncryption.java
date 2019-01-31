@@ -39,7 +39,7 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
 
     private final SecureRandom secureRandom;
     private final Provider provider;
-    private Cipher cipher;
+    private ThreadLocal<Cipher> cipherWrapper = new ThreadLocal<>();
 
     public AesGcmEncryption() {
         this(new SecureRandom(), null);
@@ -121,6 +121,7 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
     }
 
     private Cipher getCipher() {
+        Cipher cipher = cipherWrapper.get();
         if (cipher == null) {
             try {
                 if (provider != null) {
@@ -131,7 +132,10 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
             } catch (Exception e) {
                 throw new IllegalStateException("could not get cipher instance", e);
             }
+            cipherWrapper.set(cipher);
+            return cipherWrapper.get();
+        } else {
+            return cipher;
         }
-        return cipher;
     }
 }

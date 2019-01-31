@@ -46,7 +46,7 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
 
     private final SecureRandom secureRandom;
     private final Provider provider;
-    private Cipher cipher;
+    private ThreadLocal<Cipher> cipherWrapper = new ThreadLocal<>();
     private Mac hmac;
 
     public AesCbcEncryption() {
@@ -195,7 +195,8 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
         }
     }
 
-    private synchronized Cipher getCipher() {
+    private Cipher getCipher() {
+        Cipher cipher = cipherWrapper.get();
         if (cipher == null) {
             try {
                 if (provider != null) {
@@ -206,7 +207,10 @@ final class AesCbcEncryption implements AuthenticatedEncryption {
             } catch (Exception e) {
                 throw new IllegalStateException("could not get cipher instance", e);
             }
+            cipherWrapper.set(cipher);
+            return cipherWrapper.get();
+        } else {
+            return cipher;
         }
-        return cipher;
     }
 }

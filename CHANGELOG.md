@@ -1,5 +1,11 @@
 # Releases
 
+## v0.8.0
+
+* Fixed an issue when getting and setting values from different threads in parallel #41
+
+> [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.7.0...v0.8.0)
+
 ## v0.7.0
 
 * Improve derive user password memory protection #32

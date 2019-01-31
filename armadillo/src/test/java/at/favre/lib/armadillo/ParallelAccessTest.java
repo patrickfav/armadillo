@@ -7,6 +7,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class ParallelAccessTest {
 
@@ -26,14 +27,13 @@ public class ParallelAccessTest {
     public void testParallelAccess() {
         SharedPreferences encryptedPreferences = createArmadillo(mockPreferences, null, false).build();
 
-        encryptedPreferences.edit().putString("foo", "1").apply();
+        encryptedPreferences.edit().putString("foo", "D62A13F997F350B6E17A6B41AA477200").apply();
 
-        long start = System.currentTimeMillis();
         Thread thread1 = new Thread() {
             @Override
             public void run() {
-                for (int i = 0; i < 100; ++i) {
-                    encryptedPreferences.getString("foo", "");
+                for (int i = 0; i < 2500; ++i) {
+                    assertEquals("D62A13F997F350B6E17A6B41AA477200", encryptedPreferences.getString("foo", ""));
                 }
             }
         };
@@ -43,8 +43,8 @@ public class ParallelAccessTest {
         Thread thread2 = new Thread() {
             @Override
             public void run() {
-                for (int i = 0; i < 100; ++i) {
-                    encryptedPreferences.getString("foo", "");
+                for (int i = 0; i < 2000; ++i) {
+                    assertEquals("D62A13F997F350B6E17A6B41AA477200", encryptedPreferences.getString("foo", ""));
                 }
             }
         };
@@ -55,9 +55,10 @@ public class ParallelAccessTest {
             thread1.join();
             thread2.join();
         } catch (InterruptedException ignored) {
+            fail();
         }
 
-        assertEquals("1", encryptedPreferences.getString("foo", ""));
+        assertEquals("D62A13F997F350B6E17A6B41AA477200", encryptedPreferences.getString("foo", ""));
     }
 
     private Armadillo.Builder createArmadillo(SharedPreferences preferences, char[] password, boolean validatePassword) {

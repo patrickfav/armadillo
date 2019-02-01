@@ -380,6 +380,7 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
         if (preferencesSalt != null) {
             Arrays.fill(preferencesSalt, (byte) 0);
         }
+        encryptionProtocol.wipeDerivedPasswordCache();
         preferencesSalt = null;
         prefSaltContentKey = null;
         encryptionProtocol = null;

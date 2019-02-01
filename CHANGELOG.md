@@ -1,5 +1,9 @@
 # Releases
 
+## v0.9.0
+
+* add wiping of pw cache to close() method in SecureSharedPreferences
+
 ## v0.8.0
 
 * Fixed an issue when getting and setting values from different threads in parallel #41

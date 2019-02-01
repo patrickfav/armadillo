@@ -6,6 +6,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import at.favre.lib.bytes.Bytes;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -25,15 +27,26 @@ public class ParallelAccessTest {
 
     @Test
     public void testParallelAccess() {
-        SharedPreferences encryptedPreferences = createArmadillo(mockPreferences, null, false).build();
+        testParallelAccess(createArmadillo(mockPreferences, null).build());
+    }
 
-        encryptedPreferences.edit().putString("foo", "D62A13F997F350B6E17A6B41AA477200").apply();
+    @Test
+    public void testParallelAccessWithPasswordCache() {
+        testParallelAccess(createArmadillo(mockPreferences, "secret1234".toCharArray())
+            .keyStretchingFunction(new FastKeyStretcher())
+            .enableDerivedPasswordCache(true).build());
+    }
+
+    private void testParallelAccess(SharedPreferences encryptedPreferences) {
+        final String value = Bytes.random(16).encodeHex();
+        encryptedPreferences.edit().putString("foo", value).apply();
 
         Thread thread1 = new Thread() {
             @Override
             public void run() {
                 for (int i = 0; i < 2500; ++i) {
-                    assertEquals("D62A13F997F350B6E17A6B41AA477200", encryptedPreferences.getString("foo", ""));
+                    //System.out.println("1: " + System.nanoTime());
+                    assertEquals(value, encryptedPreferences.getString("foo", ""));
                 }
             }
         };
@@ -44,13 +57,14 @@ public class ParallelAccessTest {
             @Override
             public void run() {
                 for (int i = 0; i < 2000; ++i) {
-                    assertEquals("D62A13F997F350B6E17A6B41AA477200", encryptedPreferences.getString("foo", ""));
+                    //System.out.println("2: " + System.nanoTime());
+                    assertEquals(value, encryptedPreferences.getString("foo", ""));
                 }
             }
         };
 
         thread2.start();
-        
+
         try {
             thread1.join();
             thread2.join();
@@ -58,13 +72,12 @@ public class ParallelAccessTest {
             fail();
         }
 
-        assertEquals("D62A13F997F350B6E17A6B41AA477200", encryptedPreferences.getString("foo", ""));
+        assertEquals(value, encryptedPreferences.getString("foo", ""));
     }
 
-    private Armadillo.Builder createArmadillo(SharedPreferences preferences, char[] password, boolean validatePassword) {
+    private Armadillo.Builder createArmadillo(SharedPreferences preferences, char[] password) {
         return Armadillo.create(preferences)
-                .encryptionFingerprint(new byte[16])
-                .password(password)
-                .supportVerifyPassword(validatePassword);
+            .encryptionFingerprint(new byte[16])
+            .password(password);
     }
 }

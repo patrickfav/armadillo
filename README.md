@@ -59,6 +59,7 @@ SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
         .encryptionFingerprint(context, userId.getBytes(StandardCharsets.UTF_8)) //add the user id to fingerprint
         .supportVerifyPassword(true) //enables optional password validation support `.isValidPassword()`
         .enableKitKatSupport(true) //enable optional kitkat support
+        .enableDerivedPasswordCache(true) //enable caching for derived password making consecutive getters faster
         .build();
 ```
 

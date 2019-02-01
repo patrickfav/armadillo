@@ -3,6 +3,7 @@
 ## v0.9.0
 
 * add wiping of pw cache to close() method in SecureSharedPreferences
+* increase internal optional password cache to 12 from 8
 
 ## v0.8.0
 

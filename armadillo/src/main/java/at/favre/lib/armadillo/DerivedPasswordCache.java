@@ -50,7 +50,7 @@ public interface DerivedPasswordCache {
         public Default(boolean enabled, SecureRandom secureRandom) {
             this.enabled = enabled;
             this.secureRandom = secureRandom;
-            this.cache = new LruCache<>(8);
+            this.cache = new LruCache<>(12);
         }
 
         @Nullable

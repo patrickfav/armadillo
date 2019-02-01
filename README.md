@@ -51,7 +51,7 @@ The following example shows some of the configurations available to the develope
 ```java
 String userId = ...
 SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
-        .password("mySuperSecretPassword".toCharArray()) //use user based password
+        .password("mySuperSecretPassword".toCharArray()) //use user provided password
         .securityProvider(Security.getProvider("BC")) //use bouncy-castle security provider
         .keyStretchingFunction(new PBKDF2KeyStretcher()) //use PBKDF2 as user password kdf
         .contentKeyDigest(Bytes.from(getAndroidId(context)).array()) //use custom content key digest salt
@@ -71,7 +71,7 @@ first put operation:
 <map>
     <!-- storage random salt -->
     <string name="585d6f0f415682ace841fb50d5980d60ed23a2ef">riIPjrL2WRfoh8QJXu7fWk4GGeAKlQoJl9ofABHZKlc=</string>
-     <!-- 'key1':'stringValue' -->
+    <!-- 'key1':'stringValue' -->
     <string name="152b866fd2d63899678c21f247bb6df0d2e38072">AAAAABD/8an1zfovjJB/2MFOT9ncAAAAJaf+Z9xgzwXzp1BqTsVMnRZxR/HfRcO8lEhyKpL17QmZ5amwAYQ=</string>
 </map>
 

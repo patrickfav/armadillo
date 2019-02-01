@@ -444,7 +444,7 @@ public final class Armadillo {
          * <strong>Summary</strong>
          * <ul>
          * <li>Improves performance of consecutive get calls when using expensive key stretching function and user password</li>
-         * <li>Slightly reduces security strenght, since the stretched bytes are kept in memory for longer</li>
+         * <li>Slightly reduces security strength, since the stretched bytes are kept in memory for longer</li>
          * </ul>
          * <p>
          * See {@link DerivedPasswordCache} for details of the implementation.

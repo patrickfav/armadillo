@@ -1,8 +1,8 @@
-
-![armadillo logo](doc/logo/logo_ldpi.png)
-
-
 # Armadillo - Encrypted Shared Preference
+
+
+<img src="https://github.com/patrickfav/armadillo/blob/master/doc/logo/logo_ldpi.png?raw=true" align="right"
+     alt="Armadillo Logo" width="170" height="207">
 
 A shared preference implementation for secret data providing confidentiality,
 integrity and authenticity . Per default uses AES-GCM, BCrypt and HKDF as cryptographic

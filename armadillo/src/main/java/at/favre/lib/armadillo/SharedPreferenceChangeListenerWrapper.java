@@ -12,7 +12,7 @@ import java.lang.ref.WeakReference;
  */
 final class SharedPreferenceChangeListenerWrapper implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static class KeyComparissonImpl implements OnSecurePreferenceChangeListener.DerivedKeyComparison  {
+    private static class KeyComparissonImpl implements OnSecurePreferenceChangeListener.DerivedKeyComparison {
         private final EncryptionProtocol encryptionProtocol;
 
         private KeyComparissonImpl(EncryptionProtocol encryptionProtocol) {
@@ -26,7 +26,7 @@ final class SharedPreferenceChangeListenerWrapper implements SharedPreferences.O
     }
 
     private final OnSecurePreferenceChangeListener.DerivedKeyComparison keyComparison;
-    private final WeakReference<OnSecurePreferenceChangeListener>       wrappedRef;
+    private final WeakReference<OnSecurePreferenceChangeListener> wrappedRef;
 
     SharedPreferenceChangeListenerWrapper(@NonNull OnSecurePreferenceChangeListener wrapped, @NonNull EncryptionProtocol encryptionProtocol) {
         keyComparison = new KeyComparissonImpl(encryptionProtocol);

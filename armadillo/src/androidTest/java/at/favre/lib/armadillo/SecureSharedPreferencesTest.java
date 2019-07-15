@@ -5,6 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
 import android.support.test.InstrumentationRegistry;
+import android.support.test.annotation.UiThreadTest;
+import android.support.test.rule.UiThreadTestRule;
 import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.Test;
@@ -12,10 +14,13 @@ import org.junit.runner.RunWith;
 
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import at.favre.lib.bytes.Bytes;
 
 import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertTrue;
 
 /**
  * Instrumented test, which will execute on an Android device.
@@ -24,6 +29,7 @@ import static junit.framework.TestCase.assertEquals;
  */
 @RunWith(AndroidJUnit4.class)
 public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
+
     protected Armadillo.Builder create(String name, char[] pw) {
         return Armadillo.create(InstrumentationRegistry.getTargetContext(), name)
                 .encryptionFingerprint(InstrumentationRegistry.getTargetContext())
@@ -53,6 +59,38 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
     public void testWithDifferentKeyStrength() {
         preferenceSmokeTest(create("fingerprint", null)
                 .encryptionKeyStrength(AuthenticatedEncryption.STRENGTH_VERY_HIGH).build());
+    }
+
+    @Test
+    @UiThreadTest
+    public void testSecurePreferenceChangeNotification() {
+        ArmadilloSharedPreferences armadilloSharedPreferences = create("fingerprint", null).build();
+        AtomicBoolean matched = new AtomicBoolean(false);
+        armadilloSharedPreferences.registerOnSecurePreferenceChangeListener(((sharedPreferences, comparison) -> {
+            if (comparison.isDerivedKeyEqualTo("key-of-interest")) {
+                matched.set(true);
+            }
+        }));
+
+        armadilloSharedPreferences.edit().putInt("key-of-interest", 3).commit();
+
+        assertTrue(matched.get());
+    }
+
+    @Test
+    @UiThreadTest
+    public void testSecurePreferenceNotMatching() {
+        ArmadilloSharedPreferences armadilloSharedPreferences = create("fingerprint", null).build();
+        AtomicBoolean matched = new AtomicBoolean(false);
+        armadilloSharedPreferences.registerOnSecurePreferenceChangeListener(((sharedPreferences, comparison) -> {
+            if (comparison.isDerivedKeyEqualTo("key-of-interest")) {
+                matched.set(true);
+            }
+        }));
+
+        armadilloSharedPreferences.edit().putInt("another-key", 3).commit();
+
+        assertFalse(matched.get());
     }
 
     @Test

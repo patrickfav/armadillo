@@ -2,6 +2,7 @@ package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -99,6 +100,11 @@ public class MockSharedPref implements SharedPreferences {
     @Override
     public void unregisterOnSharedPreferenceChangeListener(OnSharedPreferenceChangeListener onSharedPreferenceChangeListener) {
         listeners.remove(onSharedPreferenceChangeListener);
+    }
+
+    @VisibleForTesting
+    int getNumListeners() {
+        return listeners.size();
     }
 
     void executeTransaction(Map<String, Object> putMap, List<String> removeList, boolean clear) {

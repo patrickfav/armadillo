@@ -1,6 +1,7 @@
 package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 /**
@@ -46,6 +47,47 @@ public interface ArmadilloSharedPreferences extends SharedPreferences {
      *                    ignored if null is passed.
      */
     void changePassword(@Nullable char[] newPassword, @Nullable KeyStretchingFunction function);
+
+    /**
+     * Registers to listen changes on the underlying preferences in a secure fashion, as the regular
+     * {@link SharedPreferences#registerOnSharedPreferenceChangeListener(OnSharedPreferenceChangeListener)}
+     * is useless as it returns <em>derivedContentKey</em> as parameter, and we cannot compare it to noting
+     * in case we're interested in some specific key change.
+     *
+     * <pre>
+     *     public class SampleActivity extends AppCompatActivity {
+     *         private final String KEY_TOKEN = "token";
+     *         private final OnSecurePreferenceChangeListener onSecurePreferenceChangeListener = (sharedPreferences, comparison) -> {
+     *             if (comparison.isDerivedKeyEqualTo(KEY_TOKEN)) {
+     *
+     *                 String newToken = sharedPreferences.getString(KEY_TOKEN, null);
+     *                 onTokenUpdated(newToken);
+     *             }
+     *         };
+     *
+     *         private void onTokenUpdated(String newToken) {
+     *             // Do whatever is required when underlying token has been updated
+     *         }
+     *
+     *         &#64;Override
+     *         protected void onCreate(Bundle savedInstanceState) {
+     *             super.onCreate(savedInstanceState);
+     *             // ... initialize encrypted preferences ...
+     *             encryptedPreferences.registerOnSecurePreferenceChangeListener(onSecurePreferenceChangeListener);
+     *         }
+     *    }
+     * </pre>
+     *
+     * @param listener were change notifications will be delivered. You need to keep <b>strong</b> reference to it to avoid garbage collection. Same behaviour as the platform
+     *                 {@linkplain SharedPreferences}
+     */
+    void registerOnSecurePreferenceChangeListener(@NonNull OnSecurePreferenceChangeListener listener);
+
+    /**
+     * Unregisters previously registered {@link OnSecurePreferenceChangeListener} from preference update.
+     * @param listener is an already registered instance that will be unregistered then, will stop receiving updates.
+     */
+    void unregisterOnSecurePreferenceChangeListener(@NonNull OnSecurePreferenceChangeListener listener);
 
     /**
      * Changes the user provided password to the new given password. This will immediately reencrypt

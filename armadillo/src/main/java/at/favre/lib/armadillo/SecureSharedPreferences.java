@@ -258,29 +258,16 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
 
     private final List<SharedPreferenceChangeListenerWrapper> securePreferenceListeners = new LinkedList<>();
 
+    @Override
     public void registerOnSecurePreferenceChangeListener(@NonNull OnSecurePreferenceChangeListener listener) {
         synchronized (securePreferenceListeners) {
-            ListIterator<SharedPreferenceChangeListenerWrapper> iterator = securePreferenceListeners.listIterator();
-            boolean found = false;
-            while (iterator.hasNext()) {
-                SharedPreferenceChangeListenerWrapper listenerWrapper = iterator.next();
-                OnSecurePreferenceChangeListener wrapped = listenerWrapper.getWrapped();
-                if (wrapped == null) {
-                    unregisterOnSharedPreferenceChangeListener(listenerWrapper);
-                    iterator.remove();
-                } else if (wrapped == listener) {
-                    found = true; // we let the loop continue, so that we may cleanup some more references
-                }
-            }
-
-            if (!found) {
-                SharedPreferenceChangeListenerWrapper listenerWrapper = new SharedPreferenceChangeListenerWrapper(listener, encryptionProtocol);
-                registerOnSharedPreferenceChangeListener(listenerWrapper);
-                securePreferenceListeners.add(listenerWrapper);
-            }
+            SharedPreferenceChangeListenerWrapper listenerWrapper = new SharedPreferenceChangeListenerWrapper(listener, encryptionProtocol, this);
+            registerOnSharedPreferenceChangeListener(listenerWrapper);
+            securePreferenceListeners.add(listenerWrapper);
         }
     }
 
+    @Override
     public void unregisterOnSecurePreferenceChangeListener(@NonNull OnSecurePreferenceChangeListener listener) {
         synchronized (securePreferenceListeners) {
             ListIterator<SharedPreferenceChangeListenerWrapper> iterator = securePreferenceListeners.listIterator();

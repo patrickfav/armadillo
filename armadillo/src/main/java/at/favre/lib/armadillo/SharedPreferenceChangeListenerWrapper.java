@@ -8,29 +8,33 @@ import java.lang.ref.WeakReference;
 
 /**
  * Implementation that will wrap a {@link OnSecurePreferenceChangeListener} to adapt to the standard {@link SharedPreferences.OnSharedPreferenceChangeListener}
- * @since 03.07.2019
+ * @since 0.9.0
  */
 final class SharedPreferenceChangeListenerWrapper implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static class KeyComparissonImpl implements OnSecurePreferenceChangeListener.DerivedKeyComparison {
+    private static class KeyComparisonImpl implements OnSecurePreferenceChangeListener.DerivedKeyComparison {
         private final EncryptionProtocol encryptionProtocol;
+        private final String derivedContentKey;
 
-        private KeyComparissonImpl(EncryptionProtocol encryptionProtocol) {
+        private KeyComparisonImpl(EncryptionProtocol encryptionProtocol, String derivedContentKey) {
             this.encryptionProtocol = encryptionProtocol;
+            this.derivedContentKey = derivedContentKey;
         }
 
         @Override
-        public boolean isDerivedKeyEqualTo(@NonNull String derivedKey, @NonNull String key) {
-            return derivedKey.equals(encryptionProtocol.deriveContentKey(key));
+        public boolean isDerivedKeyEqualTo(@NonNull String key) {
+            return derivedContentKey.equals(encryptionProtocol.deriveContentKey(key));
         }
     }
 
-    private final OnSecurePreferenceChangeListener.DerivedKeyComparison keyComparison;
     private final WeakReference<OnSecurePreferenceChangeListener> wrappedRef;
+    @NonNull private final EncryptionProtocol                     encryptionProtocol;
+    @NonNull private final SharedPreferences securedPrefs;
 
-    SharedPreferenceChangeListenerWrapper(@NonNull OnSecurePreferenceChangeListener wrapped, @NonNull EncryptionProtocol encryptionProtocol) {
-        keyComparison = new KeyComparissonImpl(encryptionProtocol);
+    SharedPreferenceChangeListenerWrapper(@NonNull OnSecurePreferenceChangeListener wrapped, @NonNull EncryptionProtocol encryptionProtocol, @NonNull SharedPreferences securedPrefs) {
         wrappedRef = new WeakReference<>(wrapped);
+        this.encryptionProtocol = encryptionProtocol;
+        this.securedPrefs = securedPrefs;
     }
 
     @Nullable
@@ -43,14 +47,14 @@ final class SharedPreferenceChangeListenerWrapper implements SharedPreferences.O
 
         OnSecurePreferenceChangeListener wrapped = wrappedRef.get();
 
-        if (wrapped == null && sharedPreferences != null) {
+        if (wrapped == null) {
             // we unregister ourselves from client preferences
             sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
             return;
         }
 
-        if (sharedPreferences != null && key != null) {
-            wrapped.onSecurePreferenceChanged(keyComparison, sharedPreferences, key);
+        if (key != null) {
+            wrapped.onSecurePreferenceChanged(securedPrefs, new KeyComparisonImpl(encryptionProtocol, key));
         }
     }
 }

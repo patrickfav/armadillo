@@ -28,7 +28,7 @@ final class SharedPreferenceChangeListenerWrapper implements SharedPreferences.O
     }
 
     private final WeakReference<OnSecurePreferenceChangeListener> wrappedRef;
-    @NonNull private final EncryptionProtocol                     encryptionProtocol;
+    @NonNull private final EncryptionProtocol encryptionProtocol;
     @NonNull private final SharedPreferences securedPrefs;
 
     SharedPreferenceChangeListenerWrapper(@NonNull OnSecurePreferenceChangeListener wrapped, @NonNull EncryptionProtocol encryptionProtocol, @NonNull SharedPreferences securedPrefs) {

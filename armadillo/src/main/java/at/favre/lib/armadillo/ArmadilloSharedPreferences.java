@@ -53,6 +53,10 @@ public interface ArmadilloSharedPreferences extends SharedPreferences {
      * {@link SharedPreferences#registerOnSharedPreferenceChangeListener(OnSharedPreferenceChangeListener)}
      * is useless as it returns <em>derivedContentKey</em> as parameter, and we cannot compare it to noting
      * in case we're interested in some specific key change.
+     * <br/><br/>
+     * Thus we change it to provide an alternative method using {@link OnSecurePreferenceChangeListener}. You can
+     * find an example of usage below.
+     * <br/><br/>
      *
      * <pre>
      *     public class SampleActivity extends AppCompatActivity {

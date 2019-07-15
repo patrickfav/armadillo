@@ -5,8 +5,9 @@ import android.support.annotation.NonNull;
 
 /**
  * Allow to register preference change listeners that receive a {@link DerivedKeyComparison} instance in order to make it possible compare the changed key against
- * actual key constants.
- *
+ * <b>actual</b> key constants (instead of the derivedKeys that the library uses)
+ * <br/><br/>
+ * <em>Example:</em>
  * <pre>
  *     public class SampleActivity extends AppCompatActivity {
  *         private final String KEY_TOKEN = "token";

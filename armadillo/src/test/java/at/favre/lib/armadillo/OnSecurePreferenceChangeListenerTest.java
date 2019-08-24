@@ -57,18 +57,6 @@ public class OnSecurePreferenceChangeListenerTest {
         assertEquals(0, mockSharedPref.getNumListeners());
     }
 
-    @Test
-    public void testGarbageCollectionAlsoUnregistersFromListener() {
-        armadilloSharedPreferences.unregisterOnSecurePreferenceChangeListener(testSecurePreferenceChange);
-        armadilloSharedPreferences.registerOnSecurePreferenceChangeListener(new TestSecurePreferenceChange("target-key"));
-
-        System.gc();
-
-        // Unregistration happens on the first event of notification
-        armadilloSharedPreferences.edit().putString("target-key", "a new hope").apply();
-        assertEquals(0, mockSharedPref.getNumListeners());
-    }
-
     private static class TestSecurePreferenceChange implements OnSecurePreferenceChangeListener {
         private final String expectedKey;
         private String newValue;

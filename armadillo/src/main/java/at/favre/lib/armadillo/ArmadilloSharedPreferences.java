@@ -82,8 +82,7 @@ public interface ArmadilloSharedPreferences extends SharedPreferences {
      *    }
      * </pre>
      *
-     * @param listener were change notifications will be delivered. You need to keep <b>strong</b> reference to it to avoid garbage collection. Same behaviour as the platform
-     *                 {@linkplain SharedPreferences}
+     * @param listener were change notifications will be delivered.
      */
     void registerOnSecurePreferenceChangeListener(@NonNull OnSecurePreferenceChangeListener listener);
 

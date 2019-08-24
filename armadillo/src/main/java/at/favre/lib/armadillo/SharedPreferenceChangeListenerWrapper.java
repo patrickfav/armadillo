@@ -2,9 +2,6 @@ package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
-import java.lang.ref.WeakReference;
 
 /**
  * Implementation that will wrap a {@link OnSecurePreferenceChangeListener} to adapt to the standard {@link SharedPreferences.OnSharedPreferenceChangeListener}
@@ -27,34 +24,25 @@ final class SharedPreferenceChangeListenerWrapper implements SharedPreferences.O
         }
     }
 
-    private final WeakReference<OnSecurePreferenceChangeListener> wrappedRef;
+    private final OnSecurePreferenceChangeListener wrappedListener;
     @NonNull private final EncryptionProtocol encryptionProtocol;
     @NonNull private final SharedPreferences securedPrefs;
 
     SharedPreferenceChangeListenerWrapper(@NonNull OnSecurePreferenceChangeListener wrapped, @NonNull EncryptionProtocol encryptionProtocol, @NonNull SharedPreferences securedPrefs) {
-        wrappedRef = new WeakReference<>(wrapped);
+        wrappedListener = wrapped;
         this.encryptionProtocol = encryptionProtocol;
         this.securedPrefs = securedPrefs;
     }
 
-    @Nullable
     OnSecurePreferenceChangeListener getWrapped() {
-        return wrappedRef.get();
+        return wrappedListener;
     }
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 
-        OnSecurePreferenceChangeListener wrapped = wrappedRef.get();
-
-        if (wrapped == null) {
-            // we unregister ourselves from client preferences
-            sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
-            return;
-        }
-
         if (key != null) {
-            wrapped.onSecurePreferenceChanged(securedPrefs, new KeyComparisonImpl(encryptionProtocol, key));
+            wrappedListener.onSecurePreferenceChanged(securedPrefs, new KeyComparisonImpl(encryptionProtocol, key));
         }
     }
 }

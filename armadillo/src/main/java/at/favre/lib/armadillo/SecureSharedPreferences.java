@@ -11,6 +11,9 @@ import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -251,6 +254,32 @@ public final class SecureSharedPreferences implements ArmadilloSharedPreferences
     @Override
     public void unregisterOnSharedPreferenceChangeListener(OnSharedPreferenceChangeListener onSharedPreferenceChangeListener) {
         sharedPreferences.unregisterOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener);
+    }
+
+    private final List<SharedPreferenceChangeListenerWrapper> securePreferenceListeners = new LinkedList<>();
+
+    @Override
+    public void registerOnSecurePreferenceChangeListener(@NonNull OnSecurePreferenceChangeListener listener) {
+        synchronized (securePreferenceListeners) {
+            SharedPreferenceChangeListenerWrapper listenerWrapper = new SharedPreferenceChangeListenerWrapper(listener, encryptionProtocol, this);
+            registerOnSharedPreferenceChangeListener(listenerWrapper);
+            securePreferenceListeners.add(listenerWrapper);
+        }
+    }
+
+    @Override
+    public void unregisterOnSecurePreferenceChangeListener(@NonNull OnSecurePreferenceChangeListener listener) {
+        synchronized (securePreferenceListeners) {
+            ListIterator<SharedPreferenceChangeListenerWrapper> iterator = securePreferenceListeners.listIterator();
+            while (iterator.hasNext()) {
+                SharedPreferenceChangeListenerWrapper listenerWrapper = iterator.next();
+                OnSecurePreferenceChangeListener wrapped = listenerWrapper.getWrapped();
+                if (wrapped == null || wrapped == listener) {
+                    unregisterOnSharedPreferenceChangeListener(listenerWrapper);
+                    iterator.remove();
+                }
+            }
+        }
     }
 
     @Override

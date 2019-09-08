@@ -4,6 +4,7 @@
 
 * add wiping of pw cache to close() method in SecureSharedPreferences
 * increase internal optional password cache to 12 from 8
+* add shared preference listener feature which works with unencrypted data #47 (thx @davidgarciaanton)
 
 ## v0.8.0
 

@@ -47,9 +47,9 @@ android {
 }
 
 dependencies {
-    api 'at.favre.lib:hkdf:1.0.2'
-    api 'at.favre.lib:bytes:0.8.0'
-    api 'at.favre.lib:bcrypt:0.7.0'
+    api 'at.favre.lib:hkdf:1.1.0'
+    api 'at.favre.lib:bytes:1.2.0'
+    api 'at.favre.lib:bcrypt:0.8.0'
     api 'com.jakewharton.timber:timber:4.7.1'
 
     api group: 'com.android.support', name: 'support-annotations', version: rootProject.ext.dependencies.support

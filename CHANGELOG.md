@@ -3,6 +3,8 @@
 ## v0.10.0
 
 * use fallback if ANDROID_ID returns null #49
+* update AGP and some libs (bcrypt & hkdf)
+* update to checkstyle 8.31
 
 ## v0.9.0
 

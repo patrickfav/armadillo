@@ -57,7 +57,7 @@ public class OnSecurePreferenceChangeListenerTest {
         assertEquals(0, mockSharedPref.getNumListeners());
     }
 
-    private static class TestSecurePreferenceChange implements OnSecurePreferenceChangeListener {
+    private static final class TestSecurePreferenceChange implements OnSecurePreferenceChangeListener {
         private final String expectedKey;
         private String newValue;
         private int numHits = 0;

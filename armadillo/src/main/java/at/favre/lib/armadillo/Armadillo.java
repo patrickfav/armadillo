@@ -115,7 +115,7 @@ public final class Armadillo {
          * The encryption fingerprint is in important security measure. When no user password is
          * provided, it is the most important source of entropy to derive the key for the encryption.
          * <p>
-         * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory
+         * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory}
          * with addtional custom data. Setting this is <strong>highly recommended</strong> as it makes
          * it more difficult for an attacker calculate the key the more random the input is.
          * <p>
@@ -133,7 +133,7 @@ public final class Armadillo {
          * The encryption fingerprint is in important security measure. When no user password is
          * provided, it is the most important source of entropy to derive the key for the encryption.
          * <p>
-         * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory
+         * Set the default fingerprint using sources explained in {@link EncryptionFingerprintFactory}
          * with addtional custom data. Setting this is <strong>highly recommended</strong> as it makes
          * it more difficult for an attacker calculate the key the more random the input is.
          * <p>

@@ -7,7 +7,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 @SuppressWarnings("WeakerAccess")
-public class Utils {
+public final class Utils {
 
     private Utils() {
         // Utility class

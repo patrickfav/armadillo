@@ -9,7 +9,7 @@ import java.util.Objects;
  * @since 28.10.2018
  */
 @SuppressWarnings("WeakerAccess")
-public class EncryptionProtocolConfig {
+public final class EncryptionProtocolConfig {
 
     public final int protocolVersion;
 

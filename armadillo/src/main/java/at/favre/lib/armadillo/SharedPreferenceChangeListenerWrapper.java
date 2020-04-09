@@ -9,7 +9,7 @@ import android.support.annotation.NonNull;
  */
 final class SharedPreferenceChangeListenerWrapper implements SharedPreferences.OnSharedPreferenceChangeListener {
 
-    private static class KeyComparisonImpl implements OnSecurePreferenceChangeListener.DerivedKeyComparison {
+    private static final class KeyComparisonImpl implements OnSecurePreferenceChangeListener.DerivedKeyComparison {
         private final EncryptionProtocol encryptionProtocol;
         private final String derivedContentKey;
 

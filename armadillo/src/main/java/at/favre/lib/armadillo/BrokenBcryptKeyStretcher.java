@@ -38,7 +38,7 @@ final class BrokenBcryptKeyStretcher implements KeyStretchingFunction {
     private static final int BCRYPT_MIN_ROUNDS = 8;
     private static final int BCRYPT_DEFAULT_ROUNDS = 12;
     private static final BCrypt.Version CUSTOM_LEGACY_VERSION = new BCrypt.Version(new byte[] {0x32, 0x61},
-        true, true, new CustomFormatter(new Radix64Encoder.Default(), StandardCharsets.UTF_8), BCrypt.Version.VERSION_2A.parser);
+            true, true, BCrypt.Version.DEFAULT_MAX_PW_LENGTH_BYTE, new CustomFormatter(new Radix64Encoder.Default(), StandardCharsets.UTF_8), BCrypt.Version.VERSION_2A.parser);
     private final int iterations;
 
     /**

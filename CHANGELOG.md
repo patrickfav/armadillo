@@ -1,5 +1,9 @@
 # Releases
 
+## v0.10.0
+
+* use fallback if ANDROID_ID returns null #49
+
 ## v0.9.0
 
 * add wiping of pw cache to close() method in SecureSharedPreferences

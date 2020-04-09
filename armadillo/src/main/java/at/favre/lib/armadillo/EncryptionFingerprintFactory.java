@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import java.io.ByteArrayOutputStream;
 
 import at.favre.lib.bytes.Bytes;
+import timber.log.Timber;
 
 /**
  * Factory for creating {@link EncryptionFingerprintFactory} in Android
@@ -50,7 +51,7 @@ public final class EncryptionFingerprintFactory {
                 Bytes.from(getApplicationPackage(context)).array(),
                 Bytes.from(getBuildDetails()).array(),
                 BuildConfig.STATIC_RANDOM,
-            additionalData != null ? Bytes.from(additionalData).array() : Bytes.empty().array()).array());
+                additionalData != null ? Bytes.from(additionalData).array() : Bytes.empty().array()).array());
     }
 
     /**
@@ -79,11 +80,16 @@ public final class EncryptionFingerprintFactory {
      * to user and device
      *
      * @param context from Android
-     * @return package
+     * @return android id or fallback if
      */
     @SuppressLint("HardwareIds")
     private static String getAndroidId(Context context) {
-        return Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        String androidId = Settings.Secure.getString(context.getContentResolver(), Settings.Secure.ANDROID_ID);
+        if (androidId == null) { // fallback on devices that incorrectly return null
+            Timber.w("This devices returned null as ANDROID_ID, using fallback. This is not expected and may be a device bug. If this behaviour is non-deterministic, it may disrupt the possibility of decrypting the content.");
+            return BuildConfig.ANDROID_ID_FALLBACK;
+        }
+        return androidId;
     }
 
     /**

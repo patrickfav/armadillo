@@ -1,5 +1,9 @@
 # Releases
 
+## v0.11.0
+
+* improve AES-GCM decryption logic
+
 ## v0.10.0
 
 * use fallback if ANDROID_ID returns null #49

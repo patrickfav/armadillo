@@ -90,28 +90,25 @@ final class AesGcmEncryption implements AuthenticatedEncryption {
 
     @Override
     public byte[] decrypt(byte[] rawEncryptionKey, byte[] encryptedData, @Nullable byte[] associatedData) throws AuthenticatedEncryptionException {
-        byte[] iv = null;
-        byte[] encrypted = null;
         try {
-            ByteBuffer byteBuffer = ByteBuffer.wrap(encryptedData);
+            int initialOffset = 1;
+            int ivLength = encryptedData[0];
 
-            int ivLength = byteBuffer.get();
-            iv = new byte[ivLength];
-            byteBuffer.get(iv);
-            encrypted = new byte[byteBuffer.remaining()];
-            byteBuffer.get(encrypted);
+            if (ivLength != 12 && ivLength != 16) {
+                throw new IllegalStateException("Unexpected iv length");
+            }
 
             final Cipher cipherDec = getCipher();
-            cipherDec.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"), new GCMParameterSpec(TAG_LENGTH_BIT, iv));
+            cipherDec.init(Cipher.DECRYPT_MODE, new SecretKeySpec(rawEncryptionKey, "AES"),
+                    new GCMParameterSpec(TAG_LENGTH_BIT, encryptedData, initialOffset, ivLength));
+
             if (associatedData != null) {
                 cipherDec.updateAAD(associatedData);
             }
-            return cipherDec.doFinal(encrypted);
+
+            return cipherDec.doFinal(encryptedData, initialOffset + ivLength, encryptedData.length - (initialOffset + ivLength));
         } catch (Exception e) {
             throw new AuthenticatedEncryptionException("could not decrypt", e);
-        } finally {
-            Bytes.wrapNullSafe(iv).mutable().secureWipe();
-            Bytes.wrapNullSafe(encrypted).mutable().secureWipe();
         }
     }
 

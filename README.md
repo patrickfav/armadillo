@@ -36,12 +36,12 @@ compile 'at.favre.lib:armadillo:x.y.z'
 A very minimal example
 
 ```java
-    SharedPreferences preferences = Armadillo.create(context, "myPrefs")
-        .encryptionFingerprint(context)
-        .build();
+SharedPreferences preferences = Armadillo.create(context, "myPrefs")
+    .encryptionFingerprint(context)
+    .build();
 
-    preferences.edit().putString("key1", "stringValue").commit();
-    String s = preferences.getString("key1", null);
+preferences.edit().putString("key1", "stringValue").commit();
+String s = preferences.getString("key1", null);
 ```
 
 ### Advanced Example

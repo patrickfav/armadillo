@@ -8,7 +8,7 @@ A shared preference implementation for secret data providing confidentiality,
 integrity and authenticity . Per default uses AES-GCM, BCrypt and HKDF as cryptographic
 primitives.
 
-[![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg) ](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
+[![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg)](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
 [![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
 [![Javadocs](https://www.javadoc.io/badge/at.favre.lib/armadillo.svg)](https://www.javadoc.io/doc/at.favre.lib/armadillo)
 [![Coverage Status](https://coveralls.io/repos/github/patrickfav/armadillo/badge.svg?branch=master)](https://coveralls.io/github/patrickfav/armadillo?branch=master)
@@ -29,7 +29,7 @@ See [migration guide in the changelog for v0.6.0](https://github.com/patrickfav/
 
 Add the following to your dependencies ([add jcenter to your repositories](https://developer.android.com/studio/build/index.html#top-level) if you haven't)
 
-```gradle
+```groovy
 compile 'at.favre.lib:armadillo:x.y.z'
 ```
 

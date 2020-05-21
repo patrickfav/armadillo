@@ -1,7 +1,7 @@
 package at.favre.lib.armadillo;
 
 import android.os.StrictMode;
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;

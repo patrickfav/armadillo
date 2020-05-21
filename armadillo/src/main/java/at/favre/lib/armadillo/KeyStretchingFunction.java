@@ -1,6 +1,6 @@
 package at.favre.lib.armadillo;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 /**
  * In cryptography, key stretching techniques are used to make a possibly weak key, typically a password or

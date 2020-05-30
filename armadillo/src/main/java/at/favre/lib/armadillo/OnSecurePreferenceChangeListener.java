@@ -1,7 +1,7 @@
 package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Allow to register preference change listeners that receive a {@link DerivedKeyComparison} instance in order to make it possible compare the changed key against

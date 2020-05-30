@@ -4,9 +4,10 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
-import android.support.test.InstrumentationRegistry;
-import android.support.test.annotation.UiThreadTest;
-import android.support.test.runner.AndroidJUnit4;
+
+import androidx.test.core.app.ApplicationProvider;
+import androidx.test.annotation.UiThreadTest;
+import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -29,9 +30,11 @@ import static junit.framework.TestCase.assertTrue;
 @RunWith(AndroidJUnit4.class)
 public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
 
+    private final Context context = ApplicationProvider.getApplicationContext();
+
     protected Armadillo.Builder create(String name, char[] pw) {
-        return Armadillo.create(InstrumentationRegistry.getTargetContext(), name)
-                .encryptionFingerprint(InstrumentationRegistry.getTargetContext())
+        return Armadillo.create(context, name)
+                .encryptionFingerprint(context)
                 .enableKitKatSupport(isKitKatOrBelow())
                 .password(pw);
     }
@@ -43,7 +46,6 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
 
     @Test
     public void quickStartTest() {
-        Context context = InstrumentationRegistry.getTargetContext();
         SharedPreferences preferences = Armadillo.create(context, "myPrefs")
                 .encryptionFingerprint(context)
                 .enableKitKatSupport(isKitKatOrBelow()).build();
@@ -94,7 +96,6 @@ public class SecureSharedPreferencesTest extends ASecureSharedPreferencesTest {
 
     @Test
     public void advancedTest() {
-        Context context = InstrumentationRegistry.getTargetContext();
         String userId = "1234";
         SharedPreferences preferences = Armadillo.create(context, "myCustomPreferences")
             .password("mySuperSecretPassword".toCharArray()) //use user based password

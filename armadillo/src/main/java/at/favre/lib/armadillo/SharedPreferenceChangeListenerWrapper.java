@@ -1,7 +1,7 @@
 package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Implementation that will wrap a {@link OnSecurePreferenceChangeListener} to adapt to the standard {@link SharedPreferences.OnSharedPreferenceChangeListener}

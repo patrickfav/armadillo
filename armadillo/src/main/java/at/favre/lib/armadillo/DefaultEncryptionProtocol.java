@@ -1,5 +1,7 @@
 package at.favre.lib.armadillo;
 
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -13,7 +15,8 @@ import java.util.Objects;
 
 import at.favre.lib.bytes.Bytes;
 import at.favre.lib.crypto.HKDF;
-import timber.log.Timber;
+
+import static at.favre.lib.armadillo.Armadillo.log;
 
 /**
  * The Armadillo Encryption Protocol. The whole protocol logic, orchestrating all the other parts.
@@ -33,6 +36,7 @@ import timber.log.Timber;
  */
 
 final class DefaultEncryptionProtocol implements EncryptionProtocol {
+    private static final String TAG = DefaultEncryptionProtocol.class.getSimpleName();
 
     private static final int CONTENT_SALT_LENGTH_BYTES = 16;
     private static final int STRETCHED_PASSWORD_LENGTH_BYTES = 32;
@@ -101,7 +105,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         } finally {
             Bytes.wrap(fingerprintBytes).mutable().secureWipe();
             Bytes.wrap(key).mutable().secureWipe();
-            Timber.v("encrypt took %d ms", System.currentTimeMillis() - start);
+            log(Log.VERBOSE, TAG, "encrypt took %d ms", System.currentTimeMillis() - start);
         }
     }
 
@@ -155,7 +159,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         } finally {
             Bytes.wrap(fingerprintBytes).mutable().secureWipe();
             Bytes.wrap(key).mutable().secureWipe();
-            Timber.v("decrypt took %d ms", System.currentTimeMillis() - start);
+            log(Log.VERBOSE, TAG, "decrypt took %d ms", System.currentTimeMillis() - start);
         }
     }
 

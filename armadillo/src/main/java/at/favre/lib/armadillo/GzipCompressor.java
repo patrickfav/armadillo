@@ -1,11 +1,13 @@
 package at.favre.lib.armadillo;
 
+import android.util.Log;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import timber.log.Timber;
+import static at.favre.lib.armadillo.Armadillo.log;
 
 /**
  * A compressor using Gzip algorithm provided by the JDK
@@ -14,6 +16,7 @@ import timber.log.Timber;
  * @since 06.01.2018
  */
 public final class GzipCompressor implements Compressor {
+    private static final String TAG = GzipCompressor.class.getSimpleName();
 
     public GzipCompressor() {
     }
@@ -32,7 +35,7 @@ public final class GzipCompressor implements Compressor {
             gzipInputStream.close();
             returnBuffer = bos.toByteArray();
             bos.close();
-            Timber.v("compression saved %d byte", compressed.length - returnBuffer.length);
+            log(Log.VERBOSE, TAG, "compression saved %d byte", compressed.length - returnBuffer.length);
             return returnBuffer;
         } catch (Exception e) {
             throw new IllegalStateException("could not decompress gzip", e);

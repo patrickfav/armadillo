@@ -14,7 +14,9 @@ android {
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     dataBinding {
-        enabled = true
+        buildFeatures {
+            dataBinding true
+        }
     }
     buildTypes {
         release {

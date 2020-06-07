@@ -1,18 +1,11 @@
-def jacocoTask = 'jacocoTestReleaseUnitTestReport'
 /**
  * Copy the jacoco unit test report to a standard jacoco out folder, so coveralls plugin can find it
  */
-//afterEvaluate {
-//    def task
-//    if ((task = project.tasks.findByName(jacocoTask))) {
-//        copyJacocoReport.dependsOn task
-//    }
-//}
 
 task copyJacocoReport(type: Copy) {
-    File source = new File("$project.rootDir.absolutePath/$project.name/build/reports/jacoco/$jacocoTask")
+    File source = new File("$project.rootDir.absolutePath/$project.name/build/reports/jacoco/release")
     File target = new File("$project.rootDir.absolutePath/$project.name/build/reports/jacoco/test")
-    String testFileName = "${jacocoTask}.xml"
+    String testFileName = "jacoco.xml"
 
     from source
     include testFileName
@@ -20,4 +13,4 @@ task copyJacocoReport(type: Copy) {
     into target
 }
 
-copyJacocoReport.dependsOn 'jacocoTestReleaseUnitTestReport'
+copyJacocoReport.dependsOn 'jacocoTestReportRelease'

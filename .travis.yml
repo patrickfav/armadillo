@@ -35,7 +35,7 @@ jobs:
       - ./gradlew :armadillo:checkstyle lint --stacktrace
       - ./gradlew :armadillo:testReleaseUnitTest --info
     after_success:
-      - ./gradlew :armadillo:jacocoTestReleaseUnitTestReport :armadillo:copyJacocoReport coveralls --info
+      - ./gradlew :armadillo:jacocoTestReportRelease :armadillo:copyJacocoReport coveralls --info
     deploy:
       - provider: script
         script: ./gradlew install bintrayUpload --info

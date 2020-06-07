@@ -5,9 +5,25 @@
 * migrate to AndroidX (thx @marukami and special thx @davidmigloz)
 * update AGP and Gradle
 
+### Breaking Change: Change of transitive dependencies from `api` to `implementation`
+
+If you are using code of any of the following libraries as transitive dependencies through this lib:
+
+* `at.favre.lib:hkdf`
+* `at.favre.lib:bytes`
+* `at.favre.lib:bcrypt`
+* `com.jakewharton.timber:timber`
+
+your build may break and you have to add the dependency manually to your build. The reason is, that
+I changed the scope of these to `implementation`. See https://docs.gradle.org/current/userguide/java_library_plugin.html#:~:text=The%20api%20configuration%20should%20be,are%20internal%20to%20the%20component.
+
+> [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.11.0...v1.0.0)
+
 ## v0.11.0
 
 * improve AES-GCM decryption logic
+
+> [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.10.0...v0.11.0)
 
 ## v0.10.0
 
@@ -15,12 +31,16 @@
 * update AGP and some libs (bcrypt & hkdf)
 * update to checkstyle 8.31
 
+> [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.9.0...v0.10.0)
+
 ## v0.9.0
 
 * add wiping of pw cache to close() method in SecureSharedPreferences
 * increase internal optional password cache to 12 from 8
 * add shared preference listener feature which works with unencrypted data #47 (thx @davidgarciaanton)
 * update AGP, target SDK to 29 and several internal dependencies
+
+> [Full changelog](https://github.com/patrickfav/armadillo/compare/v0.8.0...v0.9.0)
 
 ## v0.8.0
 

@@ -1,5 +1,10 @@
 # Releases
 
+## v1.0.0
+
+* migrate to AndroidX (thx @marukami and special thx @davidmigloz)
+* update AGP and Gradle
+
 ## v0.11.0
 
 * improve AES-GCM decryption logic

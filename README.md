@@ -5,8 +5,7 @@
      alt="Armadillo Logo" width="170" height="207">
 
 A shared preference implementation for secret data providing confidentiality,
-integrity and authenticity . Per default uses AES-GCM, BCrypt and HKDF as cryptographic
-primitives.
+integrity and authenticity. Per default uses AES-GCM, BCrypt and HKDF as cryptographic primitives.
 
 [![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg)](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
 [![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
@@ -270,12 +269,12 @@ The `.aar` files can then be found in `/armadillo/build/outputs/aar` folder
 ## Similar Projects:
 
 * [Google's Android Jetpack EncryptedSharedPreferences using Android Keystore System](https://developer.android.com/topic/security/data)
-* [secure-preferences using AES-CBC](https://github.com/scottyab/secure-preferences) by @scottyab (_not maintained_)
-* [secure-preferences supporting Android Keystore System](https://github.com/ophio/secure-preferences) by @ophio
-* [secure-preferences using FB Conceal framework](https://github.com/KaKaVip/secure-preferences) by @KaKaVip
-* [secure-preferences supporting Android Keystore System](https://github.com/adorsys/secure-storage-android) by @adorsys
-* [secure-preferences supporting Android Keystore System](https://github.com/iamMehedi/Secured-Preference-Store) by @iamMehedi
-* [secure-preferences using AES-CBC](https://github.com/PDDStudio/EncryptedPreferences) by @PDDStudio
+* [secure-preferences using AES-CBC](https://github.com/scottyab/secure-preferences) by [@scottyab](https://github.com/scottyab) (_not maintained_)
+* [secure-preferences supporting Android Keystore System](https://github.com/ophio/secure-preferences) by [@ophio](https://github.com/ophio)
+* [secure-preferences using FB Conceal framework](https://github.com/KaKaVip/secure-preferences) by [@KaKaVip](https://github.com/KaKaVip)
+* [secure-preferences supporting Android Keystore System](https://github.com/adorsys/secure-storage-android) by [@adorsys](https://github.com/adorsys)
+* [secure-preferences supporting Android Keystore System](https://github.com/iamMehedi/Secured-Preference-Store) by [@iamMehedi](https://github.com/iamMehedi)
+* [secure-preferences using AES-CBC](https://github.com/PDDStudio/EncryptedPreferences) by [@PDDStudio](https://github.com/PDDStudio)
 
 ## Further Reading
 

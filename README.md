@@ -26,12 +26,12 @@ See [migration guide in the changelog for v0.6.0](https://github.com/patrickfav/
 
 ### Security Summary
 
-* Using it **wit a user provided password** (and strong password hash, like the default BCrypt): **your data is strongly encrypted**
+* Using it **with a user provided password** (and strong password hash, like the default BCrypt): **your data is strongly encrypted**
 * Using it without a user provided password: **your data is obfuscated and cannot be easily altered or read by an attacker with access to the device**
 * By using fingerprinting, it is **not easily possible to just copy data over to another device** and use it there
 * Encryption is **non-deterministic**, which means even if you encrypt the same data it **appears to be different**
-* All encrypted data is **protected against modification by an outside attacker**, so long as the encryption itself is not broken
-* The **[Android Keystore System](https://developer.android.com/training/articles/keystore.html) is not used**, since proved to be unreliable and hard to handle in production due to device fragmentation and poor driver support
+* All encrypted data is **protected against modification by an outside attacker**, so long as the encryption itself is not circumvented
+* The **[Android Keystore System](https://developer.android.com/training/articles/keystore.html) is not used**, since it proved to be unreliable and hard to handle in production due to device fragmentation and poor driver support (read more [below](https://github.com/patrickfav/armadillo#design-choices))
 
 ## Quick Start
 
@@ -127,7 +127,7 @@ generates new salts, iv so the the resulting cipher text will be unrecognizably
 different even with the same underlying data. This makes it harder to check if
 the data actually has changed.
 * **KDFs with Key Stretching features for user passwords:** Add brute-force
-protection to possibly weak user provided passwords.
+protection to possibly weak user provided passwords (e.g. BCrypt).
 * **Minimum SDK 19 (Android 4.4):** A way to increase security is to cap older
 implementation. SDK 19 seems to be a good compromise where most of the older
 [security hack fixes](https://android-developers.googleblog.com/2013/08/some-securerandom-thoughts.html)

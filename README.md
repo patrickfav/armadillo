@@ -31,7 +31,7 @@ See [migration guide in the changelog for v0.6.0](https://github.com/patrickfav/
 * By using fingerprinting, it is **not easily possible to just copy data over to another device** and use it there
 * Encryption is **non-deterministic**, which means even if you encrypt the same data it **appears to be different**
 * All encrypted data is **protected against modification by an outside attacker**, so long as the encryption itself is not circumvented
-* The **[Android Keystore System](https://developer.android.com/training/articles/keystore.html) is not used**, since it proved to be unreliable and hard to handle in production due to device fragmentation and poor driver support (read more [below](https://github.com/patrickfav/armadillo#design-choices))
+* The **[Android Keystore System](https://developer.android.com/training/articles/keystore.html) is not used**, since it proved to be unreliable and hard to handle in production due to device fragmentation and poor driver support (read more [below](https://github.com/patrickfav/armadillo#design-choices)). This implementation is a good fallback solution for a system that uses the aforementioned.
 
 ## Quick Start
 

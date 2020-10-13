@@ -32,7 +32,7 @@ import timber.log.Timber;
  * @since 18.12.2017
  */
 
-final class DefaultEncryptionProtocol implements EncryptionProtocol {
+public final class DefaultEncryptionProtocol implements EncryptionProtocol {
 
     private static final int CONTENT_SALT_LENGTH_BYTES = 16;
     private static final int STRETCHED_PASSWORD_LENGTH_BYTES = 32;
@@ -236,7 +236,7 @@ final class DefaultEncryptionProtocol implements EncryptionProtocol {
         private EncryptionProtocolConfig defaultConfig;
         private final List<EncryptionProtocolConfig> additionalDecryptionConfigs;
 
-        Factory(EncryptionProtocolConfig defaultConfig, EncryptionFingerprint fingerprint,
+        public Factory(EncryptionProtocolConfig defaultConfig, EncryptionFingerprint fingerprint,
                 StringMessageDigest stringMessageDigest, SecureRandom secureRandom,
                 boolean enableDerivedPasswordCaching,
                 List<EncryptionProtocolConfig> additionalDecryptionConfigs) {

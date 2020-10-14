@@ -1,6 +1,7 @@
 package at.favre.lib.armadillo;
 
 import android.os.StrictMode;
+
 import androidx.annotation.NonNull;
 
 import org.junit.Test;

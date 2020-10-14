@@ -1,6 +1,7 @@
 package at.favre.lib.armadillo;
 
 import android.content.SharedPreferences;
+
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 

@@ -1,10 +1,11 @@
 package at.favre.lib.securesharedpreferences;
 
 import android.content.Intent;
-import androidx.databinding.DataBindingUtil;
 import android.os.Bundle;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.View;
+
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.databinding.DataBindingUtil;
 
 import at.favre.lib.armadillo.Armadillo;
 import at.favre.lib.armadillo.ArmadilloSharedPreferences;

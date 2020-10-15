@@ -1,7 +1,8 @@
 package at.favre.lib.armadillo;
 
-import androidx.annotation.Nullable;
 import android.util.LruCache;
+
+import androidx.annotation.Nullable;
 
 import java.security.SecureRandom;
 

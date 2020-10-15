@@ -5,8 +5,8 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.provider.Settings;
 
-import androidx.test.core.app.ApplicationProvider;
 import androidx.test.annotation.UiThreadTest;
+import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Test;

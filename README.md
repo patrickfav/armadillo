@@ -8,7 +8,7 @@ A shared preference implementation for secret data providing confidentiality,
 integrity and authenticity. Per default uses AES-GCM, BCrypt and HKDF as cryptographic primitives.
 
 [![Download](https://api.bintray.com/packages/patrickfav/maven/armadillo/images/download.svg)](https://bintray.com/patrickfav/maven/armadillo/_latestVersion)
-[![Build Status](https://travis-ci.org/patrickfav/armadillo.svg?branch=master)](https://travis-ci.org/patrickfav/armadillo)
+[![Build Status](https://travis-ci.com/patrickfav/armadillo.svg?branch=master)](https://travis-ci.com/patrickfav/armadillo)
 [![Javadocs](https://www.javadoc.io/badge/at.favre.lib/armadillo.svg)](https://www.javadoc.io/doc/at.favre.lib/armadillo)
 [![Coverage Status](https://coveralls.io/repos/github/patrickfav/armadillo/badge.svg?branch=master)](https://coveralls.io/github/patrickfav/armadillo?branch=master)
 [![Maintainability](https://api.codeclimate.com/v1/badges/c3ac3cdd849ba47fd90a/maintainability)](https://codeclimate.com/github/patrickfav/armadillo/maintainability)

@@ -5,12 +5,19 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @ExperimentalSerializationApi
 @RunWith(AndroidJUnit4::class)
 class UserStoreTest {
+
+  @Before
+  fun setup() {
+    val store = UserStore(ApplicationProvider.getApplicationContext())
+    store.clear()
+  }
 
   @Test
   fun canReadEmptyUserFromStore() {

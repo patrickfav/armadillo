@@ -2,7 +2,6 @@ package at.favre.lib.armadillo.datastore
 
 import android.content.Context
 import android.os.Build
-import android.util.Log
 import androidx.datastore.Serializer
 import at.favre.lib.armadillo.*
 import at.favre.lib.armadillo.Armadillo.CONTENT_KEY_OUT_BYTE_LENGTH
@@ -12,15 +11,10 @@ import java.io.OutputStream
 import java.security.Provider
 import java.security.SecureRandom
 
-interface ProtobufProtocol<T> {
-  fun toBytes(data: T): ByteArray
-  fun fromBytes(bytes: ByteArray): T
-  fun fromNothing(): T
-}
-
 class ArmadilloSerializer<T>(
     context: Context,
     private val protocol: ProtobufProtocol<T>,
+    password: CharArray? = null,
     fingerprintData: List<String> = emptyList(),
     secureRandom: SecureRandom = SecureRandom(),
     additionalDecryptionConfigs: List<EncryptionProtocolConfig> = listOf(),
@@ -29,36 +23,38 @@ class ArmadilloSerializer<T>(
     preferencesSalt: ByteArray = BuildConfig.PREF_SALT
 ) : Serializer<T> {
 
-  private val password: ByteArrayRuntimeObfuscator?
+  private val serializerPassword: ByteArrayRuntimeObfuscator?
   private val encryptionProtocol: EncryptionProtocol
   private val fingerprint: EncryptionFingerprint = EncryptionFingerprintFactory.create(
       context,
       buildString { fingerprintData.forEach(::append) }
   )
+  private val defaultConfig = EncryptionProtocolConfig.newDefaultConfig()
+  private val kitKatConfig by lazy {
+    @Suppress("DEPRECATION")
+    EncryptionProtocolConfig.newBuilder(defaultConfig.build())
+        .authenticatedEncryption(AesCbcEncryption(secureRandom, provider))
+        .protocolVersion(Armadillo.KITKAT_PROTOCOL_VERSION)
+        .build()
+  }
 
   init {
-    val defaultConfig = EncryptionProtocolConfig.newDefaultConfig()
 
     val stringMessageDigest = HkdfMessageDigest(
         BuildConfig.PREF_SALT,
         CONTENT_KEY_OUT_BYTE_LENGTH
     )
-    val kitKatConfig = takeIf { enabledKitkatSupport }?.run {
-      @Suppress("DEPRECATION")
-      EncryptionProtocolConfig.newBuilder(defaultConfig.build())
-          .authenticatedEncryption(AesCbcEncryption(secureRandom, provider))
-          .protocolVersion(Armadillo.KITKAT_PROTOCOL_VERSION)
-          .build()
-    }
+
     val config =
-        if (kitKatConfig != null && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
           kitKatConfig
         } else {
           EncryptionProtocolConfig
               .newBuilder(defaultConfig.build())
               .authenticatedEncryption(AesGcmEncryption(secureRandom, provider))
               .build()
-        }.also { checkKitKatSupport(it.authenticatedEncryption) }
+        }
+    checkKitKatSupport(config.authenticatedEncryption)
 
     val factory = DefaultEncryptionProtocol.Factory(
         config,
@@ -74,7 +70,7 @@ class ArmadilloSerializer<T>(
     )
 
     encryptionProtocol = factory.create(preferencesSalt)
-    password = null // TODO Add password config factory.obfuscatePassword()
+    serializerPassword = password?.let(factory::obfuscatePassword)
   }
 
 
@@ -86,41 +82,30 @@ class ArmadilloSerializer<T>(
   }
 
   companion object {
-    private const val CRYPTO_KEY = "ArmadilloStore"
+    private const val CRYPTO_KEY = "ArmadilloStoreSerializer"
   }
 
 
-  private fun encrypt(content: ByteArray): ByteArray =
-      try {
+  private fun encrypt(content: ByteArray): ByteArray = with(encryptionProtocol) {
+    encrypt(
+        deriveContentKey(CRYPTO_KEY),
+        deobfuscatePassword(serializerPassword),
+        content
+    )
+  }
+
+
+  private fun decrypt(encrypted: ByteArray): ByteArray? =
+      if (encrypted.isEmpty()) {
+        null
+      } else {
         encryptionProtocol
-            .encrypt(
+            .decrypt(
                 encryptionProtocol.deriveContentKey(CRYPTO_KEY),
-                encryptionProtocol.deobfuscatePassword(password),
-                content
+                encryptionProtocol.deobfuscatePassword(serializerPassword),
+                encrypted
             )
-      } catch (e: Throwable) {
-        throw IllegalStateException(e)
       }
-
-
-  private fun decrypt(encrypted: ByteArray): ByteArray? {
-    if (encrypted.isEmpty()) {
-      return null
-    }
-    try {
-      return encryptionProtocol
-          .decrypt(
-              encryptionProtocol.deriveContentKey(CRYPTO_KEY),
-              encryptionProtocol.deobfuscatePassword(password),
-              encrypted
-          )
-    } catch (e: Throwable) {
-      Log.e("DataStrore", "decetyp", e)
-//      recoveryPolicy.handleBrokenConte(e, keyHash, base64Encrypted, password != null, this)
-      // TODO handle this
-    }
-    return null
-  }
 
   override fun readFrom(input: InputStream): T =
       input
@@ -128,14 +113,14 @@ class ArmadilloSerializer<T>(
           .let(::decrypt)
           .let {
             val bytes = it ?: byteArrayOf()
-            if (bytes.isEmpty()) protocol.fromNothing()
-            else protocol.fromBytes(bytes)
+            if (bytes.isEmpty()) protocol.default()
+            else protocol.decode(bytes)
           }
 
 
   override fun writeTo(t: T, output: OutputStream) {
     protocol
-        .toBytes(t)
+        .encode(t)
         .let(::encrypt)
         .also(output::write)
   }

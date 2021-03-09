@@ -1,8 +1,8 @@
 package at.favre.lib.armadillo.datastore
 
 import android.content.Context
-import androidx.datastore.DataStore
-import androidx.datastore.createDataStore
+import androidx.datastore.core.DataStore
+import androidx.datastore.core.createDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.protobuf.ProtoBuf

@@ -47,18 +47,18 @@ android {
 dependencies {
   implementation(project(":armadillo"))
 
-  implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.10")
+  implementation("org.jetbrains.kotlin:kotlin-stdlib:1.4.30")
 
   implementation("androidx.core:core-ktx:1.3.2")
   implementation("androidx.appcompat:appcompat:1.2.0")
-  implementation("androidx.datastore:datastore-core:1.0.0-alpha01")
+  implementation("androidx.datastore:datastore-core:1.0.0-alpha07")
 
-  androidTestImplementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.0.0")
+  implementation("org.jetbrains.kotlinx:kotlinx-serialization-protobuf:1.0.0")
 
-  testImplementation("junit:junit:4.13")
+  testImplementation("junit:junit:4.13.2")
   androidTestImplementation("androidx.test.ext:junit:1.1.2")
   androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
-  androidTestImplementation("org.bouncycastle:bcprov-jdk15on:1.60")
+  androidTestImplementation("org.bouncycastle:bcprov-jdk15on:1.67")
   androidTestImplementation("org.mindrot:jbcrypt:0.4")
   androidTestImplementation("androidx.test.ext:junit:1.1.2")
   androidTestImplementation("androidx.test:rules:1.3.0")

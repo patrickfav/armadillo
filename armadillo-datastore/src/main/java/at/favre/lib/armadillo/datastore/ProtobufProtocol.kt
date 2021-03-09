@@ -8,6 +8,10 @@ package at.favre.lib.armadillo.datastore
  * Datastore will always return an empty
  */
 interface ProtobufProtocol<T> {
+//  /**
+//   * If the file contents has change you must migrate the data
+//   */
+//  val version: Int
   /**
    * un-encrypted proto byte encoding of [T]
    */

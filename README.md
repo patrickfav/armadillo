@@ -280,7 +280,7 @@ The `.aar` files can then be found in `/armadillo/build/outputs/aar` folder
 * [Google's Android Jetpack EncryptedSharedPreferences using Android Keystore System](https://developer.android.com/topic/security/data)
 * [secure-preferences using AES-CBC](https://github.com/scottyab/secure-preferences) by [@scottyab](https://github.com/scottyab) (_not maintained_)
 * [secure-preferences supporting Android Keystore System](https://github.com/ophio/secure-preferences) by [@ophio](https://github.com/ophio)
-* [secure-preferences using FB Conceal framework](https://github.com/KaKaVip/secure-preferences) by [@KaKaVip](https://github.com/KaKaVip)
+* [secure-preferences using FB Conceal framework](hhttps://github.com/phamquyhai/secure-preferences) by [@phamquyhai](https://github.com/phamquyhai)
 * [secure-preferences supporting Android Keystore System](https://github.com/adorsys/secure-storage-android) by [@adorsys](https://github.com/adorsys)
 * [secure-preferences supporting Android Keystore System](https://github.com/iamMehedi/Secured-Preference-Store) by [@iamMehedi](https://github.com/iamMehedi)
 * [secure-preferences using AES-CBC](https://github.com/PDDStudio/EncryptedPreferences) by [@PDDStudio](https://github.com/PDDStudio)

@@ -1,1 +1,1 @@
-include ':app', ':armadillo'
+include ':app', ':armadillo', ':armadillo-datastore'

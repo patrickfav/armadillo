@@ -32,7 +32,7 @@ import at.favre.lib.bytes.Bytes;
  * @since 18.12.2017
  */
 @SuppressWarnings("WeakerAccess")
-final class AesGcmEncryption implements AuthenticatedEncryption {
+public final class AesGcmEncryption implements AuthenticatedEncryption {
     private static final String ALGORITHM = "AES/GCM/NoPadding";
     private static final int TAG_LENGTH_BIT = 128;
     private static final int IV_LENGTH_BYTE = 12;

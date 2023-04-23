@@ -15,7 +15,7 @@ import java.security.SecureRandom;
  * @since 18.12.2017
  */
 
-interface EncryptionProtocol {
+public interface EncryptionProtocol {
 
     /**
      * Given a original content key provided by the user creates a message digest of this key

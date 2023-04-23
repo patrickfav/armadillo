@@ -39,7 +39,7 @@ import at.favre.lib.crypto.HKDF;
  */
 @SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
 @Deprecated
-final class AesCbcEncryption implements AuthenticatedEncryption {
+public final class AesCbcEncryption implements AuthenticatedEncryption {
     private static final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private static final String HMAC_ALGORITHM = "HmacSHA256";
     private static final int IV_LENGTH_BYTE = 16;

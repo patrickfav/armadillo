@@ -12,7 +12,7 @@ import at.favre.lib.crypto.HKDF;
  * @author Patrick Favre-Bulle
  */
 
-final class HkdfMessageDigest implements StringMessageDigest {
+public final class HkdfMessageDigest implements StringMessageDigest {
     private final byte[] salt;
     private final int outLength;
 
@@ -22,7 +22,7 @@ final class HkdfMessageDigest implements StringMessageDigest {
      * @param salt          used in all derivations
      * @param outByteLength the byte length created by the derive function
      */
-    HkdfMessageDigest(byte[] salt, int outByteLength) {
+    public HkdfMessageDigest(byte[] salt, int outByteLength) {
         this.salt = Objects.requireNonNull(salt);
         this.outLength = outByteLength;
     }
